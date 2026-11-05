@@ -1,7 +1,7 @@
 #include "rogue.h"
 
 
-/* Liberacao do mapa */
+/* Liberacao da room */
 void freeRoom()
 {
     for (int y = 0; y < ROOM_HEIGHT; ++y)
@@ -11,6 +11,7 @@ void freeRoom()
     free(room);
 }
 
+/* Le uma room do data/rooms */
 Tile** readRoom(int n)
 {
     FILE* fp;

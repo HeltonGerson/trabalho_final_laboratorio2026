@@ -11,7 +11,7 @@ typedef struct
 typedef struct
 {
     Position pos;
-    char ch;
+    int ch;
 } Entity;
 
 typedef struct
@@ -34,7 +34,7 @@ void gameLoop();
 void closeGame();
 // funcoes do mapa
 Tile** readRoom(int n);
-void     freeRoom();
+void   freeRoom();
 // funcoes do player
 Entity* createPlayer(Position start_pos);
 void    handleInput (int ch);

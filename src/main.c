@@ -14,7 +14,7 @@ int main()
 {
     cursesSetup();
     win  = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, (LINES - ROOM_HEIGHT) / 2, (COLS - ROOM_WIDTH) / 2);
-    room = readRoom(2);
+    room = readRoom(1);
     Position start_pos = {5,5};
     player = createPlayer(start_pos);
     refresh();
@@ -41,15 +41,23 @@ void handleInput(int input)
     Position newPos = player->pos;
     switch(input)
     {
+        case KEY_UP:
+        case 'w':
         case 'k':
             newPos.y--;
             break;
+        case KEY_DOWN:
+        case 's':
         case 'j':
             newPos.y++;
             break;
+        case KEY_LEFT:
+        case 'a':
         case 'h':
             newPos.x--;
             break;
+        case KEY_RIGHT:
+        case 'd':
         case 'l':
             newPos.x++;
             break;
@@ -59,8 +67,16 @@ void handleInput(int input)
 
 void movePlayer(Position newPos)
 {
-    if (newPos.x >= ROOM_WIDTH-1 || newPos.x < 1 || newPos.y >= ROOM_HEIGHT-1 || newPos.y < 1)
+    int y = newPos.y, x = newPos.x;
+    if (x >= ROOM_WIDTH || x < 0 || y >= ROOM_HEIGHT || y < 0)
         return;
+    
+    mvaddch(0,0, room[y][x].ch);
+    refresh();
+    if (room[newPos.y][newPos.x].ch == ACS_UARROW)
+    {
+        room = readRoom(2);
+    }
     else if (room[newPos.y][newPos.x].walkable)
     {
         player->pos.y = newPos.y;
