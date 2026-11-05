@@ -76,36 +76,37 @@ void roomDoors()
     fillDoors(curr_room);
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
-        for (int x = 0; x < ROOM_WIDTH; ++x)
+        if (curr_room[y][ROOM_WIDTH-1].ch == ACS_RARROW)
         {
-            if (curr_room[y][x].ch == ACS_RARROW)
+            if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1] == 0)
             {
-                if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1] == 0)
-                {
-                    curr_room[y][x].ch = ACS_VLINE;
-                }
-            }
-            if (curr_room[y][x].ch == ACS_LARROW)
-            {
-                if (map_x - 1 < 0 || map[map_y][map_x-1] == 0)
-                {
-                    curr_room[y][x].ch = ACS_VLINE;
-                }
-            }
-            if (curr_room[y][x].ch == ACS_DARROW)
-            {
-                if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x] == 0)
-                {
-                    curr_room[y][x].ch = ACS_HLINE;
-                }
-            }
-            if (curr_room[y][x].ch == ACS_UARROW)
-            {
-                if (map_y - 1 < 0 || map[map_y-1][map_x] == 0)
-                {
-                    curr_room[y][x].ch = ACS_HLINE;
-                }
+                curr_room[y][ROOM_WIDTH-1].ch = ACS_VLINE;
             }
         }
+        if (curr_room[y][0].ch == ACS_LARROW)
+        {
+            if (map_x - 1 < 0 || map[map_y][map_x-1] == 0)
+            {
+                curr_room[y][0].ch = ACS_VLINE;
+            }
+        }
+    }
+    for (int x = 0; x < ROOM_WIDTH; ++x)
+    {
+        if (curr_room[ROOM_HEIGHT-1][x].ch == ACS_DARROW)
+        {
+            if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x] == 0)
+            {
+                curr_room[ROOM_HEIGHT-1][x].ch = ACS_HLINE;
+            }
+        }
+        if (curr_room[0][x].ch == ACS_UARROW)
+        {
+            if (map_y - 1 < 0 || map[map_y-1][map_x] == 0)
+            {
+                curr_room[0][x].ch = ACS_HLINE;
+            }
+        }
+
     }
 }
