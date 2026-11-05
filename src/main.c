@@ -5,17 +5,18 @@ Entity* player;
 Tile**  map;
 WINDOW* win;
 
-const int MAP_WIDTH  = 40;
-const int MAP_HEIGHT = 13;
+const int MAP_WIDTH  = 50;
+const int MAP_HEIGHT = 15;
 
 int main()
 {
     cursesSetup();
-    win = create_newwin(MAP_HEIGHT, MAP_WIDTH);
+    win    = create_newwin(MAP_HEIGHT, MAP_WIDTH);
     map    = createMapTiles();
     Position start_pos = setupMap();
     player = createPlayer(start_pos);
 
+    refresh();
 
     gameLoop();
 
