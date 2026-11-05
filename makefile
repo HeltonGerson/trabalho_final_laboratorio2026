@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -lncurses
+CFLAGS = -Wall -lncurses -g
 CPPFLAGS = -I./include/
 LDLIBS = -lncurses
 SOURCES = src/*.c
