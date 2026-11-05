@@ -1,12 +1,13 @@
 #include "rogue.h"
 
+// desenha a room atual;
 void drawRoom()
 {
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
         for (int x = 0; x < ROOM_WIDTH; ++x)
         {
-            mvwaddch(win, y, x, room[y][x].ch);
+            mvwaddch(win, y, x, curr_room[y][x].ch);
         }
     }
 }

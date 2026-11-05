@@ -1,14 +1,25 @@
 #include "rogue.h"
 
+void fillDoors(Tile** room)
+{
+    for (int i = 0; i < 2; i++)
+        room[(ROOM_HEIGHT)/2 - 1 + i][0].ch = ACS_LARROW;
+    for (int i = 0; i < 2; i++)
+        room[(ROOM_HEIGHT)/2 - 1 + i][ROOM_WIDTH-1].ch = ACS_RARROW;
+    for (int i = 0; i < 4; i++)
+        room[0][(ROOM_WIDTH)/2 - 2 + i].ch = ACS_UARROW;
+    for (int i = 0; i < 4; i++)
+        room[ROOM_HEIGHT-1][(ROOM_WIDTH)/2 -2 + i].ch = ACS_DARROW;
+}
 
 /* Liberacao da room */
 void freeRoom()
 {
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
-        free(room[y]);
+        free(curr_room[y]);
     }
-    free(room);
+    free(curr_room);
 }
 
 /* Le uma room do data/rooms */
@@ -16,10 +27,10 @@ Tile** readRoom(int n)
 {
     FILE* fp;
     // o dir é do makefile
-    char* file_path = (char *)malloc(20*sizeof(char));
-    sprintf(file_path, "data/rooms/%d.txt", n);
+    char* file_path = (char *)malloc(24*sizeof(char));
+    sprintf(file_path, "data/rooms/normal/%d.txt", n);
     fp = fopen(file_path, "r");
-    
+
     Tile** room = malloc(sizeof(Tile*) * ROOM_HEIGHT);
 
     for (int y = 0; y < ROOM_HEIGHT; ++y)
@@ -45,13 +56,56 @@ Tile** readRoom(int n)
     room[0][ROOM_WIDTH-1].ch = ACS_URCORNER;
     room[ROOM_HEIGHT-1][0].ch = ACS_LLCORNER;
     room[ROOM_HEIGHT-1][ROOM_WIDTH-1].ch = ACS_LRCORNER;
-    for (int i = 0; i < 2; i++)
-        room[(ROOM_HEIGHT)/2 - 1 + i][0].ch = ACS_LARROW;
-    for (int i = 0; i < 2; i++)
-        room[(ROOM_HEIGHT)/2 - 1 + i][ROOM_WIDTH-1].ch = ACS_RARROW;
-    for (int i = 0; i < 4; i++)
-        room[0][(ROOM_WIDTH)/2 - 2 + i].ch = ACS_UARROW;
-    for (int i = 0; i < 4; i++)
-        room[ROOM_HEIGHT-1][(ROOM_WIDTH)/2 -2 + i].ch = ACS_DARROW;
+    fillDoors(room);
     return room;
+}
+
+Tile*** LoadRooms()
+{
+    Tile*** rooms = malloc(sizeof(Tile**) * N_ROOMS + 1);
+    for (int i = 1; i <= N_ROOMS; ++i)
+    {
+        rooms[i] = readRoom(i);
+    }
+    return rooms;
+}
+/* Verificar se as portas da room atual */
+
+void roomDoors()
+{
+    fillDoors(curr_room);
+    for (int y = 0; y < ROOM_HEIGHT; ++y)
+    {
+        for (int x = 0; x < ROOM_WIDTH; ++x)
+        {
+            if (curr_room[y][x].ch == ACS_RARROW)
+            {
+                if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1] == 0)
+                {
+                    curr_room[y][x].ch = ACS_VLINE;
+                }
+            }
+            if (curr_room[y][x].ch == ACS_LARROW)
+            {
+                if (map_x - 1 < 0 || map[map_y][map_x-1] == 0)
+                {
+                    curr_room[y][x].ch = ACS_VLINE;
+                }
+            }
+            if (curr_room[y][x].ch == ACS_DARROW)
+            {
+                if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x] == 0)
+                {
+                    curr_room[y][x].ch = ACS_HLINE;
+                }
+            }
+            if (curr_room[y][x].ch == ACS_UARROW)
+            {
+                if (map_y - 1 < 0 || map[map_y-1][map_x] == 0)
+                {
+                    curr_room[y][x].ch = ACS_HLINE;
+                }
+            }
+        }
+    }
 }

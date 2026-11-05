@@ -28,5 +28,7 @@ void closeGame()
 {
     endwin();
     free(player);
+    freeRoom();
+    freeMap();
 }
 
