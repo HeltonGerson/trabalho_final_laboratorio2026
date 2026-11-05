@@ -37,9 +37,12 @@ void drawMap();
 void drawEntity(Entity* e);
 void drawEverything();
 
+// funcoes de tela
+WINDOW *create_newwin(int height, int width);
 /* extern: faz com que o compiliador assuma
  * que as variaveis estejam disponiveis */
 extern const int MAP_HEIGHT;
 extern const int MAP_WIDTH;
 extern Entity*   player;
 extern Tile**    map;
+extern WINDOW*    win;

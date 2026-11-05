@@ -3,16 +3,19 @@
 // declaracoes globais
 Entity* player;
 Tile**  map;
+WINDOW* win;
 
 const int MAP_WIDTH  = 40;
-const int MAP_HEIGHT = 16;
+const int MAP_HEIGHT = 13;
 
 int main()
 {
     cursesSetup();
+    win = create_newwin(MAP_HEIGHT, MAP_WIDTH);
     map    = createMapTiles();
     Position start_pos = setupMap();
     player = createPlayer(start_pos);
+
 
     gameLoop();
 
@@ -60,4 +63,13 @@ void movePlayer(Position newPos)
         player->pos.y = newPos.y;
         player->pos.x = newPos.x;
     }
+}
+
+WINDOW *create_newwin(int height, int width)
+{
+    WINDOW *local_win;
+    //local_win = newwin(height, width, 0, 0);
+    local_win = newwin(height, width, (LINES - height) / 2, (COLS - width) / 2);
+    wrefresh(local_win);
+    return local_win;
 }

@@ -6,19 +6,20 @@ void drawMap()
     {
         for (int x = 0; x < MAP_WIDTH; ++x)
         {
-            mvaddch(y, x, map[y][x].ch);
+            mvwprintw(win, y, x, "%c", map[y][x].ch);
         }
     }
 }
 
 void drawEntity(Entity* e)
 {
-    mvaddch(e->pos.y, e->pos.x, e->ch);
+    mvwprintw(win, e->pos.y, e->pos.x, "%c", e->ch);
 }
 
 void drawEverything()
 {
-    clear();
+    //clear();
     drawMap();
     drawEntity(player);
+    wrefresh(win);
 }
