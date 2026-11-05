@@ -5,8 +5,8 @@ Entity* player;
 Tile**  map;
 WINDOW* win;
 
-const int MAP_WIDTH  = 50;
-const int MAP_HEIGHT = 15;
+const int MAP_WIDTH  = 32;
+const int MAP_HEIGHT = 10;
 
 int main()
 {
