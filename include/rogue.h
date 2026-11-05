@@ -16,7 +16,7 @@ typedef struct
 
 typedef struct
 {
-    char ch;
+    int ch;
     bool walkable;
 } Tile;
 
@@ -48,8 +48,10 @@ void drawEverything();
 WINDOW *create_newwin(int height, int width, int starty, int startx);
 /* extern: faz com que o compiliador assuma
  * que as variaveis estejam disponiveis */
-extern const int MAP_HEIGHT;
-extern const int MAP_WIDTH;
+extern const int ROOM_HEIGHT;
+extern const int ROOM_WIDTH;
 extern Entity*   player;
 extern Tile**    room;
+extern Tile***   room_choices;
+extern int**     map;
 extern WINDOW*   win;

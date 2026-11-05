@@ -1,12 +1,12 @@
 #include "rogue.h"
 
-void drawMap()
+void drawRoom()
 {
-    for (int y = 0; y < MAP_HEIGHT; ++y)
+    for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
-        for (int x = 0; x < MAP_WIDTH; ++x)
+        for (int x = 0; x < ROOM_WIDTH; ++x)
         {
-            mvwprintw(win, y, x, "%c", room[y][x].ch);
+            mvwaddch(win, y, x, room[y][x].ch);
         }
     }
 }
@@ -19,7 +19,7 @@ void drawEntity(Entity* e)
 void drawEverything()
 {
     //clear();
-    drawMap();
+    drawRoom();
     drawEntity(player);
     wrefresh(win);
 }

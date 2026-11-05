@@ -3,16 +3,18 @@
 // declaracoes globais
 Entity* player;
 Tile**  room;
+Tile*** room_choices;
 WINDOW* win;
 
-const int MAP_WIDTH  = 32;
-const int MAP_HEIGHT = 10;
+const int ROOM_WIDTH  = 32;
+const int ROOM_HEIGHT = 10;
+const int N_ROOMS    = 2;
 
 int main()
 {
     cursesSetup();
-    win    = create_newwin(MAP_HEIGHT, MAP_WIDTH, (LINES - MAP_HEIGHT) / 2, (COLS - MAP_WIDTH) / 2);
-    room    = readRoom(1);
+    win  = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, (LINES - ROOM_HEIGHT) / 2, (COLS - ROOM_WIDTH) / 2);
+    room = readRoom(2);
     Position start_pos = {5,5};
     player = createPlayer(start_pos);
     refresh();
@@ -57,9 +59,9 @@ void handleInput(int input)
 
 void movePlayer(Position newPos)
 {
-    if (newPos.x >= MAP_WIDTH || newPos.x < 0 || newPos.y >= MAP_HEIGHT || newPos.y < 0)
+    if (newPos.x >= ROOM_WIDTH-1 || newPos.x < 1 || newPos.y >= ROOM_HEIGHT-1 || newPos.y < 1)
         return;
-    if (room[newPos.y][newPos.x].walkable)
+    else if (room[newPos.y][newPos.x].walkable)
     {
         player->pos.y = newPos.y;
         player->pos.x = newPos.x;
