@@ -1,0 +1,21 @@
+# Compilação e Binários
+*.o
+*.out
+*.exe
+dungeon
+dungeon_c
+bin/
+build/
+obj/
+
+# Saves e arquivos de execução
+saves/*.dat
+!saves/.gitkeep
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
