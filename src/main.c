@@ -2,7 +2,7 @@
 
 // declaracoes globais
 Entity* player;
-Tile**  map;
+Tile**  room;
 WINDOW* win;
 
 const int MAP_WIDTH  = 32;
@@ -11,13 +11,11 @@ const int MAP_HEIGHT = 10;
 int main()
 {
     cursesSetup();
-    win    = create_newwin(MAP_HEIGHT, MAP_WIDTH);
-    map    = createMapTiles();
-    Position start_pos = setupMap();
+    win    = create_newwin(MAP_HEIGHT, MAP_WIDTH, (LINES - MAP_HEIGHT) / 2, (COLS - MAP_WIDTH) / 2);
+    room    = readRoom(1);
+    Position start_pos = {5,5};
     player = createPlayer(start_pos);
-
     refresh();
-
     gameLoop();
 
     closeGame();
@@ -59,18 +57,19 @@ void handleInput(int input)
 
 void movePlayer(Position newPos)
 {
-    if (map[newPos.y][newPos.x].walkable)
+    if (newPos.x >= MAP_WIDTH || newPos.x < 0 || newPos.y >= MAP_HEIGHT || newPos.y < 0)
+        return;
+    if (room[newPos.y][newPos.x].walkable)
     {
         player->pos.y = newPos.y;
         player->pos.x = newPos.x;
     }
 }
 
-WINDOW *create_newwin(int height, int width)
+WINDOW *create_newwin(int height, int width, int starty, int startx)
 {
     WINDOW *local_win;
-    //local_win = newwin(height, width, 0, 0);
-    local_win = newwin(height, width, (LINES - height) / 2, (COLS - width) / 2);
+    local_win = newwin(height, width, starty, startx);
     wrefresh(local_win);
     return local_win;
 }

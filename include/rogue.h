@@ -20,29 +20,36 @@ typedef struct
     bool walkable;
 } Tile;
 
+typedef struct
+{
+    int id;
+    //int width;
+    //int height;
+    Tile** tiles;
+} Room;
+
 // funcoes da engine
 void cursesSetup();
 void gameLoop();
 void closeGame();
 // funcoes do mapa
-Tile**   createMapTiles();
-void     freeMap();
-Position setupMap();
+Tile** readRoom(int n);
+void     freeRoom();
 // funcoes do player
 Entity* createPlayer(Position start_pos);
 void    handleInput (int ch);
 void    movePlayer  (Position newPos);
 // funcoes do draw
-void drawMap();
+void drawRoom();
 void drawEntity(Entity* e);
 void drawEverything();
 
 // funcoes de tela
-WINDOW *create_newwin(int height, int width);
+WINDOW *create_newwin(int height, int width, int starty, int startx);
 /* extern: faz com que o compiliador assuma
  * que as variaveis estejam disponiveis */
 extern const int MAP_HEIGHT;
 extern const int MAP_WIDTH;
 extern Entity*   player;
-extern Tile**    map;
-extern WINDOW*    win;
+extern Tile**    room;
+extern WINDOW*   win;

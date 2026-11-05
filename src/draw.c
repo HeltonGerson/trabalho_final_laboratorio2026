@@ -6,7 +6,7 @@ void drawMap()
     {
         for (int x = 0; x < MAP_WIDTH; ++x)
         {
-            mvwprintw(win, y, x, "%c", map[y][x].ch);
+            mvwprintw(win, y, x, "%c", room[y][x].ch);
         }
     }
 }
