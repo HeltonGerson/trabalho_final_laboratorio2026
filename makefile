@@ -9,8 +9,13 @@ all: compile run clean
 compile: $(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES) $(CPPFLAGS) $(LDLIBS) -o game
 
+test: tests/test_floor.c src/map.c src/room.c
+	$(CC) $(CFLAGS) tests/test_floor.c src/map.c src/room.c $(CPPFLAGS) $(LDLIBS) -o test_runner
+	./test_runner
+	rm -f test_runner
+
 run: ./game
 	./game
 
 clean:
-	rm -f game
+	rm -f game test_runner

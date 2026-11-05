@@ -12,14 +12,16 @@ void fillDoors(Tile** room)
         room[ROOM_HEIGHT-1][(ROOM_WIDTH)/2 -2 + i].ch = ACS_DARROW;
 }
 
-/* Liberacao da room */
-void freeRoom()
+/* Liberacao dos tiles de uma room */
+void freeRoomTiles(Tile** tiles)
 {
+    if (!tiles)
+        return;
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
-        free(curr_room[y]);
+        free(tiles[y]);
     }
-    free(curr_room);
+    free(tiles);
 }
 
 /* Le uma room do data/rooms */
@@ -71,32 +73,22 @@ Tile** readRoom(int n)
     return room;
 }
 
-Tile*** LoadRooms()
-{
-    Tile*** rooms = malloc(sizeof(Tile**) * (N_ROOMS + 1));
-    for (int i = 1; i <= N_ROOMS; ++i)
-    {
-        rooms[i] = readRoom(i);
-    }
-    return rooms;
-}
 /* Verificar se as portas da room atual */
-
-void roomDoors()
+void roomDoors(void)
 {
     fillDoors(curr_room);
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
         if (curr_room[y][ROOM_WIDTH-1].ch == ACS_RARROW)
         {
-            if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1] == 0)
+            if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1].id == 0)
             {
                 curr_room[y][ROOM_WIDTH-1].ch = ACS_VLINE;
             }
         }
         if (curr_room[y][0].ch == ACS_LARROW)
         {
-            if (map_x - 1 < 0 || map[map_y][map_x-1] == 0)
+            if (map_x - 1 < 0 || map[map_y][map_x-1].id == 0)
             {
                 curr_room[y][0].ch = ACS_VLINE;
             }
@@ -106,18 +98,17 @@ void roomDoors()
     {
         if (curr_room[ROOM_HEIGHT-1][x].ch == ACS_DARROW)
         {
-            if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x] == 0)
+            if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x].id == 0)
             {
                 curr_room[ROOM_HEIGHT-1][x].ch = ACS_HLINE;
             }
         }
         if (curr_room[0][x].ch == ACS_UARROW)
         {
-            if (map_y - 1 < 0 || map[map_y-1][map_x] == 0)
+            if (map_y - 1 < 0 || map[map_y-1][map_x].id == 0)
             {
                 curr_room[0][x].ch = ACS_HLINE;
             }
         }
-
     }
 }

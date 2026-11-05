@@ -24,11 +24,17 @@ void gameLoop()
 }
 
 /* Termina o jogo, libera memoria */
-void closeGame()
+void closeGame(void)
 {
+    if (win_minimapa)
+        delwin(win_minimapa);
+    if (win)
+        delwin(win);
     endwin();
+
     free(player);
-    freeRoom();
+    player = NULL;
+
     freeMap();
 }
 

@@ -1,3 +1,6 @@
+#ifndef ROGUE_H
+#define ROGUE_H
+
 #include <ncurses.h>
 #include <stdlib.h>
 
@@ -23,45 +26,51 @@ typedef struct
 typedef struct
 {
     int id;
-    //int width;
-    //int height;
     Tile** tiles;
-} Room;
+    bool visited;
+    bool discovered;
+} MapCell;
 
 // funcoes da engine
-void cursesSetup();
-void gameLoop();
-void closeGame();
+void cursesSetup(void);
+void gameLoop(void);
+void closeGame(void);
+
 // funcoes das rooms
 Tile** readRoom(int n);
-void   freeRoom();
-void   roomDoors();
-Tile*** LoadRooms();
+void   freeRoomTiles(Tile** tiles);
+void   roomDoors(void);
+
 // funcoes do player
 Entity* createPlayer(Position start_pos);
-void    handleInput (int ch);
-void    movePlayer  (Position newPos);
+void    handleInput(int ch);
+void    movePlayer(Position newPos);
+
 // funcoes do draw
-void drawRoom();
+void drawRoom(void);
+void drawMinimap(void);
 void drawEntity(Entity* e);
-void drawEverything();
+void drawEverything(void);
+
 // funcoes do map
-int** createMap();
-void  fillMap();
-void  freeMap();
+MapCell** createMap(void);
+void      setupFloor(void);
+void      updateFogOfWar(void);
+void      freeMap(void);
 
 // funcoes de tela
 WINDOW *create_newwin(int height, int width, int starty, int startx);
-/* extern: faz com que o compiliador assuma
- * que as variaveis estejam disponiveis */
+
+/* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
 extern const int ROOM_WIDTH;
 extern const int MAP_SIZE;
-extern const int N_ROOMS;
 extern Entity*   player;
 extern Tile**    curr_room;
-extern Tile***   room_choices;
-extern int**     map;
+extern MapCell** map;
 extern int       map_y;
 extern int       map_x;
 extern WINDOW*   win;
+extern WINDOW*   win_minimapa;
+
+#endif

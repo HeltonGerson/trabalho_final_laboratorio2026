@@ -1,34 +1,41 @@
 #include "rogue.h"
 
 // declaracoes globais
-Entity* player;
-// room atual
-Tile**  curr_room;
-Tile*** room_choices;
-WINDOW* win;
-int**   map;
-// indicies atuais do map
-int     map_y = 1;
-int     map_x = 1;
+Entity*   player;
+Tile**    curr_room;
+WINDOW*   win;
+WINDOW*   win_minimapa;
+MapCell** map;
+
+// indices atuais no mapa
+int map_y = 1;
+int map_x = 1;
 
 const int ROOM_WIDTH  = 32;
 const int ROOM_HEIGHT = 10;
 const int MAP_SIZE    = 3;
-const int N_ROOMS     = 2;
 
-int main()
+int main(void)
 {
     cursesSetup();
 
-    win  = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, (LINES - ROOM_HEIGHT) / 2, (COLS - ROOM_WIDTH) / 2);
-    map  = createMap();
-    fillMap();
+    int minimap_w = 17;
+    int minimap_h = 7;
+    int spacing = 3;
+    int total_w = minimap_w + spacing + ROOM_WIDTH;
+    int start_x = (COLS - total_w) / 2;
+    int start_y = (LINES - ROOM_HEIGHT) / 2;
 
-    Position start_pos = {5,5};
+    win_minimapa = create_newwin(minimap_h, minimap_w, start_y + (ROOM_HEIGHT - minimap_h) / 2, start_x);
+    win = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, start_y, start_x + minimap_w + spacing);
+
+    map = createMap();
+    setupFloor();
+
+    curr_room = map[map_y][map_x].tiles;
+
+    Position start_pos = {5, 5};
     player = createPlayer(start_pos);
-
-    room_choices = LoadRooms();
-    curr_room = room_choices[map[map_y][map_x]];
 
     roomDoors();
     refresh();
@@ -38,10 +45,11 @@ int main()
     return 0;
 }
 
-
 Entity* createPlayer(Position start_pos)
 {
     Entity* newPlayer = malloc(sizeof(Entity));
+    if (!newPlayer)
+        return NULL;
 
     newPlayer->pos.y = start_pos.y;
     newPlayer->pos.x = start_pos.x;
@@ -75,6 +83,8 @@ void handleInput(int input)
         case 'l':
             newPos.x++;
             break;
+        default:
+            return;
     }
     movePlayer(newPos);
 }
@@ -85,35 +95,45 @@ void movePlayer(Position newPos)
     if (x >= ROOM_WIDTH || x < 0 || y >= ROOM_HEIGHT || y < 0)
         return;
 
-    /* Entrada e saida da salas */
+    bool room_changed = false;
+
+    /* Entrada e saida das salas */
     if (curr_room[newPos.y][newPos.x].ch == ACS_UARROW)
     {
-        player->pos.y = ROOM_HEIGHT-2;
+        player->pos.y = ROOM_HEIGHT - 2;
         map_y--;
+        room_changed = true;
     }
-    if (curr_room[newPos.y][newPos.x].ch == ACS_DARROW)
+    else if (curr_room[newPos.y][newPos.x].ch == ACS_DARROW)
     {
         player->pos.y = 1;
         map_y++;
+        room_changed = true;
     }
-    if (curr_room[newPos.y][newPos.x].ch == ACS_LARROW)
+    else if (curr_room[newPos.y][newPos.x].ch == ACS_LARROW)
     {
-        player->pos.x = ROOM_WIDTH-2;
+        player->pos.x = ROOM_WIDTH - 2;
         map_x--;
+        room_changed = true;
     }
-    if (curr_room[newPos.y][newPos.x].ch == ACS_RARROW)
+    else if (curr_room[newPos.y][newPos.x].ch == ACS_RARROW)
     {
         player->pos.x = 1;
         map_x++;
+        room_changed = true;
     }
-    if (curr_room[newPos.y][newPos.x].walkable)
+    else if (curr_room[newPos.y][newPos.x].walkable)
     {
         player->pos.y = newPos.y;
         player->pos.x = newPos.x;
     }
-    curr_room = room_choices[map[map_y][map_x]];
-    refresh();
-    roomDoors();
+
+    if (room_changed)
+    {
+        curr_room = map[map_y][map_x].tiles;
+        updateFogOfWar();
+        roomDoors();
+    }
 }
 
 WINDOW *create_newwin(int height, int width, int starty, int startx)
