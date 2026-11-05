@@ -11,12 +11,12 @@ typedef struct
 typedef struct
 {
     Position pos;
-    int ch;
+    chtype ch;
 } Entity;
 
 typedef struct
 {
-    int ch;
+    chtype ch;
     bool walkable;
 } Tile;
 

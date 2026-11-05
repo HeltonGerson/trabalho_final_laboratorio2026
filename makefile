@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -lncurses -g
+CFLAGS = -Wall -Wextra -pedantic -std=c99 -g
 CPPFLAGS = -I./include/
 LDLIBS = -lncurses
 SOURCES = src/*.c
@@ -7,7 +7,7 @@ SOURCES = src/*.c
 all: compile run clean
 
 compile: $(SOURCES)
-	$(CC) $(SOURCES) $(CPPFLAGS) $(LDLIBS) -o game
+	$(CC) $(CFLAGS) $(SOURCES) $(CPPFLAGS) $(LDLIBS) -o game
 
 run: ./game
 	./game
