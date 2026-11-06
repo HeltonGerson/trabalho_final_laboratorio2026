@@ -12,14 +12,16 @@ void fillDoors(Tile** room)
         room[ROOM_HEIGHT-1][(ROOM_WIDTH)/2 -2 + i].ch = ACS_DARROW;
 }
 
-/* Liberacao da room */
-void freeRoom()
+/* Liberacao dos tiles de uma room */
+void freeRoomTiles(Tile** tiles)
 {
+    if (!tiles)
+        return;
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
-        free(curr_room[y]);
+        free(tiles[y]);
     }
-    free(curr_room);
+    free(tiles);
 }
 
 /* Le uma room do data/rooms */
@@ -27,9 +29,16 @@ Tile** readRoom(int n)
 {
     FILE* fp;
     // o dir é do makefile
-    char* file_path = (char *)malloc(24*sizeof(char));
+    char* file_path = (char *)malloc(32 * sizeof(char));
+    if (!file_path)
+        return NULL;
+
     sprintf(file_path, "data/rooms/normal/%d.txt", n);
     fp = fopen(file_path, "r");
+    free(file_path);
+
+    if (!fp)
+        return NULL;
 
     Tile** room = malloc(sizeof(Tile*) * ROOM_HEIGHT);
 
@@ -39,9 +48,11 @@ Tile** readRoom(int n)
         for (int x = 0; x < ROOM_WIDTH; ++x)
         {
             room[y][x].walkable = false;
-            room[y][x].ch = '\n';
-            while (room[y][x].ch == '\n')
-                room[y][x].ch = fgetc(fp);
+            int input_ch = '\n';
+            while (input_ch == '\n')
+                input_ch = fgetc(fp);
+
+            room[y][x].ch = (chtype)input_ch;
             // o entorno
             if (x == 0 || x == ROOM_WIDTH - 1)
                 room[y][x].ch = ACS_VLINE;
@@ -51,6 +62,8 @@ Tile** readRoom(int n)
                 room[y][x].walkable = true;
         }
     }
+    fclose(fp);
+
     // Definindo os caracteres especiais do canto
     room[0][0].ch = ACS_ULCORNER;
     room[0][ROOM_WIDTH-1].ch = ACS_URCORNER;
@@ -60,32 +73,22 @@ Tile** readRoom(int n)
     return room;
 }
 
-Tile*** LoadRooms()
-{
-    Tile*** rooms = malloc(sizeof(Tile**) * N_ROOMS + 1);
-    for (int i = 1; i <= N_ROOMS; ++i)
-    {
-        rooms[i] = readRoom(i);
-    }
-    return rooms;
-}
 /* Verificar se as portas da room atual */
-
-void roomDoors()
+void roomDoors(void)
 {
     fillDoors(curr_room);
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
         if (curr_room[y][ROOM_WIDTH-1].ch == ACS_RARROW)
         {
-            if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1] == 0)
+            if (map_x + 1 >= MAP_SIZE || map[map_y][map_x+1].id == 0)
             {
                 curr_room[y][ROOM_WIDTH-1].ch = ACS_VLINE;
             }
         }
         if (curr_room[y][0].ch == ACS_LARROW)
         {
-            if (map_x - 1 < 0 || map[map_y][map_x-1] == 0)
+            if (map_x - 1 < 0 || map[map_y][map_x-1].id == 0)
             {
                 curr_room[y][0].ch = ACS_VLINE;
             }
@@ -95,18 +98,17 @@ void roomDoors()
     {
         if (curr_room[ROOM_HEIGHT-1][x].ch == ACS_DARROW)
         {
-            if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x] == 0)
+            if (map_y + 1 >= MAP_SIZE || map[map_y+1][map_x].id == 0)
             {
                 curr_room[ROOM_HEIGHT-1][x].ch = ACS_HLINE;
             }
         }
         if (curr_room[0][x].ch == ACS_UARROW)
         {
-            if (map_y - 1 < 0 || map[map_y-1][map_x] == 0)
+            if (map_y - 1 < 0 || map[map_y-1][map_x].id == 0)
             {
                 curr_room[0][x].ch = ACS_HLINE;
             }
         }
-
     }
 }
