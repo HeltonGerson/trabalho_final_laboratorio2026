@@ -5,10 +5,9 @@
 ### Diferença entre arquivo .c e .h:
 
 - .h:
-  Até eu não sei direito para que servem.
-  
-  Pelo pouco que entendo, o arquivo **.h** promete a existência de uma função. Vai no cabeçalho dos arquivos. Como se fosse uma biblioteca.
-  por exemplo, em determinado arquivo teste.h, existe:
+  Definem a existência de uma função, seu "protótipo". Não têm memória alocada e nem definem o comportamento da função, apenas declaram sua existência. O arquivo **.h** promete a existência de uma função. Vai no cabeçalho dos arquivos. Seu uso pode ser visto nas bibliotecas, ferramentas essenciais para codar.
+
+  Por exemplo, em determinado arquivo teste.h, existe:
   
   ´´´
   int somar(int a, int b);
@@ -17,7 +16,7 @@
   O que isso faz é literalmente dizer que "existe uma função chamada 'somar' que recebe dois inteiros a e b e devolve um inteiro".
 
 - .c:
-  Este aqui realmente implementam as funcionalidades que foram "prometidas" em um .h. Aqui está toda lógica, loops, operações... etc.
+  Implementa as funcionalidades que foram "prometidas" em um .h. Aqui está toda lógica, loops, operações... etc.
 
 ´´´
 #include "calculadora.h"
@@ -27,7 +26,7 @@ int somar(int a, int b) {
 }
 ´´´
 
-No final das contas, tendo o arquivo .h, você pode chamar em qualquer canto eu acho.
+O arquivo .h permite maior organização e modularização, pois ao incluir um .h, torna-se sabido o que a função precisa e o seu retorno sem precisar ter seu funcionamento definido. Depois disso o compilador simplesmente faz alguma coisa aí escrever direito depois.  
 
 ### 1. por onde começar: rogue.h
   Se for pra começar por algum canto, tem que começar entendendo as variáveis fundamentais (e principais).
