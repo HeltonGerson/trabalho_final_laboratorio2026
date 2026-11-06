@@ -14,21 +14,21 @@ typedef struct
 typedef struct
 {
     Position pos;
-    chtype ch;
+    chtype   ch;
 } Entity;
 
 typedef struct
 {
     chtype ch;
-    bool walkable;
+    bool   walkable;
 } Tile;
 
 typedef struct
 {
-    int id;
+    int    id;
     Tile** tiles;
-    bool visited;
-    bool discovered;
+    bool   visited;
+    bool   discovered;
 } MapCell;
 
 // funcoes da engine
@@ -59,7 +59,7 @@ void      updateFogOfWar(void);
 void      freeMap(void);
 
 // funcoes de tela
-WINDOW *create_newwin(int height, int width, int starty, int startx);
+WINDOW* create_newwin(int height, int width, int starty, int startx);
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
