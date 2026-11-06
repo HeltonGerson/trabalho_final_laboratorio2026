@@ -45,8 +45,7 @@ No final das contas, tendo o arquivo .h, você pode chamar em qualquer canto eu 
     1. Uma position no mapa
     2. Um caracter de representação
      
-    Cada ponto em que uma entidade pisa (Tile), possui um caracter de representação e um valor lógico
-    para chegar se é possível andar por ali ou não.
+    Cada ponto em que uma entidade pisa (Tile), possui um caracter de representação e um valor lógico para checar se é possível andar por ali ou não.
     
     Uma MapCell representa uma sala.
     Toda sala é uma matriz de caracteres demilitado porr uma constate de largura e altura.
@@ -71,4 +70,4 @@ No final das contas, tendo o arquivo .h, você pode chamar em qualquer canto eu 
         - curr_room define como sendo a sala atual, à sala map[map_y][map_x].tiles do nosso mapa previamente criado.
         - Cria um player, definindo sua posição inicial.
     **Antes de fechar a main, looping, refresh e quit**
-        - 
+        -
