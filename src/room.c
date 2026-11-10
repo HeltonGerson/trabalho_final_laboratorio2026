@@ -14,10 +14,15 @@ void fillDoors(Tile** room)
 
 int setRoom(int x, int y, int choosed_room)
 {
-    if (choosed_room >= 1 && choosed_room <= 4)
+    if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT &&
+        choosed_room >= 1 && choosed_room <= 4)
     {
-        map[x][y].id    = 1;
-        map[x][y].tiles = readRoom(choosed_room);
+        Tile** tiles = readRoom(choosed_room);
+        if (!tiles)
+            return 1;
+
+        map[y][x].id    = choosed_room;
+        map[y][x].tiles = tiles;
         return 0;
     }
     return 1;

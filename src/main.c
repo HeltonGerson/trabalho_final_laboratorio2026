@@ -21,7 +21,7 @@ int main(void)
     cursesSetup();
 
     srand(time(NULL));
-    int number_of_rooms = rand() % 45 + 4;
+    int number_of_rooms = rand() % 8 + 8;
     int minimap_w       = 17;
     int minimap_h       = 7;
     int spacing         = 3;

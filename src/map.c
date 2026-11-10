@@ -35,7 +35,7 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
             int nx = st->top->coord.x + dx[i];
             int ny = st->top->coord.y + dy[i];
 
-            if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT && map[nx][ny].id == 0)
+            if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT && map[ny][nx].id == 0)
             {
                 free_dirs[count_dirs] = i;
                 count_dirs++;

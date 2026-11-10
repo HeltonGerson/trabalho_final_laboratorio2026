@@ -8,51 +8,89 @@ Tile**    curr_room    = NULL;
 WINDOW*   win          = NULL;
 WINDOW*   win_minimapa = NULL;
 MapCell** map          = NULL;
-int       map_y        = 1;
-int       map_x        = 1;
+int       map_y        = 3;
+int       map_x        = 3;
 
 const int ROOM_WIDTH  = 32;
 const int ROOM_HEIGHT = 10;
-const int MAP_SIZE    = 3;
+const int MAP_SIZE    = 7;
+const int MAP_WIDTH   = 7;
+const int MAP_HEIGHT  = 7;
 
 int main(void)
 {
-    printf("Testando inicializacao do mapa 3x3 e nevoa de guerra...\n");
+    printf("Testando inicializacao do mapa 7x7 procedural e nevoa de guerra...\n");
 
     map = createMap();
     assert(map != NULL);
 
-    setupFloor();
+    int target_rooms = 10;
+    setupFloor(map_x, map_y, target_rooms);
 
-    // Centro deve ser sala 1, visitada e descoberta
-    assert(map[1][1].id == 1);
-    assert(map[1][1].tiles != NULL);
-    assert(map[1][1].visited == true);
-    assert(map[1][1].discovered == true);
+    // Centro (3, 3) deve ser sala 1, visitada e descoberta
+    assert(map[3][3].id == 1);
+    assert(map[3][3].tiles != NULL);
+    assert(map[3][3].visited == true);
+    assert(map[3][3].discovered == true);
 
-    // Cardeais devem ser sala 2, nao visitadas, mas descobertas
-    assert(map[0][1].id == 2 && map[0][1].discovered == true && map[0][1].visited == false);
-    assert(map[2][1].id == 2 && map[2][1].discovered == true && map[2][1].visited == false);
-    assert(map[1][0].id == 2 && map[1][0].discovered == true && map[1][0].visited == false);
-    assert(map[1][2].id == 2 && map[1][2].discovered == true && map[1][2].visited == false);
+    int count_rooms = 0;
+    for (int y = 0; y < MAP_SIZE; ++y)
+    {
+        for (int x = 0; x < MAP_SIZE; ++x)
+        {
+            if (map[y][x].id != 0)
+            {
+                count_rooms++;
+                assert(map[y][x].id >= 1 && map[y][x].id <= 4);
+                assert(map[y][x].tiles != NULL);
+            }
+            else
+            {
+                assert(map[y][x].tiles == NULL);
+                assert(map[y][x].visited == false);
+            }
+        }
+    }
 
-    // Cantos devem ser vazios e nao descobertos
-    assert(map[0][0].id == 0 && map[0][0].discovered == false && map[0][0].tiles == NULL);
-    assert(map[0][2].id == 0 && map[0][2].discovered == false && map[0][2].tiles == NULL);
-    assert(map[2][0].id == 0 && map[2][0].discovered == false && map[2][0].tiles == NULL);
-    assert(map[2][2].id == 0 && map[2][2].discovered == false && map[2][2].tiles == NULL);
+    // A contagem total de salas deve bater com a solicitada
+    assert(count_rooms == target_rooms);
 
-    // Simula transicao para o Norte (map_y = 0, map_x = 1)
-    map_y = 0;
-    map_x = 1;
+    // Vizinhos cardeais de (3, 3) que foram gerados devem estar descobertos e nao visitados
+    int dy[4] = {-1, 1, 0, 0};
+    int dx[4] = {0, 0, -1, 1};
+    int discovered_neighbor_y = -1;
+    int discovered_neighbor_x = -1;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        int ny = 3 + dy[i];
+        int nx = 3 + dx[i];
+        if (map[ny][nx].id != 0)
+        {
+            assert(map[ny][nx].discovered == true);
+            assert(map[ny][nx].visited == false);
+            if (discovered_neighbor_y == -1)
+            {
+                discovered_neighbor_y = ny;
+                discovered_neighbor_x = nx;
+            }
+        }
+    }
+
+    // Deve existir pelo menos um vizinho conectado com mais de 1 sala gerada
+    assert(discovered_neighbor_y != -1 && discovered_neighbor_x != -1);
+
+    // Simula transicao para o vizinho descoberto
+    map_y = discovered_neighbor_y;
+    map_x = discovered_neighbor_x;
     updateFogOfWar();
-    assert(map[0][1].visited == true);
-    assert(map[0][1].discovered == true);
+    assert(map[map_y][map_x].visited == true);
+    assert(map[map_y][map_x].discovered == true);
 
     // Liberacao de memoria
     freeMap();
     assert(map == NULL);
 
-    printf("Todos os testes do mapa passaram com sucesso!\n");
+    printf("Todos os testes do mapa procedural passaram com sucesso!\n");
     return 0;
 }
