@@ -8,29 +8,32 @@ WINDOW*   win_minimapa;
 MapCell** map;
 
 // indices atuais no mapa
-int map_y = 1;
-int map_x = 1;
-
+int map_y = 3;
+int map_x = 3;
 const int ROOM_WIDTH  = 32;
 const int ROOM_HEIGHT = 10;
-const int MAP_SIZE    = 3;
+const int MAP_SIZE    = 7;
+const int MAP_WIDTH   = 7;
+const int MAP_HEIGHT  = 7;
 
 int main(void)
 {
     cursesSetup();
 
+    srand(time(NULL));
+    int number_of_rooms = 3;
     int minimap_w = 17;
     int minimap_h = 7;
     int spacing = 3;
     int total_w = minimap_w + spacing + ROOM_WIDTH;
     int start_x = (COLS - total_w) / 2;
     int start_y = (LINES - ROOM_HEIGHT) / 2;
-
+    
     win_minimapa = create_newwin(minimap_h, minimap_w, start_y + (ROOM_HEIGHT - minimap_h) / 2, start_x);
     win = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, start_y, start_x + minimap_w + spacing);
 
     map = createMap();
-    setupFloor();
+    setupFloor(map_x, map_y, number_of_rooms);
 
     curr_room = map[map_y][map_x].tiles;
 

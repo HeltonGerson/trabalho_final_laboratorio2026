@@ -1,4 +1,5 @@
 #include "rogue.h"
+#include <stdlib.h>
 
 MapCell **createMap(void) {
   MapCell **m = malloc(sizeof(MapCell *) * MAP_SIZE);
@@ -8,26 +9,49 @@ MapCell **createMap(void) {
   return m;
 }
 
-void setupFloor(void) {
-  // Layout em cruz: 5 salas no 1º andar
-  // Centro: sala inicial
-  map[1][1].id = 1;
-  map[1][1].tiles = readRoom(1);
+void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms) { 
+    coordStack *st = initializeCoordStack();
+    if(setRoom(start_pos_x, start_pos_y, 1)){
+        printw("Erro ao preencher a sala inicial");
+        exit(1);
+    }
+    pushCoord(start_pos_x, start_pos_y, st);
+    number_of_rooms--;
+    
+    int dx[4] = {-1, 0, 1, 0};
+    int dy[4] = {0, 1, 0, -1};
 
-  // salas conectadas
-  map[0][1].id = 2;
-  map[0][1].tiles = readRoom(2);
+    while(number_of_rooms > 0 && st->top != NULL){
+       int free_dirs[4];
+       int count_dirs = 0;
 
-  map[2][1].id = 2;
-  map[2][1].tiles = readRoom(2);
+       for(int i = 0; i < 4; i++){
+           int nx = st->top->coord.x + dx[i];
+           int ny = st->top->coord.y + dy[i];
 
-  map[1][0].id = 2;
-  map[1][0].tiles = readRoom(2);
+           if(nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT && map[nx][ny].tiles == 0){
+               free_dirs[count_dirs] = i;
+               count_dirs++;
+           }
+       }
 
-  map[1][2].id = 2;
-  map[1][2].tiles = readRoom(2);
-
-  updateFogOfWar();
+       if(count_dirs == 0){
+           popCoord(st);
+           continue;
+       }
+       int choose_dir = free_dirs[rand() % count_dirs];
+       int room_type = rand() % 4 + 1;
+       int nx = st->top->coord.x + dx[choose_dir];
+       int ny = st->top->coord.y + dy[choose_dir];
+       if(setRoom(nx, ny, room_type)){
+           printw("Erro ao preencher uma sala");
+           exit(1);
+       }
+       pushCoord(nx, ny, st);
+       number_of_rooms--;
+    }
+    updateFogOfWar();
+    eraseStack(st);
 }
 
 void updateFogOfWar(void) {

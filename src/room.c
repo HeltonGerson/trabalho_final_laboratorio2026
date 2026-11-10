@@ -12,6 +12,15 @@ void fillDoors(Tile** room)
         room[ROOM_HEIGHT-1][(ROOM_WIDTH)/2 -2 + i].ch = ACS_DARROW;
 }
 
+int setRoom(int x, int y, int choosed_room){
+    if (choosed_room >= 1 && choosed_room <= 4) {
+        map[x][y].id = 1;
+        map[x][y].tiles = readRoom(choosed_room);
+        return 0;
+    }   
+    return 1;
+}
+
 /* Liberacao dos tiles de uma room */
 void freeRoomTiles(Tile** tiles)
 {
