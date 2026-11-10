@@ -22,8 +22,8 @@ int main(void)
 
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
-    int minimap_w       = 17;
-    int minimap_h       = 7;
+    int minimap_w       = 31;
+    int minimap_h       = 15;
     int spacing         = 3;
     int total_w         = minimap_w + spacing + ROOM_WIDTH;
     int start_x         = (COLS - total_w) / 2;
