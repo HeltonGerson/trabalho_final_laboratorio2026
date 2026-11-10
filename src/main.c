@@ -24,14 +24,25 @@ int main(void)
     int number_of_rooms = rand() % 8 + 8;
     int minimap_w       = 31;
     int minimap_h       = 15;
+    int room_win_w      = ROOM_WIDTH * 2;
+    int room_win_h      = ROOM_HEIGHT * 2;
     int spacing         = 3;
-    int total_w         = minimap_w + spacing + ROOM_WIDTH;
-    int start_x         = (COLS - total_w) / 2;
-    int start_y         = (LINES - ROOM_HEIGHT) / 2;
+    int room_x = (COLS - room_win_w) / 2;
+    int room_y = (LINES - room_win_h) / 2;
+    if (room_x < 0)
+        room_x = 0;
+    if (room_y < 0)
+        room_y = 0;
 
-    win_minimapa =
-        create_newwin(minimap_h, minimap_w, start_y + (ROOM_HEIGHT - minimap_h) / 2, start_x);
-    win = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, start_y, start_x + minimap_w + spacing);
+    int minimap_x = room_x - minimap_w - spacing;
+    if (minimap_x < 0)
+        minimap_x = 0;
+    int minimap_y = room_y + (room_win_h - minimap_h) / 2;
+    if (minimap_y < 0)
+        minimap_y = 0;
+
+    win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
+    win          = create_newwin(room_win_h, room_win_w, room_y, room_x);
 
     map = createMap();
     setupFloor(map_x, map_y, number_of_rooms);

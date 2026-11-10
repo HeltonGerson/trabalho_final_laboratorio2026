@@ -1,13 +1,51 @@
 #include "rogue.h"
 
-// desenha a room atual
+// desenha a room atual com zoom 2x
 void drawRoom(void)
 {
+    werase(win);
+    box(win, 0, 0);
+
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
         for (int x = 0; x < ROOM_WIDTH; ++x)
         {
-            mvwaddch(win, y, x, curr_room[y][x].ch);
+            chtype ch = curr_room[y][x].ch;
+
+            if (y == 0 && ch == ACS_UARROW)
+            {
+                mvwaddch(win, 0, x * 2, ch);
+                mvwaddch(win, 0, x * 2 + 1, ch);
+            }
+            else if (y == ROOM_HEIGHT - 1 && ch == ACS_DARROW)
+            {
+                mvwaddch(win, ROOM_HEIGHT * 2 - 1, x * 2, ch);
+                mvwaddch(win, ROOM_HEIGHT * 2 - 1, x * 2 + 1, ch);
+            }
+            else if (x == 0 && ch == ACS_LARROW)
+            {
+                mvwaddch(win, y * 2, 0, ch);
+                mvwaddch(win, y * 2 + 1, 0, ch);
+            }
+            else if (x == ROOM_WIDTH - 1 && ch == ACS_RARROW)
+            {
+                mvwaddch(win, y * 2, ROOM_WIDTH * 2 - 1, ch);
+                mvwaddch(win, y * 2 + 1, ROOM_WIDTH * 2 - 1, ch);
+            }
+            else if (y > 0 && y < ROOM_HEIGHT - 1 && x > 0 && x < ROOM_WIDTH - 1)
+            {
+                if (ch == '.')
+                {
+                    mvwaddch(win, y * 2, x * 2, '.');
+                }
+                else
+                {
+                    mvwaddch(win, y * 2, x * 2, ch);
+                    mvwaddch(win, y * 2, x * 2 + 1, ch);
+                    mvwaddch(win, y * 2 + 1, x * 2, ch);
+                    mvwaddch(win, y * 2 + 1, x * 2 + 1, ch);
+                }
+            }
         }
     }
 }
@@ -61,7 +99,7 @@ void drawMinimap(void)
     wrefresh(win_minimapa);
 }
 
-void drawEntity(Entity* e) { mvwprintw(win, e->pos.y, e->pos.x, "%c", e->ch); }
+void drawEntity(Entity* e) { mvwaddch(win, e->pos.y * 2, e->pos.x * 2, e->ch); }
 
 void drawEverything(void)
 {
