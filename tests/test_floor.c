@@ -1,15 +1,15 @@
+#include "rogue.h"
 #include <assert.h>
 #include <stdio.h>
-#include "rogue.h"
 
 // Variaveis globais necessarias para linkagem
-Entity*   player = NULL;
-Tile**    curr_room = NULL;
-WINDOW*   win = NULL;
+Entity*   player       = NULL;
+Tile**    curr_room    = NULL;
+WINDOW*   win          = NULL;
 WINDOW*   win_minimapa = NULL;
-MapCell** map = NULL;
-int       map_y = 1;
-int       map_x = 1;
+MapCell** map          = NULL;
+int       map_y        = 1;
+int       map_x        = 1;
 
 const int ROOM_WIDTH  = 32;
 const int ROOM_HEIGHT = 10;

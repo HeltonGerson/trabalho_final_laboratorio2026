@@ -46,10 +46,7 @@ void drawMinimap(void)
     wrefresh(win_minimapa);
 }
 
-void drawEntity(Entity* e)
-{
-    mvwprintw(win, e->pos.y, e->pos.x, "%c", e->ch);
-}
+void drawEntity(Entity* e) { mvwprintw(win, e->pos.y, e->pos.x, "%c", e->ch); }
 
 void drawEverything(void)
 {

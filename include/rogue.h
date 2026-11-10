@@ -14,40 +14,40 @@ typedef struct
 typedef struct
 {
     Position pos;
-    chtype ch;
+    chtype   ch;
 } Entity;
 
 typedef struct
 {
     chtype ch;
-    bool walkable;
+    bool   walkable;
 } Tile;
 
 typedef struct
 {
-    int id;
+    int    id;
     Tile** tiles;
-    bool visited;
-    bool discovered;
+    bool   visited;
+    bool   discovered;
 } MapCell;
 
 typedef struct s
 {
-    Position coord;
-    struct s *below;
+    Position  coord;
+    struct s* below;
 } coordNode;
 
-typedef struct 
+typedef struct
 {
-    coordNode *top;
-    int size;
+    coordNode* top;
+    int        size;
 } coordStack;
 
 // funcoes das structs
 coordStack* initializeCoordStack();
-void        pushCoord(int x, int y, coordStack *stack);
-void        popCoord(coordStack *stack);
-void        eraseStack(coordStack *st);
+void        pushCoord(int x, int y, coordStack* stack);
+void        popCoord(coordStack* stack);
+void        eraseStack(coordStack* st);
 
 // funcoes da engine
 void cursesSetup(void);
@@ -78,7 +78,7 @@ void      updateFogOfWar(void);
 void      freeMap(void);
 
 // funcoes de tela
-WINDOW *create_newwin(int height, int width, int starty, int startx);
+WINDOW* create_newwin(int height, int width, int starty, int startx);
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
@@ -93,6 +93,6 @@ extern int       map_y;
 extern int       map_x;
 extern WINDOW*   win;
 extern WINDOW*   win_minimapa;
-extern Position  *top;
+extern Position* top;
 
 #endif
