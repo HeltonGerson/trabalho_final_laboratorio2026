@@ -8,34 +8,49 @@ WINDOW*   win_minimapa;
 MapCell** map;
 
 // indices atuais no mapa
-int map_y = 1;
-int map_x = 1;
-
+int       map_y       = 3;
+int       map_x       = 3;
 const int ROOM_WIDTH  = 32;
 const int ROOM_HEIGHT = 10;
-const int MAP_SIZE    = 3;
+const int MAP_SIZE    = 7;
+const int MAP_WIDTH   = 7;
+const int MAP_HEIGHT  = 7;
 
 int main(void)
 {
     cursesSetup();
 
-    int minimap_w = 17;
-    int minimap_h = 7;
-    int spacing = 3;
-    int total_w = minimap_w + spacing + ROOM_WIDTH;
-    int start_x = (COLS - total_w) / 2;
-    int start_y = (LINES - ROOM_HEIGHT) / 2;
+    srand(time(NULL));
+    int number_of_rooms = rand() % 8 + 8;
+    int minimap_w       = 31;
+    int minimap_h       = 15;
+    int room_win_w      = ROOM_WIDTH * 2;
+    int room_win_h      = ROOM_HEIGHT * 2;
+    int spacing         = 3;
+    int room_x = (COLS - room_win_w) / 2;
+    int room_y = (LINES - room_win_h) / 2;
+    if (room_x < 0)
+        room_x = 0;
+    if (room_y < 0)
+        room_y = 0;
 
-    win_minimapa = create_newwin(minimap_h, minimap_w, start_y + (ROOM_HEIGHT - minimap_h) / 2, start_x);
-    win = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, start_y, start_x + minimap_w + spacing);
+    int minimap_x = room_x - minimap_w - spacing;
+    if (minimap_x < 0)
+        minimap_x = 0;
+    int minimap_y = room_y + (room_win_h - minimap_h) / 2;
+    if (minimap_y < 0)
+        minimap_y = 0;
+
+    win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
+    win          = create_newwin(room_win_h, room_win_w, room_y, room_x);
 
     map = createMap();
-    setupFloor();
+    setupFloor(map_x, map_y, number_of_rooms);
 
     curr_room = map[map_y][map_x].tiles;
 
     Position start_pos = {5, 5};
-    player = createPlayer(start_pos);
+    player             = createPlayer(start_pos);
 
     roomDoors();
     refresh();
@@ -53,7 +68,7 @@ Entity* createPlayer(Position start_pos)
 
     newPlayer->pos.y = start_pos.y;
     newPlayer->pos.x = start_pos.x;
-    newPlayer->ch = '@';
+    newPlayer->ch    = '@';
 
     return newPlayer;
 }
@@ -61,30 +76,30 @@ Entity* createPlayer(Position start_pos)
 void handleInput(int input)
 {
     Position newPos = player->pos;
-    switch(input)
+    switch (input)
     {
-        case KEY_UP:
-        case 'w':
-        case 'k':
-            newPos.y--;
-            break;
-        case KEY_DOWN:
-        case 's':
-        case 'j':
-            newPos.y++;
-            break;
-        case KEY_LEFT:
-        case 'a':
-        case 'h':
-            newPos.x--;
-            break;
-        case KEY_RIGHT:
-        case 'd':
-        case 'l':
-            newPos.x++;
-            break;
-        default:
-            return;
+    case KEY_UP:
+    case 'w':
+    case 'k':
+        newPos.y--;
+        break;
+    case KEY_DOWN:
+    case 's':
+    case 'j':
+        newPos.y++;
+        break;
+    case KEY_LEFT:
+    case 'a':
+    case 'h':
+        newPos.x--;
+        break;
+    case KEY_RIGHT:
+    case 'd':
+    case 'l':
+        newPos.x++;
+        break;
+    default:
+        return;
     }
     movePlayer(newPos);
 }
@@ -136,9 +151,9 @@ void movePlayer(Position newPos)
     }
 }
 
-WINDOW *create_newwin(int height, int width, int starty, int startx)
+WINDOW* create_newwin(int height, int width, int starty, int startx)
 {
-    WINDOW *local_win;
+    WINDOW* local_win;
     local_win = newwin(height, width, starty, startx);
     wrefresh(local_win);
     return local_win;

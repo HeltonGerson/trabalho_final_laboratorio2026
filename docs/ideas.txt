@@ -3,7 +3,7 @@ status básicos:
     x corações
     y de dano
     z de defesa
-    O player tem uma espada e um arco. Ambos têm chance de acerto. A espada tem dano e chance crítica, atacando ao posicionar-se em cima do inimigo. O arco tem dano e range, atacando nas laterais e nas diagonais//talvez crítico também//. 
+    O player tem uma espada e um arco. Ambos têm chance de acerto. A espada tem dano e chance crítica, atacando ao posicionar-se em cima do inimigo. O arco tem dano e range, atacando nas laterais e nas diagonais//talvez crítico também//.
 
 itens:
     Espada:
@@ -25,19 +25,19 @@ pergaminho de encantamento de personagem: melhora aleatoriamente um status do pl
 
 
 Inimigos:
-    Goblin: ataca fisicamente, desloca-se até o usuário buscando o menor caminho. Tem corações, dano e defesa. Caso o goblin chegue no player primeiro, ele ataca, Caso o player chegue primeiro, ele ataca.  
+    Goblin: ataca fisicamente, desloca-se até o usuário buscando o menor caminho. Tem corações, dano e defesa. Caso o goblin chegue no player primeiro, ele ataca, Caso o player chegue primeiro, ele ataca.
     Goblin arqueiro: ataca à distância. Permanece parado. Pode atacar nas laterais e para as diagonais. Tem corações, dano e defesa
-    Goblin especialista: boss com ataque corpo-a-corpo e a distância. //Manejar a escolha da ação de algum jeito aí//. Tem mais corações, dano e defesa que o comum. 
+    Goblin especialista: boss com ataque corpo-a-corpo e a distância. //Manejar a escolha da ação de algum jeito aí//. Tem mais corações, dano e defesa que o comum.
 
 Obstáculos:
-    Parede: bloqueia a passagem.  
+    Parede: bloqueia a passagem.
     Espinho: Está ativado ou desativado. Se ativado, é interpreteado como uma parede pelos inimigos. Se desativado, o player pode fazer o inimigo passar por cima dele, dando dano. O mesmo comportamento serve para o player. Ele pode se desativar de novo depois de x rodadas que tiver sido ativado.
-Andar de no máximo nxm salas gerado de forma aleatória. O primeiro andar sem boss, o segundo com um inimigo comum buffado e o terceiro com o Goblin Especialista. 
-    Desenhar as salas e sortear com base no número de cada uma. 
+Andar de no máximo nxm salas gerado de forma aleatória. O primeiro andar sem boss, o segundo com um inimigo comum buffado e o terceiro com o Goblin Especialista.
+    Desenhar as salas e sortear com base no número de cada uma.
 
-Menu: 
-    Start: iniciar um novo jogo. 
-    Continue: o salvamento é feito andar a andar. Ao adentrar num novo andar, ele é todo gerado e salvo. Se o usuário sair antes de terminar o andar, ao retornar ele volta do começo. Ao terminar um andar, o salvamento do próximo - ou seja, o atual - é feito. Guarda-se o estado do mapa, os status e itens do player. 
+Menu:
+    Start: iniciar um novo jogo.
+    Continue: o salvamento é feito andar a andar. Ao adentrar num novo andar, ele é todo gerado e salvo. Se o usuário sair antes de terminar o andar, ao retornar ele volta do começo. Ao terminar um andar, o salvamento do próximo - ou seja, o atual - é feito. Guarda-se o estado do mapa, os status e itens do player.
     Ranking: andar máximo alcançado. //talvez salvar os status também
     Quit: sair.
 
