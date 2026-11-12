@@ -4,6 +4,9 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <dirent.h>
+#include <stdbool.h>
 
 // structs base
 typedef struct
@@ -55,10 +58,11 @@ void gameLoop(void);
 void closeGame(void);
 
 // funcoes das rooms
-Tile** readRoom(int n);
+Tile** readRoom(int room_type);
 void   freeRoomTiles(Tile** tiles);
 void   roomDoors(void);
 int    setRoom(int x, int y, int choosed_room);
+int    countTxtFiles(const char* dir_path);
 
 // funcoes do player
 Entity* createPlayer(Position start_pos);

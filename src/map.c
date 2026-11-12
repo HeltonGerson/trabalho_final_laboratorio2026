@@ -1,5 +1,5 @@
 #include "rogue.h"
-#include <stdlib.h>
+#include <curses.h>
 
 MapCell** createMap(void)
 {
@@ -14,9 +14,10 @@ MapCell** createMap(void)
 void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
 {
     coordStack* st = initializeCoordStack();
-    if (setRoom(start_pos_x, start_pos_y, 1))
+    if (setRoom(start_pos_x, start_pos_y, 0))
     {
-        printw("Erro ao preencher a sala inicial");
+        endwin();
+        fprintf(stderr, "Erro ao preencher a sala inicial");
         exit(1);
     }
     pushCoord(start_pos_x, start_pos_y, st);
@@ -24,6 +25,8 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
 
     int dx[4] = {-1, 0, 1, 0};
     int dy[4] = {0, 1, 0, -1};
+    bool i_flag = 0;
+    bool b_flag = 0;
 
     while (number_of_rooms > 0 && st->top != NULL)
     {
@@ -47,13 +50,25 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
             popCoord(st);
             continue;
         }
+        int room_type = rand() % 20 + 1;
+        if(room_type == 1)
+            b_flag = 1;
+        else if(room_type == 2 || room_type == 3)
+            i_flag = 1;
+        
+        
         int choose_dir = free_dirs[rand() % count_dirs];
-        int room_type  = rand() % 4 + 1;
         int nx         = st->top->coord.x + dx[choose_dir];
         int ny         = st->top->coord.y + dy[choose_dir];
+        if(number_of_rooms == 2 && i_flag == 0)
+            room_type = 2;
+        else if(number_of_rooms == 1 && b_flag == 0)
+            room_type = 1;
+        
         if (setRoom(nx, ny, room_type))
         {
-            printw("Erro ao preencher uma sala");
+            endwin();
+            fprintf(stderr, "Erro ao preencher uma sala");
             exit(1);
         }
         pushCoord(nx, ny, st);
