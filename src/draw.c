@@ -77,10 +77,22 @@ void drawMinimap(void)
 
 void drawEntity(Entity* e)
 {
-    if (!win || !e)
+    if (!win || !e || !e->active)
         return;
 
     mvwaddch(win, e->pos.y, e->pos.x, e->ch);
+}
+
+void drawRoomEntities(void)
+{
+    if (!win || !map)
+        return;
+
+    MapCell* cell = &map[map_y][map_x];
+    for (int i = 0; i < cell->entity_count; ++i)
+    {
+        drawEntity(&cell->entities[i]);
+    }
 }
 
 void drawEverything(void)
@@ -105,6 +117,7 @@ void drawEverything(void)
     }
 
     drawRoom();
+    drawRoomEntities();
     drawEntity(player);
     drawMinimap();
 

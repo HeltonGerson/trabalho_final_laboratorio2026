@@ -93,6 +93,92 @@ int main(void)
     freeMap();
     assert(map == NULL);
 
-    printf("Todos os testes do mapa procedural passaram com sucesso!\n");
+    // Teste 2: Contagem exata dos 15 templates de sala
+    int total_templates = countTxtFiles("data/rooms/start") + countTxtFiles("data/rooms/boss") +
+                          countTxtFiles("data/rooms/items") + countTxtFiles("data/rooms/normal");
+    assert(total_templates == 15);
+
+    // Teste 3: Conversao de caracteres E/A/B/I em entidades e piso '.'
+    map   = createMap();
+    map_x = 3;
+    map_y = 3;
+    assert(setRoom(3, 3, 1) == 0); // sala boss possui 'B'
+    curr_room = map[3][3].tiles;
+
+    bool found_boss = false;
+    for (int i = 0; i < map[3][3].entity_count; ++i)
+    {
+        Entity* e = &map[3][3].entities[i];
+        assert(e->active == true);
+        assert(curr_room[e->pos.y][e->pos.x].ch == '.');
+        assert(curr_room[e->pos.y][e->pos.x].walkable == true);
+        if (e->type == ENTITY_BOSS)
+        {
+            found_boss = true;
+            assert(e->hp == 50 && e->max_hp == 50 && e->attack == 20 && e->defense == 10);
+        }
+    }
+    assert(found_boss == true);
+
+    // Teste 4: Inicializacao do player e coleta de item (desaparece do mapa)
+    Position start_pos = {5, 5};
+    player             = createPlayer(start_pos);
+    assert(player != NULL);
+    assert(player->hp == 10 && player->attack == 4 && player->defense == 0 && player->active == true);
+
+    assert(setRoom(2, 3, 4) == 0); // sala normal limpa para testar entidades controladas
+    map_x     = 2;
+    map_y     = 3;
+    curr_room = map[3][2].tiles;
+
+    freeRoomEntities(&map[3][2]);
+    map[3][2].entities     = malloc(sizeof(Entity) * 3);
+    map[3][2].entity_count = 3;
+    assert(map[3][2].entities != NULL);
+
+    initEntity(&map[3][2].entities[0], ENTITY_ITEM, 6, 5);
+    initEntity(&map[3][2].entities[1], ENTITY_ENEMY_MELEE, 7, 5);
+    initEntity(&map[3][2].entities[2], ENTITY_ENEMY_RANGED, 5, 6);
+    curr_room[5][6].ch       = '.';
+    curr_room[5][6].walkable = true;
+    curr_room[5][7].ch       = '.';
+    curr_room[5][7].walkable = true;
+    curr_room[6][5].ch       = '.';
+    curr_room[6][5].walkable = true;
+
+    // Move para o item em (6, 5): item desativa e player avanca
+    movePlayer((Position){6, 5});
+    assert(map[3][2].entities[0].active == false);
+    assert(player->pos.x == 6 && player->pos.y == 5);
+
+    // Teste 5: Combate corpo a corpo contra Goblin Melee (8/3/0) em (7, 5)
+    // 1o golpe: dano 4, HP 8 -> 4, player nao avanca
+    movePlayer((Position){7, 5});
+    assert(map[3][2].entities[1].hp == 4);
+    assert(map[3][2].entities[1].active == true);
+    assert(player->pos.x == 6 && player->pos.y == 5);
+
+    // 2o golpe: dano 4, HP 4 -> 0, inimigo desativado
+    movePlayer((Position){7, 5});
+    assert(map[3][2].entities[1].hp == 0);
+    assert(map[3][2].entities[1].active == false);
+    assert(player->pos.x == 6 && player->pos.y == 5);
+
+    // 3o movimento: espaco livre, player avanca para (7, 5)
+    movePlayer((Position){7, 5});
+    assert(player->pos.x == 7 && player->pos.y == 5);
+
+    // Teste 6: Combate contra Boss (50/20/10) garante dano minimo 1
+    Entity boss;
+    initEntity(&boss, ENTITY_BOSS, 10, 5);
+    attackEntity(player, &boss);
+    assert(boss.hp == 49 && boss.active == true);
+
+    free(player);
+    player = NULL;
+    freeMap();
+    assert(map == NULL);
+
+    printf("Todos os testes do mapa procedural e entidades passaram com sucesso!\n");
     return 0;
 }

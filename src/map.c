@@ -113,6 +113,7 @@ void freeMap(void)
                 freeRoomTiles(map[y][x].tiles);
                 map[y][x].tiles = NULL;
             }
+            freeRoomEntities(&map[y][x]);
         }
         free(map[y]);
     }
