@@ -10,11 +10,50 @@ MapCell** map;
 // indices atuais no mapa
 int       map_y       = 3;
 int       map_x       = 3;
-const int ROOM_WIDTH  = 31;
-const int ROOM_HEIGHT = 11;
+const int ROOM_WIDTH  = 32;
+const int ROOM_HEIGHT = 10;
 const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
+
+void layoutWindows(void)
+{
+    if (COLS < 50 || LINES < ROOM_HEIGHT)
+        return;
+
+    int minimap_w = 15;
+    int minimap_h = 7;
+    int spacing   = 3;
+
+    int room_x = (COLS - ROOM_WIDTH) / 2;
+    int room_y = (LINES - ROOM_HEIGHT) / 2;
+    if (room_y < 0)
+        room_y = 0;
+
+    int minimap_x = room_x - minimap_w - spacing;
+    if (minimap_x < 0)
+    {
+        minimap_x = 0;
+        room_x    = minimap_w + spacing;
+    }
+
+    int minimap_y = room_y + (ROOM_HEIGHT - minimap_h) / 2;
+    if (minimap_y < 0)
+        minimap_y = 0;
+
+    if (!win_minimapa)
+        win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
+    else
+        mvwin(win_minimapa, minimap_y, minimap_x);
+
+    if (!win)
+        win = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, room_y, room_x);
+    else
+    {
+        mvwin(win, room_y, room_x);
+        touchwin(win);
+    }
+}
 
 int main(void)
 {
@@ -22,27 +61,8 @@ int main(void)
 
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
-    int minimap_w       = 31;
-    int minimap_h       = 15;
-    int room_win_w      = ROOM_WIDTH * 2;
-    int room_win_h      = ROOM_HEIGHT * 2;
-    int spacing         = 3;
-    int room_x = (COLS - room_win_w) / 2;
-    int room_y = (LINES - room_win_h) / 2;
-    if (room_x < 0)
-        room_x = 0;
-    if (room_y < 0)
-        room_y = 0;
 
-    int minimap_x = room_x - minimap_w - spacing;
-    if (minimap_x < 0)
-        minimap_x = 0;
-    int minimap_y = room_y + (room_win_h - minimap_h) / 2;
-    if (minimap_y < 0)
-        minimap_y = 0;
-
-    win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
-    win          = create_newwin(room_win_h, room_win_w, room_y, room_x);
+    layoutWindows();
 
     map = createMap();
     setupFloor(map_x, map_y, number_of_rooms);

@@ -27,11 +27,13 @@ int main(void)
     int target_rooms = 10;
     setupFloor(map_x, map_y, target_rooms);
 
-    // Centro (3, 3) deve ser sala 1, visitada e descoberta
-    assert(map[3][3].id == 1);
+    // Centro (3, 3) deve ser sala inicial (-1), visitada e descoberta
+    assert(map[3][3].id == -1);
     assert(map[3][3].tiles != NULL);
     assert(map[3][3].visited == true);
     assert(map[3][3].discovered == true);
+    assert(map[3][3].tiles[0][0].ch == ACS_ULCORNER);
+    assert(map[3][3].tiles[ROOM_HEIGHT - 1][ROOM_WIDTH - 1].ch == ACS_LRCORNER);
 
     int count_rooms = 0;
     for (int y = 0; y < MAP_SIZE; ++y)
@@ -41,7 +43,7 @@ int main(void)
             if (map[y][x].id != 0)
             {
                 count_rooms++;
-                assert(map[y][x].id >= 1 && map[y][x].id <= 4);
+                assert(map[y][x].id == -1 || (map[y][x].id >= 1 && map[y][x].id <= 20));
                 assert(map[y][x].tiles != NULL);
             }
             else

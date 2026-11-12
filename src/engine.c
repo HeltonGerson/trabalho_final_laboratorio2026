@@ -17,7 +17,16 @@ void gameLoop()
 
     while ((ch = getch()) != 'q')
     {
-        handleInput(ch);
+        if (ch == KEY_RESIZE)
+        {
+            layoutWindows();
+            erase();
+            refresh();
+        }
+        else
+        {
+            handleInput(ch);
+        }
         drawEverything();
     }
 }

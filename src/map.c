@@ -23,8 +23,8 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
     pushCoord(start_pos_x, start_pos_y, st);
     number_of_rooms--;
 
-    int dx[4] = {-1, 0, 1, 0};
-    int dy[4] = {0, 1, 0, -1};
+    int  dx[4]  = {-1, 0, 1, 0};
+    int  dy[4]  = {0, 1, 0, -1};
     bool i_flag = 0;
     bool b_flag = 0;
 
@@ -53,20 +53,20 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
         int choose_dir = free_dirs[rand() % count_dirs];
         int nx         = st->top->coord.x + dx[choose_dir];
         int ny         = st->top->coord.y + dy[choose_dir];
-        int room_type = rand() % 20 + 1;
-        if(room_type == 1 && b_flag == 1)
+        int room_type  = rand() % 20 + 1;
+        if (room_type == 1 && b_flag == 1)
             room_type = 4;
 
-        if(number_of_rooms == 2 && !i_flag)
+        if (number_of_rooms == 2 && !i_flag)
             room_type = 2;
-        else if(number_of_rooms == 1 && !b_flag)
+        else if (number_of_rooms == 1 && !b_flag)
             room_type = 1;
 
-        if(room_type == 2 || room_type == 3)
+        if (room_type == 2 || room_type == 3)
             i_flag = 1;
-        else if(room_type == 1)
+        else if (room_type == 1)
             b_flag = 1;
-         
+
         if (setRoom(nx, ny, room_type))
         {
             endwin();

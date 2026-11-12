@@ -14,17 +14,20 @@ void fillDoors(Tile** room)
 }
 
 // Conta quantos arquivos existem no diretório informado pra saber quantas salas tem
-int countTxtFiles(const char* dir_path) {
+int countTxtFiles(const char* dir_path)
+{
     DIR* dir = opendir(dir_path);
-    if (!dir) {
+    if (!dir)
+    {
         return -1;
     }
 
     struct dirent* entry;
-    int count = 0;
+    int            count = 0;
 
-    while ((entry = readdir(dir)) != NULL) {
-        if(entry->d_name[0] == '.')
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_name[0] == '.')
             continue;
         count++;
     }
@@ -41,7 +44,7 @@ int setRoom(int x, int y, int room_type)
         if (!tiles)
             return 1;
 
-        map[y][x].id = (room_type == 0) ? -1 : room_type;
+        map[y][x].id    = (room_type == 0) ? -1 : room_type;
         map[y][x].tiles = tiles;
         return 0;
     }
@@ -52,35 +55,32 @@ int setRoom(int x, int y, int room_type)
 Tile** readRoom(int type)
 {
     FILE* fp;
-    char room_type[8];
-    int room_n = 0;
-    if(type == 0)
+    char  room_type[8];
+    int   room_n = 0;
+    if (type == 0)
         strcpy(room_type, "start");
-    else if(type == 1)
+    else if (type == 1)
         strcpy(room_type, "boss");
-    else if(type == 2 || type == 3)
+    else if (type == 2 || type == 3)
         strcpy(room_type, "items");
-    else if(type >= 4 && type <= 20)
+    else if (type >= 4 && type <= 20)
         strcpy(room_type, "normal");
     else
         return NULL;
-    
-    
+
     char dir_path[50];
     snprintf(dir_path, sizeof(dir_path), "data/rooms/%s", room_type);
     int total_rooms = countTxtFiles(dir_path);
 
-    if(total_rooms <= 0)
+    if (total_rooms <= 0)
         return NULL;
-    
-    
+
     char file_path[128];
     room_n = rand() % total_rooms + 1;
     snprintf(file_path, sizeof(file_path), "%s/%d.txt", dir_path, room_n);
     fp = fopen(file_path, "r");
     if (!fp)
         return NULL;
-
 
     Tile** room = malloc(sizeof(Tile*) * ROOM_HEIGHT);
 
@@ -126,7 +126,6 @@ void freeRoomTiles(Tile** tiles)
     }
     free(tiles);
 }
-
 
 /* Verificar se as portas da room atual */
 void roomDoors(void)
