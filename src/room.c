@@ -46,6 +46,13 @@ int setRoom(int x, int y, int room_type)
 
         map[y][x].id    = (room_type == 0) ? -1 : room_type;
         map[y][x].tiles = tiles;
+        if (spawnRoomEntities(&map[y][x]) != 0)
+        {
+            freeRoomTiles(tiles);
+            map[y][x].id    = 0;
+            map[y][x].tiles = NULL;
+            return 1;
+        }
         return 0;
     }
     return 1;
