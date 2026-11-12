@@ -1,4 +1,5 @@
 #include "rogue.h"
+#include <curses.h>
 
 void fillDoors(Tile** room)
 {
@@ -12,49 +13,74 @@ void fillDoors(Tile** room)
         room[ROOM_HEIGHT - 1][(ROOM_WIDTH) / 2 - 2 + i].ch = ACS_DARROW;
 }
 
-int setRoom(int x, int y, int choosed_room)
+// Conta quantos arquivos existem no diretório informado pra saber quantas salas tem
+int countTxtFiles(const char* dir_path) {
+    DIR* dir = opendir(dir_path);
+    if (!dir) {
+        return -1;
+    }
+
+    struct dirent* entry;
+    int count = 0;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if(entry->d_name[0] == '.')
+            continue;
+        count++;
+    }
+
+    closedir(dir);
+    return count;
+}
+// faz as verificações para ver se os parâmetros passados são válidos para uma sala
+int setRoom(int x, int y, int room_type)
 {
-    if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT &&
-        choosed_room >= 1 && choosed_room <= 4)
+    if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT && room_type >= 0 && room_type <= 20)
     {
-        Tile** tiles = readRoom(choosed_room);
+        Tile** tiles = readRoom(room_type);
         if (!tiles)
             return 1;
 
-        map[y][x].id    = choosed_room;
+        map[y][x].id = (room_type == 0) ? -1 : room_type;
         map[y][x].tiles = tiles;
         return 0;
     }
     return 1;
 }
 
-/* Liberacao dos tiles de uma room */
-void freeRoomTiles(Tile** tiles)
-{
-    if (!tiles)
-        return;
-    for (int y = 0; y < ROOM_HEIGHT; ++y)
-    {
-        free(tiles[y]);
-    }
-    free(tiles);
-}
-
 /* Le uma room do data/rooms */
-Tile** readRoom(int n)
+Tile** readRoom(int type)
 {
     FILE* fp;
-    // o dir é do makefile
-    char* file_path = (char*)malloc(32 * sizeof(char));
-    if (!file_path)
+    char room_type[8];
+    int room_n = 0;
+    if(type == 0)
+        strcpy(room_type, "start");
+    else if(type == 1)
+        strcpy(room_type, "boss");
+    else if(type == 2 || type == 3)
+        strcpy(room_type, "items");
+    else if(type >= 4 && type <= 20)
+        strcpy(room_type, "normal");
+    else
         return NULL;
+    
+    
+    char dir_path[50];
+    snprintf(dir_path, sizeof(dir_path), "data/rooms/%s", room_type);
+    int total_rooms = countTxtFiles(dir_path);
 
-    sprintf(file_path, "data/rooms/normal/%d.txt", n);
+    if(total_rooms <= 0)
+        return NULL;
+    
+    
+    char file_path[128];
+    room_n = rand() % total_rooms + 1;
+    snprintf(file_path, sizeof(file_path), "%s/%d.txt", dir_path, room_n);
     fp = fopen(file_path, "r");
-    free(file_path);
-
     if (!fp)
         return NULL;
+
 
     Tile** room = malloc(sizeof(Tile*) * ROOM_HEIGHT);
 
@@ -88,6 +114,19 @@ Tile** readRoom(int n)
     fillDoors(room);
     return room;
 }
+
+/* Liberacao dos tiles de uma room */
+void freeRoomTiles(Tile** tiles)
+{
+    if (!tiles)
+        return;
+    for (int y = 0; y < ROOM_HEIGHT; ++y)
+    {
+        free(tiles[y]);
+    }
+    free(tiles);
+}
+
 
 /* Verificar se as portas da room atual */
 void roomDoors(void)

@@ -10,8 +10,8 @@ MapCell** map;
 // indices atuais no mapa
 int       map_y       = 3;
 int       map_x       = 3;
-const int ROOM_WIDTH  = 32;
-const int ROOM_HEIGHT = 10;
+const int ROOM_WIDTH  = 31;
+const int ROOM_HEIGHT = 11;
 const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
