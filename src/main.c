@@ -16,43 +16,42 @@ const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
 
+void destroyWindows(void)
+{
+    if (win_minimapa)
+    {
+        delwin(win_minimapa);
+        win_minimapa = NULL;
+    }
+    if (win)
+    {
+        delwin(win);
+        win = NULL;
+    }
+}
+
 void layoutWindows(void)
 {
-    if (COLS < 50 || LINES < ROOM_HEIGHT)
-        return;
-
     int minimap_w = 15;
     int minimap_h = 7;
     int spacing   = 3;
+    int total_w   = minimap_w + spacing + ROOM_WIDTH;
 
-    int room_x = (COLS - ROOM_WIDTH) / 2;
-    int room_y = (LINES - ROOM_HEIGHT) / 2;
-    if (room_y < 0)
-        room_y = 0;
+    // Recria as janelas para impedir que resizeterm() mantenha dimensoes cortadas
+    destroyWindows();
 
-    int minimap_x = room_x - minimap_w - spacing;
-    if (minimap_x < 0)
-    {
-        minimap_x = 0;
-        room_x    = minimap_w + spacing;
-    }
+    if (COLS < total_w || LINES < ROOM_HEIGHT)
+        return;
 
+    int minimap_x = (COLS - total_w) / 2;
+    int room_x    = minimap_x + minimap_w + spacing;
+    int room_y    = (LINES - ROOM_HEIGHT) / 2;
     int minimap_y = room_y + (ROOM_HEIGHT - minimap_h) / 2;
-    if (minimap_y < 0)
-        minimap_y = 0;
 
-    if (!win_minimapa)
-        win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
-    else
-        mvwin(win_minimapa, minimap_y, minimap_x);
-
-    if (!win)
-        win = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, room_y, room_x);
-    else
-    {
-        mvwin(win, room_y, room_x);
-        touchwin(win);
-    }
+    win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
+    win          = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, room_y, room_x);
+    if (!win_minimapa || !win)
+        destroyWindows();
 }
 
 int main(void)
@@ -73,7 +72,6 @@ int main(void)
     player             = createPlayer(start_pos);
 
     roomDoors();
-    refresh();
     gameLoop();
 
     closeGame();
@@ -173,8 +171,5 @@ void movePlayer(Position newPos)
 
 WINDOW* create_newwin(int height, int width, int starty, int startx)
 {
-    WINDOW* local_win;
-    local_win = newwin(height, width, starty, startx);
-    wrefresh(local_win);
-    return local_win;
+    return newwin(height, width, starty, startx);
 }

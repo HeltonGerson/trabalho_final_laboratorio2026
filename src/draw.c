@@ -14,6 +14,9 @@ static char roomGlyph(int id)
 // desenha a room atual em escala 1:1
 void drawRoom(void)
 {
+    if (!win || !curr_room)
+        return;
+
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
         for (int x = 0; x < ROOM_WIDTH; ++x)
@@ -70,28 +73,44 @@ void drawMinimap(void)
             }
         }
     }
-    wrefresh(win_minimapa);
 }
 
-void drawEntity(Entity* e) { mvwaddch(win, e->pos.y, e->pos.x, e->ch); }
+void drawEntity(Entity* e)
+{
+    if (!win || !e)
+        return;
+
+    mvwaddch(win, e->pos.y, e->pos.x, e->ch);
+}
 
 void drawEverything(void)
 {
+    werase(stdscr);
+    wnoutrefresh(stdscr);
+
     if (COLS < 50 || LINES < ROOM_HEIGHT || !win || !win_minimapa)
     {
-        const char* msg = "Terminal pequeno! Min: 50x10";
-        int         y   = LINES / 2;
-        int         x   = (COLS - (int)strlen(msg)) / 2;
-        if (x < 0)
-            x = 0;
-        erase();
-        mvprintw(y, x, "%s", msg);
-        refresh();
+        if (LINES > 0 && COLS > 0)
+        {
+            const char* msg = "Terminal pequeno! Min: 50x10";
+            int         y   = LINES / 2;
+            int         x   = (COLS - (int)strlen(msg)) / 2;
+            if (x < 0)
+                x = 0;
+            mvaddnstr(y, x, msg, COLS - x);
+            wnoutrefresh(stdscr);
+        }
+        doupdate();
         return;
     }
 
     drawRoom();
     drawEntity(player);
-    wrefresh(win);
     drawMinimap();
+
+    touchwin(win);
+    touchwin(win_minimapa);
+    wnoutrefresh(win);
+    wnoutrefresh(win_minimapa);
+    doupdate();
 }

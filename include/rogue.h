@@ -84,6 +84,7 @@ void      freeMap(void);
 // funcoes de tela
 WINDOW* create_newwin(int height, int width, int starty, int startx);
 void    layoutWindows(void);
+void    destroyWindows(void);
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
