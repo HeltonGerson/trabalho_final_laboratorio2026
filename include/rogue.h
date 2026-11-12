@@ -1,12 +1,12 @@
 #ifndef ROGUE_H
 #define ROGUE_H
 
-#include <ncurses.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
 #include <dirent.h>
+#include <ncurses.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 // structs base
 typedef struct
@@ -83,6 +83,7 @@ void      freeMap(void);
 
 // funcoes de tela
 WINDOW* create_newwin(int height, int width, int starty, int startx);
+void    layoutWindows(void);
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;

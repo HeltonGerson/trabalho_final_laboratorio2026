@@ -2,7 +2,7 @@
 #include <curses.h>
 #include <stdlib.h>
 
-//inicializa a pilha de coordenadas
+// inicializa a pilha de coordenadas
 coordStack* initializeCoordStack()
 {
     coordStack* stack = malloc(sizeof(coordStack));
@@ -11,7 +11,7 @@ coordStack* initializeCoordStack()
     return stack;
 }
 
-//push na pilha de coordenadas
+// push na pilha de coordenadas
 void pushCoord(int x, int y, coordStack* stack)
 {
     coordNode* node = malloc(sizeof(coordNode));
@@ -35,7 +35,7 @@ void pushCoord(int x, int y, coordStack* stack)
     stack->size++;
 }
 
-//pop na pilha de coordenadas
+// pop na pilha de coordenadas
 void popCoord(coordStack* stack)
 {
     coordNode* aux = stack->top;
@@ -44,7 +44,7 @@ void popCoord(coordStack* stack)
     free(aux);
 }
 
-//erase na pilha de coordenadas
+// erase na pilha de coordenadas
 void eraseStack(coordStack* stack)
 {
     while (stack->size != 0)
