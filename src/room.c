@@ -62,6 +62,8 @@ Tile** readRoom(int type)
         strcpy(room_type, "items");
     else if(type >= 4 && type <= 20)
         strcpy(room_type, "normal");
+    else
+        return NULL;
     
     
     char dir_path[50];
