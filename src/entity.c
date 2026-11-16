@@ -252,6 +252,8 @@ void movePlayer(Position newPos)
             player->pos.y = newPos.y;
             player->pos.x = newPos.x;
         }
+
+        passTime();
     }
 
     if (room_changed)
@@ -259,5 +261,48 @@ void movePlayer(Position newPos)
         curr_room = map[map_y][map_x].tiles;
         updateFogOfWar();
         roomDoors();
+    }
+}
+
+void chasePlayer(Entity* chaser)
+{
+    int dx[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
+    int dy[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
+    MapCell cell = map[map_y][map_x];
+    Tile** tiles = cell.tiles;
+
+    int dist = 0;
+    int x = chaser->pos.x;
+    int y = chaser->pos.y;
+    coordQueue* q = initializeCoordQueue();
+    pushCoordQueue(x, y, q);
+    while (q->size > 0)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            // sai da room
+            if (nx >= ROOM_WIDTH  - 1 || nx <= 0)
+                continue;
+            if (ny >= ROOM_HEIGHT - 1 || ny <= 0)
+                continue;
+            // obstaculo
+            if (tiles[ny][nx].walkable == false)
+                continue;
+            Entity* e = getEntityAt(nx, ny);
+            // quer dizer que tem uma entidade em nx e ny
+            if (e != NULL)
+            {
+                // se for player achei meu target
+                if (e->type == ENTITY_PLAYER)
+                {
+                    break;
+                }
+            }
+            //prev[ny][nx] = {ny, nx};
+            pushCoordQueue(nx, ny, q);
+        }
+        dist++;
     }
 }

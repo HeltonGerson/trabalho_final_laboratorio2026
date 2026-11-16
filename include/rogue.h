@@ -54,7 +54,7 @@ typedef struct
 typedef struct s
 {
     Position  coord;
-    struct s* below;
+    struct s* next;
 } coordNode;
 
 typedef struct
@@ -63,11 +63,24 @@ typedef struct
     int        size;
 } coordStack;
 
+typedef struct
+{
+    coordNode* front;
+    coordNode* back;
+    int size;
+} coordQueue;
+
 // funcoes das structs
+// pilha
 coordStack* initializeCoordStack();
 void        pushCoord(int x, int y, coordStack* stack);
 void        popCoord(coordStack* stack);
 void        eraseStack(coordStack* st);
+// fila
+coordQueue* initializeCoordQueue();
+void        pushCoordQueue(int x, int y, coordQueue* q);
+coordNode   popCoordQueue(coordQueue* q);
+void        eraseCoordQueue(coordQueue* q);
 
 // funcoes da engine
 void cursesSetup(void);
@@ -90,6 +103,7 @@ void    attackEntity(Entity* attacker, Entity* target);
 Entity* createPlayer(Position start_pos);
 void    handleInput(int ch);
 void    movePlayer(Position newPos);
+void    chasePlayer(Entity* e);
 
 // funcoes do draw
 void drawRoom(void);
@@ -108,6 +122,8 @@ void      freeMap(void);
 WINDOW* create_newwin(int height, int width, int starty, int startx);
 void    layoutWindows(void);
 void    destroyWindows(void);
+
+void passTime();
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
