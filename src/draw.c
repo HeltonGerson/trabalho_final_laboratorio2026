@@ -95,16 +95,42 @@ void drawRoomEntities(void)
     }
 }
 
+void drawHud(void)
+{
+    if (!win_hud || !player)
+        return;
+
+    int filled = (player->max_hp > 0) ? (player->hp * 8) / player->max_hp : 0;
+    if (player->hp > 0 && filled == 0)
+        filled = 1;
+    if (filled < 0)
+        filled = 0;
+    if (filled > 8)
+        filled = 8;
+
+    char bar[9] = "--------";
+    for (int i = 0; i < filled; ++i)
+        bar[i] = '#';
+
+    werase(win_hud);
+    box(win_hud, 0, 0);
+    mvwprintw(win_hud, 0, 3, " STATUS DO JOGADOR ");
+    mvwprintw(win_hud, 2, 3, "♥ VIDA: [%s]", bar);
+    mvwprintw(win_hud, 3, 11, "%d / %d", player->hp, player->max_hp);
+    mvwprintw(win_hud, 6, 3, "⚔ ATAQUE: %d", player->attack);
+    mvwprintw(win_hud, 8, 3, "⛨ DEFESA: %d", player->defense);
+}
+
 void drawEverything(void)
 {
     werase(stdscr);
     wnoutrefresh(stdscr);
 
-    if (COLS < 50 || LINES < ROOM_HEIGHT || !win || !win_minimapa)
+    if (COLS < 77 || LINES < ROOM_HEIGHT || !win || !win_minimapa || !win_hud)
     {
         if (LINES > 0 && COLS > 0)
         {
-            const char* msg = "Terminal pequeno! Min: 50x10";
+            const char* msg = "Terminal pequeno! Min: 77x11";
             int         y   = LINES / 2;
             int         x   = (COLS - (int)strlen(msg)) / 2;
             if (x < 0)
@@ -120,10 +146,13 @@ void drawEverything(void)
     drawRoomEntities();
     drawEntity(player);
     drawMinimap();
+    drawHud();
 
     touchwin(win);
     touchwin(win_minimapa);
+    touchwin(win_hud);
     wnoutrefresh(win);
     wnoutrefresh(win_minimapa);
+    wnoutrefresh(win_hud);
     doupdate();
 }

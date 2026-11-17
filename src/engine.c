@@ -1,7 +1,9 @@
 #include "rogue.h"
+#include <locale.h>
 
 void cursesSetup()
 {
+    setlocale(LC_ALL, "");
     initscr();            /* Inicia o modo curses */
     noecho();             /* Faz com que eh digitado nao apareca no term */
     cbreak();             /* Comandos nao sao executados (ex: Ctrl-C) */
@@ -86,7 +88,7 @@ void gameLoop()
     {
         if (ch == KEY_RESIZE)
             layoutWindows();
-        else if (win && win_minimapa)
+        else if (win && win_minimapa && win_hud)
             handleInput(ch);
 
         drawEverything();

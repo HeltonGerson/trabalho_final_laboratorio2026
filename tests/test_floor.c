@@ -7,6 +7,7 @@ Entity*   player       = NULL;
 Tile**    curr_room    = NULL;
 WINDOW*   win          = NULL;
 WINDOW*   win_minimapa = NULL;
+WINDOW*   win_hud      = NULL;
 MapCell** map          = NULL;
 int       map_y        = 3;
 int       map_x        = 3;

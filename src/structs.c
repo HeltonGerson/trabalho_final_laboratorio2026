@@ -56,9 +56,9 @@ void eraseStack(coordStack* stack)
 coordQueue* initializeCoordQueue()
 {
     coordQueue* q = malloc(sizeof(coordQueue));
-    q->size  = 0;
-    q->front = NULL;
-    q->back  = NULL;
+    q->size       = 0;
+    q->front      = NULL;
+    q->back       = NULL;
     return q;
 }
 

@@ -122,6 +122,7 @@ void    chooseItem(Entity* e);
 void drawRoom(void);
 void drawRoomEntities(void);
 void drawMinimap(void);
+void drawHud(void);
 void drawEntity(Entity* e);
 void drawEverything(void);
 
@@ -151,6 +152,7 @@ extern int       map_y;
 extern int       map_x;
 extern WINDOW*   win;
 extern WINDOW*   win_minimapa;
+extern WINDOW*   win_hud;
 extern Position* top;
 
 #endif

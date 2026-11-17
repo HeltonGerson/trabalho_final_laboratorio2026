@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -std=c99 -g
 CPPFLAGS = -I./include/
-LDLIBS = -lncurses
+LDLIBS = -lncursesw
 SOURCES = src/*.c
 
 all: compile run clean
