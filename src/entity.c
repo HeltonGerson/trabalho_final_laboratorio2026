@@ -72,12 +72,12 @@ void initEntity(Entity* e, EntityType type, int x, int y)
 void chooseItem(Entity *e)
 {
     int item = rand() % 8;
-    e->ch = 'I'; 
+    e->ch = 'I';
     e->hp      = 0;
     e->max_hp  = 0;
     e->attack  = 0;
     e->defense = 0;
-    switch (item) 
+    switch (item)
     { // mudar depois, talvez um txt
     case 1: //hp
         e->hp = 10;
@@ -290,6 +290,11 @@ void movePlayer(Position newPos)
             else
             {
                 attackEntity(player, target);
+                if (target->hp == 0)
+                    pushLogQueue("The enemy died.", logs);
+                else
+                    pushLogQueue("You attacked.", logs);
+
             }
         }
         else
@@ -384,6 +389,7 @@ void chasePlayer(Entity* chaser)
     if (prevY == chaser->pos.y && prevX == chaser->pos.x)
     {
         attackEntity(chaser, player);
+        pushLogQueue("The goblin attacked you.", logs);
     }
     else
     {

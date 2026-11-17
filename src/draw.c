@@ -95,6 +95,24 @@ void drawRoomEntities(void)
     }
 }
 
+void drawLogs()
+{
+    while (logs->size > 0)
+    {
+        
+        char* msg = popLogQueue(logs);
+        logDefault(msg);
+        // se nao for o ultimo
+        refresh();
+        if (logs->size > 0)
+        {
+            curs_set(1);
+            getch();
+            curs_set(0);
+        }
+    }
+}
+
 void drawEverything(void)
 {
     werase(stdscr);
@@ -120,10 +138,11 @@ void drawEverything(void)
     drawRoomEntities();
     drawEntity(player);
     drawMinimap();
-
+    
     touchwin(win);
     touchwin(win_minimapa);
     wnoutrefresh(win);
     wnoutrefresh(win_minimapa);
     doupdate();
+    drawLogs();
 }
