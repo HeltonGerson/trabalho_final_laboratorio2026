@@ -53,6 +53,7 @@ void eraseStack(coordStack* stack)
     free(stack);
 }
 
+// funcoes da Queue
 coordQueue* initializeCoordQueue()
 {
     coordQueue* q = malloc(sizeof(coordQueue));

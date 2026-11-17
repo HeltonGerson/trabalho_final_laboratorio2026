@@ -19,22 +19,6 @@ const int MAP_HEIGHT  = 7;
 int main(void)
 {
     cursesSetup();
-
-    coordQueue* q = initializeCoordQueue();
-    pushCoordQueue(8, 16, q);
-    pushCoordQueue(10, 4, q);
-    pushCoordQueue(1, 1, q);
-    pushCoordQueue(30, 3, q);
-    pushCoordQueue(5, 12, q);
-    popCoordQueue(q);
-    popCoordQueue(q);
-    while (q->size > 0)
-    {
-        mvprintw(q->front->coord.y, q->front->coord.x, "%d %d", q->front->coord.y, q->front->coord.x);
-        popCoordQueue(q);
-    }
-
-    getch();
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
 
