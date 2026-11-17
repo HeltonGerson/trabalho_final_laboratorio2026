@@ -19,6 +19,13 @@ const int MAP_HEIGHT  = 7;
 int main(void)
 {
     cursesSetup();
+
+    if (showMainMenu() == MENU_QUIT)
+    {
+        endwin();
+        return 0;
+    }
+
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
 

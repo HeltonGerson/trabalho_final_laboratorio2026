@@ -4,9 +4,19 @@
 #include <dirent.h>
 #include <ncurses.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#define SAVE_PATH "saves/savegame.dat"
+
+typedef enum
+{
+    MENU_NEW_GAME,
+    MENU_CONTINUE,
+    MENU_QUIT
+} MenuOption;
 
 // structs base
 typedef struct
@@ -83,9 +93,11 @@ coordNode   popCoordQueue(coordQueue* q);
 void        eraseCoordQueue(coordQueue* q);
 
 // funcoes da engine
-void cursesSetup(void);
-void gameLoop(void);
-void closeGame(void);
+void       cursesSetup(void);
+bool       saveExists(void);
+MenuOption showMainMenu(void);
+void       gameLoop(void);
+void       closeGame(void);
 
 // funcoes das rooms
 Tile** readRoom(int room_type);
