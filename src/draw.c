@@ -112,11 +112,17 @@ void drawHud(void)
     for (int i = 0; i < filled; ++i)
         bar[i] = '#';
 
+    char hp_text[16];
+    int  len  = snprintf(hp_text, sizeof(hp_text), "%d / %d", player->hp, player->max_hp);
+    int  hp_x = 11 + (10 - len) / 2;
+    if (hp_x < 1)
+        hp_x = 1;
+
     werase(win_hud);
     box(win_hud, 0, 0);
     mvwprintw(win_hud, 0, 3, " STATUS DO JOGADOR ");
     mvwprintw(win_hud, 2, 3, "♥ VIDA: [%s]", bar);
-    mvwprintw(win_hud, 3, 11, "%d / %d", player->hp, player->max_hp);
+    mvwprintw(win_hud, 3, hp_x, "%s", hp_text);
     mvwprintw(win_hud, 6, 3, "⚔ ATAQUE: %d", player->attack);
     mvwprintw(win_hud, 8, 3, "⛨ DEFESA: %d", player->defense);
 }
