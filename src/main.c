@@ -58,6 +58,13 @@ int main(void)
 {
     cursesSetup();
 
+    // shortcut: Continue starts new game until save/load is implemented
+    if (showMainMenu() == MENU_QUIT)
+    {
+        endwin();
+        return 0;
+    }
+
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
 
