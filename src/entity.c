@@ -266,15 +266,14 @@ void movePlayer(Position newPos)
 
 void chasePlayer(Entity* chaser)
 {
-    return;
-    int dx[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
-    int dy[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
+    int dx[] = {0, 0, -1, 1, -1, 1, -1, 1};
+    int dy[] = {-1, 1, 0, 0, -1, -1, 1, 1};
     MapCell cell = map[map_y][map_x];
     Tile** tiles = cell.tiles;
     // para o backtraking , -1 => indefinido
     Position prev[ROOM_HEIGHT][ROOM_WIDTH];
     // para o bfs, 0 => nao visitado, 1 => visitado
-    int visited  [ROOM_HEIGHT][ROOM_WIDTH];
+    int      visited[ROOM_HEIGHT][ROOM_WIDTH];
     for (int y = 0; y < ROOM_HEIGHT; y++)
     {
         for (int x = 0; x < ROOM_WIDTH; x++)
@@ -286,6 +285,8 @@ void chasePlayer(Entity* chaser)
     }
     coordQueue* q = initializeCoordQueue();
     pushCoordQueue(chaser->pos.x, chaser->pos.y, q);
+    visited[chaser->pos.y][chaser->pos.x] = true;
+
     bool foundPlayer = false;
     while (q->size > 0)
     {
@@ -293,9 +294,6 @@ void chasePlayer(Entity* chaser)
         popCoordQueue(q);
         int x = p.x;
         int y = p.y;
-        if (visited[y][x])
-            continue;
-        visited[y][x] = 1;
         for (int i = 0; i < 8; i++)
         {
             int nx = x + dx[i];
@@ -303,47 +301,55 @@ void chasePlayer(Entity* chaser)
             // sai da room, ou obstaculo
             if (nx >= ROOM_WIDTH  - 1 || nx <= 0 || ny >= ROOM_HEIGHT - 1 || ny <= 0)
                 continue;
-            if (tiles[ny][nx].walkable == false || visited[ny][nx])
+            if (visited[ny][nx])
                 continue;
+
             Entity* e = getEntityAt(nx, ny);
             // quer dizer que tem uma entidade em nx e ny
             if (e != NULL)
+                continue;
+            if (ny == player->pos.y && nx == player->pos.x)
             {
-                // se for player achei meu target
-                if (e->type == ENTITY_PLAYER)
-                {
-                    foundPlayer = true;
-                    break;
-                }
-                // se nao vejo o proximo
-                else
-                    continue;
+                foundPlayer = true;
+                prev[ny][nx].x = x;
+                prev[ny][nx].y = y;
+                break;
             }
+            if (tiles[ny][nx].walkable == false)
+                continue;
+
+            visited[ny][nx] = 1;
             prev[ny][nx].x = x;
             prev[ny][nx].y = y;
-            if (foundPlayer)
-                break;
             pushCoordQueue(nx, ny, q);
         }
         if (foundPlayer)
             break;
     }
+    if (!foundPlayer)
+    {
+        eraseCoordQueue(q);
+        return;
+    }
+    // no final vai ser o proximo movimento
     int prevY = prev[player->pos.y][player->pos.x].y;
     int prevX = prev[player->pos.y][player->pos.x].x;
 
-    // se o proximo for -1 quer dizer que cheguei no inimigo original
-    while (prev[prevY][prevX].x != -1)
-    {
-        prevY = prev[prevY][prevX].y;
-        prevX = prev[prevY][prevX].x;
-    }
-    // no final prevX e prevY deve conter as coordenadas para o proximo passo
-    if (prevX == player->pos.x && prevY == player->pos.y)
+    // quer dizer que ta do lado do player
+    if (prevY == chaser->pos.y && prevX == chaser->pos.x)
     {
         attackEntity(chaser, player);
     }
     else
     {
+        // se o proximo for -1 quer dizer que cheguei no inimigo original
+        while (prev[prevY][prevX].x != chaser->pos.x || prev[prevY][prevX].y != chaser->pos.y)
+        {
+            int auxY = prevY, auxX = prevX;
+            prevY = prev[auxY][auxX].y;
+            prevX = prev[auxY][auxX].x;
+        }
+        // no final prevX e prevY deve conter as coordenadas para o proximo passo
         chaser->pos.x = prevX;
         chaser->pos.y = prevY;
     }

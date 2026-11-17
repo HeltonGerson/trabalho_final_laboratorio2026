@@ -13,15 +13,13 @@ void passTime()
 {
 
     MapCell* cell = &map[map_y][map_x];
-    Entity** entities = &cell->entities;
+    Entity* entities = cell->entities;
     int ent_count     = cell->entity_count;
     for (int i = 0; i < ent_count; i++)
     {
-        Entity* e = entities[i];
-        continue;
+        Entity* e = &entities[i];
         if (e->type == ENTITY_ENEMY_MELEE)
         {
-            continue;
             chasePlayer(e);
         }
     }
