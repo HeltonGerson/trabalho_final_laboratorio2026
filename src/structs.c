@@ -1,6 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
-#include <stdlib.h>
 
 // inicializa a pilha de coordenadas
 coordStack* initializeCoordStack()
@@ -25,11 +23,11 @@ void pushCoord(int x, int y, coordStack* stack)
     node->coord.y = y;
     if (stack->size == 0)
     {
-        node->below = NULL;
+        node->next = NULL;
     }
     else
     {
-        node->below = stack->top;
+        node->next = stack->top;
     }
     stack->top = node;
     stack->size++;
@@ -39,7 +37,7 @@ void pushCoord(int x, int y, coordStack* stack)
 void popCoord(coordStack* stack)
 {
     coordNode* aux = stack->top;
-    stack->top     = stack->top->below;
+    stack->top     = stack->top->next;
     stack->size--;
     free(aux);
 }
@@ -52,4 +50,58 @@ void eraseStack(coordStack* stack)
         popCoord(stack);
     }
     free(stack);
+}
+
+// funcoes da Queue
+coordQueue* initializeCoordQueue()
+{
+    coordQueue* q = malloc(sizeof(coordQueue));
+    q->size  = 0;
+    q->front = NULL;
+    q->back  = NULL;
+    return q;
+}
+
+void pushCoordQueue(int x, int y, coordQueue* q)
+{
+    coordNode* new = malloc(sizeof(coordNode));
+    if (new == NULL)
+    {
+        endwin();
+        fprintf(stderr, "Erro ao alocar o nó da queue em structs.c");
+        exit(1);
+    }
+    new->coord.x = x;
+    new->coord.y = y;
+    new->next    = NULL;
+
+    if (q->size == 0)
+    {
+        q->front = new;
+    }
+    else
+    {
+        q->back->next = new;
+    }
+    q->back = new;
+    q->size++;
+}
+
+coordNode popCoordQueue(coordQueue* q)
+{
+    coordNode* aux = q->front;
+    coordNode  r   = *(aux);
+    q->front       = q->front->next;
+    q->size--;
+    free(aux);
+    return r;
+}
+
+void eraseCoordQueue(coordQueue* q)
+{
+    while (q->size > 0)
+    {
+        popCoordQueue(q);
+    }
+    free(q);
 }

@@ -137,6 +137,10 @@ int main(void)
     assert(map[3][2].entities != NULL);
 
     initEntity(&map[3][2].entities[0], ENTITY_ITEM, 6, 5);
+    map[3][2].entities[0].hp      = 0;
+    map[3][2].entities[0].max_hp  = 0;
+    map[3][2].entities[0].attack  = 0;
+    map[3][2].entities[0].defense = 0;
     initEntity(&map[3][2].entities[1], ENTITY_ENEMY_MELEE, 7, 5);
     initEntity(&map[3][2].entities[2], ENTITY_ENEMY_RANGED, 5, 6);
     curr_room[5][6].ch       = '.';
