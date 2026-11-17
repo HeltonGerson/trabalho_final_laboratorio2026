@@ -37,29 +37,29 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     {
     case ENTITY_PLAYER:
         e->ch      = '@';
-        e->hp      = 10;
         e->max_hp  = 10;
+        e->hp      = e->max_hp;
         e->attack  = 4;
         e->defense = 0;
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
-        e->hp      = 8;
         e->max_hp  = 8;
+        e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
         break;
     case ENTITY_ENEMY_RANGED:
         e->ch      = 'A';
-        e->hp      = 8;
         e->max_hp  = 8;
+        e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
         break;
     case ENTITY_BOSS:
         e->ch      = 'B';
-        e->hp      = 50;
         e->max_hp  = 50;
+        e->hp      = e->max_hp;
         e->attack  = 20;
         e->defense = 10;
         break;
@@ -297,6 +297,8 @@ void movePlayer(Position newPos)
             player->pos.y = newPos.y;
             player->pos.x = newPos.x;
         }
+
+        passTime();
     }
 
     if (room_changed)
@@ -305,4 +307,96 @@ void movePlayer(Position newPos)
         updateFogOfWar();
         roomDoors();
     }
+}
+
+void chasePlayer(Entity* chaser)
+{
+    int     dx[]  = {0, 0, -1, 1, -1, 1, -1, 1};
+    int     dy[]  = {-1, 1, 0, 0, -1, -1, 1, 1};
+    MapCell cell  = map[map_y][map_x];
+    Tile**  tiles = cell.tiles;
+    // para o backtraking , -1 => indefinido
+    Position prev[ROOM_HEIGHT][ROOM_WIDTH];
+    // para o bfs, 0 => nao visitado, 1 => visitado
+    int visited[ROOM_HEIGHT][ROOM_WIDTH];
+    for (int y = 0; y < ROOM_HEIGHT; y++)
+    {
+        for (int x = 0; x < ROOM_WIDTH; x++)
+        {
+            prev[y][x].x  = -1;
+            prev[y][x].y  = -1;
+            visited[y][x] = 0;
+        }
+    }
+    coordQueue* q = initializeCoordQueue();
+    pushCoordQueue(chaser->pos.x, chaser->pos.y, q);
+    visited[chaser->pos.y][chaser->pos.x] = true;
+
+    bool foundPlayer = false;
+    while (q->size > 0)
+    {
+        Position p = q->front->coord;
+        popCoordQueue(q);
+        int x = p.x;
+        int y = p.y;
+        for (int i = 0; i < 8; i++)
+        {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            // sai da room, ou obstaculo
+            if (nx >= ROOM_WIDTH - 1 || nx <= 0 || ny >= ROOM_HEIGHT - 1 || ny <= 0)
+                continue;
+            if (visited[ny][nx])
+                continue;
+
+            Entity* e = getEntityAt(nx, ny);
+            // quer dizer que tem uma entidade em nx e ny
+            if (e != NULL)
+                continue;
+            if (ny == player->pos.y && nx == player->pos.x)
+            {
+                foundPlayer    = true;
+                prev[ny][nx].x = x;
+                prev[ny][nx].y = y;
+                break;
+            }
+            if (tiles[ny][nx].walkable == false)
+                continue;
+
+            visited[ny][nx] = 1;
+            prev[ny][nx].x  = x;
+            prev[ny][nx].y  = y;
+            pushCoordQueue(nx, ny, q);
+        }
+        if (foundPlayer)
+            break;
+    }
+    if (!foundPlayer)
+    {
+        eraseCoordQueue(q);
+        return;
+    }
+    // no final vai ser o proximo movimento
+    int prevY = prev[player->pos.y][player->pos.x].y;
+    int prevX = prev[player->pos.y][player->pos.x].x;
+
+    // quer dizer que ta do lado do player
+    if (prevY == chaser->pos.y && prevX == chaser->pos.x)
+    {
+        attackEntity(chaser, player);
+    }
+    else
+    {
+        // se o proximo for -1 quer dizer que cheguei no inimigo original
+        while (prev[prevY][prevX].x != chaser->pos.x || prev[prevY][prevX].y != chaser->pos.y)
+        {
+            int auxY = prevY, auxX = prevX;
+            prevY = prev[auxY][auxX].y;
+            prevX = prev[auxY][auxX].x;
+        }
+        // no final prevX e prevY deve conter as coordenadas para o proximo passo
+        chaser->pos.x = prevX;
+        chaser->pos.y = prevY;
+    }
+    eraseCoordQueue(q);
 }

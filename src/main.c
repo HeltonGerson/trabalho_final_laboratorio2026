@@ -16,6 +16,34 @@ const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
 
+int main(void)
+{
+    cursesSetup();
+    srand(time(NULL));
+    int number_of_rooms = rand() % 8 + 8;
+
+    layoutWindows();
+
+    map = createMap();
+    setupFloor(map_x, map_y, number_of_rooms);
+
+    curr_room = map[map_y][map_x].tiles;
+
+    Position start_pos = {5, 5};
+    player             = createPlayer(start_pos);
+
+    roomDoors();
+    gameLoop();
+
+    closeGame();
+    return 0;
+}
+
+WINDOW* create_newwin(int height, int width, int starty, int startx)
+{
+    return newwin(height, width, starty, startx);
+}
+
 void destroyWindows(void)
 {
     if (win_minimapa)
@@ -52,33 +80,4 @@ void layoutWindows(void)
     win          = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, room_y, room_x);
     if (!win_minimapa || !win)
         destroyWindows();
-}
-
-int main(void)
-{
-    cursesSetup();
-
-    srand(time(NULL));
-    int number_of_rooms = rand() % 8 + 8;
-
-    layoutWindows();
-
-    map = createMap();
-    setupFloor(map_x, map_y, number_of_rooms);
-
-    curr_room = map[map_y][map_x].tiles;
-
-    Position start_pos = {5, 5};
-    player             = createPlayer(start_pos);
-
-    roomDoors();
-    gameLoop();
-
-    closeGame();
-    return 0;
-}
-
-WINDOW* create_newwin(int height, int width, int starty, int startx)
-{
-    return newwin(height, width, starty, startx);
 }
