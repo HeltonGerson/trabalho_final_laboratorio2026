@@ -15,8 +15,7 @@ void pushCoord(int x, int y, coordStack* stack)
     coordNode* node = malloc(sizeof(coordNode));
     if (node == NULL)
     {
-        //endwin();
-        closeGame();
+        endwin();
         fprintf(stderr, "Erro ao alocar o nó da stack em structs.c");
         exit(1);
     }
@@ -68,7 +67,7 @@ void pushCoordQueue(int x, int y, coordQueue* q)
     coordNode* new = malloc(sizeof(coordNode));
     if (new == NULL)
     {
-        closeGame();
+        endwin();
         fprintf(stderr, "Erro ao alocar o nó da queue em structs.c");
         exit(1);
     }

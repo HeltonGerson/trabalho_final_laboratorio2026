@@ -104,6 +104,7 @@ Entity* createPlayer(Position start_pos);
 void    handleInput(int ch);
 void    movePlayer(Position newPos);
 void    chasePlayer(Entity* e);
+void    chooseItem(Entity* e);
 
 // funcoes do draw
 void drawRoom(void);

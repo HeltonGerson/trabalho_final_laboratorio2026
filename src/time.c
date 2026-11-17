@@ -18,7 +18,7 @@ void passTime()
     for (int i = 0; i < ent_count; i++)
     {
         Entity* e = &entities[i];
-        if (e->type == ENTITY_ENEMY_MELEE)
+        if (e->active && e->type == ENTITY_ENEMY_MELEE)
         {
             chasePlayer(e);
         }
