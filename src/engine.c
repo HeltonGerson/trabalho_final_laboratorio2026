@@ -17,7 +17,11 @@ void gameLoop()
 
     while ((ch = getch()) != 'q')
     {
-        handleInput(ch);
+        if (ch == KEY_RESIZE)
+            layoutWindows();
+        else if (win && win_minimapa)
+            handleInput(ch);
+
         drawEverything();
     }
 }
@@ -25,10 +29,7 @@ void gameLoop()
 /* Termina o jogo, libera memoria */
 void closeGame(void)
 {
-    if (win_minimapa)
-        delwin(win_minimapa);
-    if (win)
-        delwin(win);
+    destroyWindows();
     endwin();
 
     free(player);

@@ -1,12 +1,12 @@
 #ifndef ROGUE_H
 #define ROGUE_H
 
-#include <ncurses.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
 #include <dirent.h>
+#include <ncurses.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 // structs base
 typedef struct
@@ -14,10 +14,25 @@ typedef struct
     int x, y;
 } Position;
 
+typedef enum
+{
+    ENTITY_PLAYER,
+    ENTITY_ENEMY_MELEE,
+    ENTITY_ENEMY_RANGED,
+    ENTITY_BOSS,
+    ENTITY_ITEM
+} EntityType;
+
 typedef struct
 {
-    Position pos;
-    chtype   ch;
+    Position   pos;
+    chtype     ch;
+    EntityType type;
+    int        hp;
+    int        max_hp;
+    int        attack;
+    int        defense;
+    bool       active;
 } Entity;
 
 typedef struct
@@ -28,10 +43,12 @@ typedef struct
 
 typedef struct
 {
-    int    id;
-    Tile** tiles;
-    bool   visited;
-    bool   discovered;
+    int     id;
+    Tile**  tiles;
+    Entity* entities;
+    int     entity_count;
+    bool    visited;
+    bool    discovered;
 } MapCell;
 
 typedef struct s
@@ -64,13 +81,19 @@ void   roomDoors(void);
 int    setRoom(int x, int y, int choosed_room);
 int    countTxtFiles(const char* dir_path);
 
-// funcoes do player
+// funcoes de entidades e player
+void    initEntity(Entity* e, EntityType type, int x, int y);
+int     spawnRoomEntities(MapCell* cell);
+void    freeRoomEntities(MapCell* cell);
+Entity* getEntityAt(int x, int y);
+void    attackEntity(Entity* attacker, Entity* target);
 Entity* createPlayer(Position start_pos);
 void    handleInput(int ch);
 void    movePlayer(Position newPos);
 
 // funcoes do draw
 void drawRoom(void);
+void drawRoomEntities(void);
 void drawMinimap(void);
 void drawEntity(Entity* e);
 void drawEverything(void);
@@ -83,6 +106,8 @@ void      freeMap(void);
 
 // funcoes de tela
 WINDOW* create_newwin(int height, int width, int starty, int startx);
+void    layoutWindows(void);
+void    destroyWindows(void);
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
