@@ -1,6 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
-#include <stdio.h>
 
 static bool charToEntityType(chtype ch, EntityType* out_type)
 {
@@ -64,44 +62,11 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->defense = 10;
         break;
     case ENTITY_ITEM:
-        chooseItem(e);
-        break;
-    }
-}
-
-void chooseItem(Entity *e)
-{
-    int item = rand() % 8;
-    e->ch = 'I'; 
-    e->hp      = 0;
-    e->max_hp  = 0;
-    e->attack  = 0;
-    e->defense = 0;
-    switch (item) 
-    { // mudar depois, talvez um txt
-    case 1: //hp
-        e->hp = 10;
-        break;
-    case 2:
-        e->hp = 20;
-        break;
-    case 3: // healing
-        e->max_hp = 5;
-        break;
-    case 4:
-        e->max_hp = 10;
-        break;
-    case 5: // dano
-        e->attack = 5;
-        break;
-    case 6:
-        e->attack = 10;
-        break;
-    case 7: //defesa
-        e->defense = 5;
-        break;
-    case 8:
-        e->defense = 10;
+        e->ch      = 'I';
+        e->hp      = 0;
+        e->max_hp  = 0;
+        e->attack  = 0;
+        e->defense = 0;
         break;
     }
 }
@@ -272,17 +237,7 @@ void movePlayer(Position newPos)
         {
             if (target->type == ENTITY_ITEM)
             {
-                if(player->hp + target->hp >= player->max_hp){
-                    player->hp = player->max_hp;
-                }else{
-                    player->hp = target->hp;
-                }
-                if(target->max_hp > 0){
-                    player->max_hp = target->max_hp;
-                    player->hp = player->max_hp;
-                }
-                player->attack += target->attack;
-                player->defense+= target->defense;
+                // shortcut: apenas desaparece do mapa ate implementar inventario/buffs
                 target->active = false;
                 player->pos.y  = newPos.y;
                 player->pos.x  = newPos.x;
