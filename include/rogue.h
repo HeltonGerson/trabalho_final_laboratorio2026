@@ -90,6 +90,7 @@ void    attackEntity(Entity* attacker, Entity* target);
 Entity* createPlayer(Position start_pos);
 void    handleInput(int ch);
 void    movePlayer(Position newPos);
+void    chooseItem(Entity *e);
 
 // funcoes do draw
 void drawRoom(void);
