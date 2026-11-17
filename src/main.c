@@ -5,7 +5,9 @@ Entity*   player;
 Tile**    curr_room;
 WINDOW*   win;
 WINDOW*   win_minimapa;
+WINDOW*   win_hud;
 MapCell** map;
+logQueue* logs;
 
 // indices atuais no mapa
 int       map_y       = 3;
@@ -28,7 +30,8 @@ int main(void)
 
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
-
+    logs = initializeLogQueue();
+    
     layoutWindows();
 
     map = createMap();
@@ -63,14 +66,19 @@ void destroyWindows(void)
         delwin(win);
         win = NULL;
     }
+    if (win_hud)
+    {
+        delwin(win_hud);
+        win_hud = NULL;
+    }
 }
 
 void layoutWindows(void)
 {
-    int minimap_w = 15;
-    int minimap_h = 7;
-    int spacing   = 3;
-    int total_w   = minimap_w + spacing + ROOM_WIDTH;
+    int minimap_w = 15, minimap_h = 7;
+    int hud_w = 25, hud_h = ROOM_HEIGHT;
+    int spacing = 3;
+    int total_w = minimap_w + spacing + ROOM_WIDTH + spacing + hud_w;
 
     // Recria as janelas para impedir que resizeterm() mantenha dimensoes cortadas
     destroyWindows();
@@ -80,11 +88,14 @@ void layoutWindows(void)
 
     int minimap_x = (COLS - total_w) / 2;
     int room_x    = minimap_x + minimap_w + spacing;
+    int hud_x     = room_x + ROOM_WIDTH + spacing;
     int room_y    = (LINES - ROOM_HEIGHT) / 2;
     int minimap_y = room_y + (ROOM_HEIGHT - minimap_h) / 2;
+    int hud_y     = room_y + (ROOM_HEIGHT - hud_h) / 2;
 
     win_minimapa = create_newwin(minimap_h, minimap_w, minimap_y, minimap_x);
     win          = create_newwin(ROOM_HEIGHT, ROOM_WIDTH, room_y, room_x);
-    if (!win_minimapa || !win)
+    win_hud      = create_newwin(hud_h, hud_w, hud_y, hud_x);
+    if (!win_minimapa || !win || !win_hud)
         destroyWindows();
 }

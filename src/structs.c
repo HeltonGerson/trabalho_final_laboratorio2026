@@ -56,9 +56,9 @@ void eraseStack(coordStack* stack)
 coordQueue* initializeCoordQueue()
 {
     coordQueue* q = malloc(sizeof(coordQueue));
-    q->size  = 0;
-    q->front = NULL;
-    q->back  = NULL;
+    q->size       = 0;
+    q->front      = NULL;
+    q->back       = NULL;
     return q;
 }
 
@@ -102,6 +102,61 @@ void eraseCoordQueue(coordQueue* q)
     while (q->size > 0)
     {
         popCoordQueue(q);
+    }
+    free(q);
+}
+
+logQueue* initializeLogQueue()
+{
+    logQueue* q = malloc(sizeof(logQueue));
+    q->size  = 0;
+    q->front = NULL;
+    q->back  = NULL;
+    return q;
+}
+
+void pushLogQueue(char* msg, logQueue* q)
+{
+    if (!q)
+        return;
+
+    logNode* new = malloc(sizeof(logNode));
+    if (new == NULL)
+    {
+        endwin();
+        fprintf(stderr, "Erro ao alocar o nó da queue em structs.c");
+        exit(1);
+    }
+    new->msg = msg;
+    new->next    = NULL;
+
+    if (q->size == 0)
+    {
+        q->front = new;
+    }
+    else
+    {
+        q->back->next = new;
+    }
+    q->back = new;
+    q->size++;
+}
+
+char* popLogQueue(logQueue* q)
+{
+    logNode* aux = q->front;
+    logNode  r   = *(aux);
+    q->front       = q->front->next;
+    q->size--;
+    free(aux);
+    return r.msg;
+}
+
+void eraseLogQueue(logQueue* q)
+{
+    while (q->size > 0)
+    {
+        popLogQueue(q);
     }
     free(q);
 }

@@ -44,7 +44,7 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
-        e->max_hp  = 8;
+        e->max_hp  = 4;
         e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
@@ -69,18 +69,17 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     }
 }
 
-void chooseItem(Entity *e)
+void chooseItem(Entity* e)
 {
-    int item = rand() % 8;
-    e->ch = 'I'; 
+    int item   = rand() % 8;
+    e->ch      = 'I';
     e->hp      = 0;
     e->max_hp  = 0;
     e->attack  = 0;
     e->defense = 0;
-    switch (item) 
-    { // mudar depois, talvez um txt
-    case 1: //hp
-        e->hp = 10;
+    switch (item)
+    {       // mudar depois, talvez um txt
+    case 1: // hp
         break;
     case 2:
         e->hp = 20;
@@ -97,7 +96,7 @@ void chooseItem(Entity *e)
     case 6:
         e->attack = 10;
         break;
-    case 7: //defesa
+    case 7: // defesa
         e->defense = 5;
         break;
     case 8:
@@ -272,17 +271,21 @@ void movePlayer(Position newPos)
         {
             if (target->type == ENTITY_ITEM)
             {
-                if(player->hp + target->hp >= player->max_hp){
+                if (player->hp + target->hp >= player->max_hp)
+                {
                     player->hp = player->max_hp;
-                }else{
+                }
+                else
+                {
                     player->hp = target->hp;
                 }
-                if(target->max_hp > 0){
+                if (target->max_hp > 0)
+                {
                     player->max_hp = target->max_hp;
-                    player->hp = player->max_hp;
+                    player->hp     = player->max_hp;
                 }
                 player->attack += target->attack;
-                player->defense+= target->defense;
+                player->defense += target->defense;
                 target->active = false;
                 player->pos.y  = newPos.y;
                 player->pos.x  = newPos.x;
@@ -290,6 +293,10 @@ void movePlayer(Position newPos)
             else
             {
                 attackEntity(player, target);
+                if (target->hp == 0)
+                    pushLogQueue("The enemy died.", logs);
+                else
+                    pushLogQueue("You attacked.", logs);
             }
         }
         else
@@ -384,6 +391,7 @@ void chasePlayer(Entity* chaser)
     if (prevY == chaser->pos.y && prevX == chaser->pos.x)
     {
         attackEntity(chaser, player);
+        pushLogQueue("The goblin attacked you.", logs);
     }
     else
     {
