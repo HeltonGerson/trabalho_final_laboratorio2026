@@ -104,5 +104,11 @@ void closeGame(void)
     free(player);
     player = NULL;
 
+    if (logs)
+    {
+        eraseLogQueue(logs);
+        logs = NULL;
+    }
+
     freeMap();
 }

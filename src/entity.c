@@ -80,7 +80,6 @@ void chooseItem(Entity* e)
     switch (item)
     {       // mudar depois, talvez um txt
     case 1: // hp
-        e->hp = 10;
         break;
     case 2:
         e->hp = 20;
@@ -294,6 +293,11 @@ void movePlayer(Position newPos)
             else
             {
                 attackEntity(player, target);
+                if (target->hp == 0)
+                    pushLogQueue("The enemy died.", logs);
+                else
+                    pushLogQueue("You attacked.", logs);
+
             }
         }
         else
@@ -388,6 +392,7 @@ void chasePlayer(Entity* chaser)
     if (prevY == chaser->pos.y && prevX == chaser->pos.x)
     {
         attackEntity(chaser, player);
+        pushLogQueue("The goblin attacked you.", logs);
     }
     else
     {

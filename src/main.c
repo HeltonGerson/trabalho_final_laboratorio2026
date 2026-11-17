@@ -7,6 +7,7 @@ WINDOW*   win;
 WINDOW*   win_minimapa;
 WINDOW*   win_hud;
 MapCell** map;
+logQueue* logs;
 
 // indices atuais no mapa
 int       map_y       = 3;
@@ -29,7 +30,8 @@ int main(void)
 
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
-
+    logs = initializeLogQueue();
+    
     layoutWindows();
 
     map = createMap();

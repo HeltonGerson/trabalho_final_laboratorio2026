@@ -18,6 +18,7 @@ typedef enum
     MENU_QUIT
 } MenuOption;
 
+
 // structs base
 typedef struct
 {
@@ -80,6 +81,19 @@ typedef struct
     int size;
 } coordQueue;
 
+typedef struct l
+{
+    char* msg;
+    struct l* next;
+} logNode;
+
+typedef struct
+{
+    logNode* front;
+    logNode* back;
+    int size;
+} logQueue;
+
 // funcoes das structs
 // pilha
 coordStack* initializeCoordStack();
@@ -91,6 +105,10 @@ coordQueue* initializeCoordQueue();
 void        pushCoordQueue(int x, int y, coordQueue* q);
 coordNode   popCoordQueue(coordQueue* q);
 void        eraseCoordQueue(coordQueue* q);
+logQueue*   initializeLogQueue();
+void        pushLogQueue(char* msg, logQueue* q);
+char*       popLogQueue(logQueue* q);
+void        eraseLogQueue(logQueue* q);
 
 // funcoes da engine
 void       cursesSetup(void);
@@ -125,6 +143,7 @@ void drawMinimap(void);
 void drawHud(void);
 void drawEntity(Entity* e);
 void drawEverything(void);
+void drawLogs();
 
 // funcoes do map
 MapCell** createMap(void);
@@ -137,7 +156,12 @@ WINDOW* create_newwin(int height, int width, int starty, int startx);
 void    layoutWindows(void);
 void    destroyWindows(void);
 
+// tempo
 void passTime();
+
+// logs
+void logDefault(const char* msg);
+
 
 /* extern: variaveis globais compartilhadas */
 extern const int ROOM_HEIGHT;
@@ -154,5 +178,6 @@ extern WINDOW*   win;
 extern WINDOW*   win_minimapa;
 extern WINDOW*   win_hud;
 extern Position* top;
+extern logQueue* logs;
 
 #endif
