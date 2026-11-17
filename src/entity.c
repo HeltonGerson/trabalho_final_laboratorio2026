@@ -44,7 +44,7 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
-        e->max_hp  = 8;
+        e->max_hp  = 4;
         e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
@@ -297,7 +297,6 @@ void movePlayer(Position newPos)
                     pushLogQueue("The enemy died.", logs);
                 else
                     pushLogQueue("You attacked.", logs);
-
             }
         }
         else
