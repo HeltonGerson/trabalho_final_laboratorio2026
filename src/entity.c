@@ -35,36 +35,36 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     {
     case ENTITY_PLAYER:
         e->ch      = '@';
-        e->hp      = 10;
-        e->max_hp  = 10;
+        e->max_hp  = 5;
+        e->hp      = e->max_hp;
         e->attack  = 4;
         e->defense = 0;
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
-        e->hp      = 8;
         e->max_hp  = 8;
+        e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
         break;
     case ENTITY_ENEMY_RANGED:
         e->ch      = 'A';
-        e->hp      = 8;
         e->max_hp  = 8;
+        e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
         break;
     case ENTITY_BOSS:
         e->ch      = 'B';
-        e->hp      = 50;
         e->max_hp  = 50;
+        e->hp      = e->max_hp;
         e->attack  = 20;
         e->defense = 10;
         break;
     case ENTITY_ITEM:
         e->ch      = 'I';
-        e->hp      = 0;
         e->max_hp  = 0;
+        e->hp      = 0;
         e->attack  = 0;
         e->defense = 0;
         break;
@@ -266,20 +266,20 @@ void movePlayer(Position newPos)
 
 void chasePlayer(Entity* chaser)
 {
-    int dx[] = {0, 0, -1, 1, -1, 1, -1, 1};
-    int dy[] = {-1, 1, 0, 0, -1, -1, 1, 1};
-    MapCell cell = map[map_y][map_x];
-    Tile** tiles = cell.tiles;
+    int     dx[]  = {0, 0, -1, 1, -1, 1, -1, 1};
+    int     dy[]  = {-1, 1, 0, 0, -1, -1, 1, 1};
+    MapCell cell  = map[map_y][map_x];
+    Tile**  tiles = cell.tiles;
     // para o backtraking , -1 => indefinido
     Position prev[ROOM_HEIGHT][ROOM_WIDTH];
     // para o bfs, 0 => nao visitado, 1 => visitado
-    int      visited[ROOM_HEIGHT][ROOM_WIDTH];
+    int visited[ROOM_HEIGHT][ROOM_WIDTH];
     for (int y = 0; y < ROOM_HEIGHT; y++)
     {
         for (int x = 0; x < ROOM_WIDTH; x++)
         {
-            prev[y][x].x    = -1;
-            prev[y][x].y    = -1;
+            prev[y][x].x  = -1;
+            prev[y][x].y  = -1;
             visited[y][x] = 0;
         }
     }
@@ -299,7 +299,7 @@ void chasePlayer(Entity* chaser)
             int nx = x + dx[i];
             int ny = y + dy[i];
             // sai da room, ou obstaculo
-            if (nx >= ROOM_WIDTH  - 1 || nx <= 0 || ny >= ROOM_HEIGHT - 1 || ny <= 0)
+            if (nx >= ROOM_WIDTH - 1 || nx <= 0 || ny >= ROOM_HEIGHT - 1 || ny <= 0)
                 continue;
             if (visited[ny][nx])
                 continue;
@@ -310,7 +310,7 @@ void chasePlayer(Entity* chaser)
                 continue;
             if (ny == player->pos.y && nx == player->pos.x)
             {
-                foundPlayer = true;
+                foundPlayer    = true;
                 prev[ny][nx].x = x;
                 prev[ny][nx].y = y;
                 break;
@@ -319,8 +319,8 @@ void chasePlayer(Entity* chaser)
                 continue;
 
             visited[ny][nx] = 1;
-            prev[ny][nx].x = x;
-            prev[ny][nx].y = y;
+            prev[ny][nx].x  = x;
+            prev[ny][nx].y  = y;
             pushCoordQueue(nx, ny, q);
         }
         if (foundPlayer)
