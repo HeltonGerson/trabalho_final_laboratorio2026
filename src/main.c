@@ -37,24 +37,19 @@ int main(void)
         setupFloor(map_x, map_y, number_of_rooms);
         Position start_pos = {5, 5};
         player             = createPlayer(start_pos);
-        
+
     }else if(mReturn == 1)
     {
         continueGame();
-        for(int i = 0; i < MAP_HEIGHT; i++){
-            for(int j = 0; j < MAP_WIDTH; j++){
-                mvprintw(i,j, "%p", map[i][j].tiles);
-            }
-        }
     }
     printw("%i %i", map_y, map_x);
     getch();
     curr_room = map[map_y][map_x].tiles;
     curr_room[0][0].ch = 0;
     printw("aaaaaaaaaaaaaa");
-    getch(); 
+    getch();
     printw("%i %i ", map_y, map_x);
-    
+
     roomDoors();
 
 

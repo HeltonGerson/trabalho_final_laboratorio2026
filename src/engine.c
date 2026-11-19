@@ -28,24 +28,24 @@ void save(Entity *player)
         return;
     }
     int somaEntidades = 0;
-    for(int i = 0; i < MAP_WIDTH; i++)
+    for(int i = 0; i < MAP_HEIGHT; i++)
     {
-        for(int j = 0; j < MAP_HEIGHT; j++)
+        for(int j = 0; j < MAP_WIDTH; j++)
         {
-            somaEntidades += map[j][i].entity_count;
+            somaEntidades += map[i][j].entity_count;
         }
     }
     fprintf(save, "%i", somaEntidades);
     fprintf(save, "\n");
-    
-    for(int i = 0; i < MAP_WIDTH; i++)
+
+    for(int i = 0; i < MAP_HEIGHT; i++)
     {
-        for(int j = 0; j < MAP_HEIGHT; j++)
+        for(int j = 0; j < MAP_WIDTH; j++)
         {
-            fprintf(save, "%i %i \n", map[j][i].id, map[j][i].entity_count);
-            for(int t = 0; t < map[j][i].entity_count; t++)
+            fprintf(save, "%i %i \n", map[i][j].id, map[i][j].entity_count);
+            for(int t = 0; t < map[i][j].entity_count; t++)
             {
-                fprintf(save, "%i %c %i %i %i %i %i %i %i \n", map[j][i].entities[t].active,  map[j][i].entities[t].ch, map[j][i].entities[t].type, map[j][i].entities[t].attack,  map[j][i].entities[t].defense,  map[j][i].entities[t].hp,  map[j][i].entities[t].max_hp,  map[j][i].entities[t].pos.x,  map[j][i].entities[t].pos.y);
+                fprintf(save, "%i %c %i %i %i %i %i %i %i \n", map[i][j].entities[t].active,  map[i][j].entities[t].ch, map[i][j].entities[t].type, map[i][j].entities[t].attack,  map[i][j].entities[t].defense,  map[i][j].entities[t].hp,  map[i][j].entities[t].max_hp,  map[i][j].entities[t].pos.x,  map[i][j].entities[t].pos.y);
             }
         }
     }
@@ -55,38 +55,39 @@ void save(Entity *player)
 
 void continueGame()
 {
-    if(!saveExists()) 
+    if(!saveExists())
         return;
-    
+
     FILE *save = fopen(SAVE_PATH, "r");
     int countRoom = 0, countEntity = 0, totalEntities = 0, idx = 0;
     fscanf(save, "%i", &totalEntities);
-    for(int i = 0; i < MAP_WIDTH; i++)
+    for(int i = 0; i < MAP_HEIGHT; i++)
     {
-        for(int j = 0; j < MAP_HEIGHT; j++)
+        for(int j = 0; j < MAP_WIDTH; j++)
         {
             fscanf(save, "%i", &countRoom);
             fscanf(save, "%i", &countEntity);
-            map[j][i].id = countRoom;
-            map[j][i].entity_count = countEntity;
-            map[j][i].tiles = readRoom(countRoom);
-            if(countRoom != 0 && countRoom != -1)
-            { 
-                Entity *auxEntity = malloc(sizeof(Entity));
-                map[j][i].entities = malloc(countEntity * sizeof(Entity));
+            map[i][j].id = countRoom;
+            map[i][j].entity_count = countEntity;
+            mvprintw(i,j,"%d", countRoom);
+            getch();
+            map[i][j].tiles = readRoom(1);
+             if(countRoom != 0 && countRoom != -1)
+            {
+                Entity auxEntity;
+                map[i][j].entities = malloc(countEntity * sizeof(Entity));
                 for(int t = 0; t < countEntity; t++)
                 {
                     int auxB, auxT;
                     char auxC;
                     fscanf(save, "%i", &auxB);
-                    auxEntity->active = auxB;
+                    auxEntity.active = auxB;
                     fscanf(save, " %c", &auxC);
-                    auxEntity->ch = (chtype)auxC;
+                    auxEntity.ch = (chtype)auxC;
                     fscanf(save, "%i", &auxT);
-                    auxEntity->type = (EntityType)auxT;
-                    fscanf(save, "%i %i %i %i %i %i", &auxEntity->attack, &auxEntity->defense, &auxEntity->hp, &auxEntity->max_hp, &auxEntity->pos.x, &auxEntity->pos.y);
-                    map[j][i].entities[idx] = *auxEntity;
-                    idx++;
+                    auxEntity.type = (EntityType)auxT;
+                    fscanf(save, "%i %i %i %i %i %i", &auxEntity.attack, &auxEntity.defense, &auxEntity.hp, &auxEntity.max_hp, &auxEntity.pos.x, &auxEntity.pos.y);
+                    map[i][j].entities[t] = auxEntity;
                 }
                 idx = 0;
             }
