@@ -9,18 +9,38 @@
  * 3.2(depois): Os projeteis seguem o seu percurso
  */
 
-void passTime()
+void passTime(void)
 {
+    if (!map || map_x < 0 || map_x >= MAP_WIDTH || map_y < 0 || map_y >= MAP_HEIGHT)
+        return;
+    if (!player || !player->active || player->hp <= 0)
+        return;
 
     MapCell* cell      = &map[map_y][map_x];
     Entity*  entities  = cell->entities;
     int      ent_count = cell->entity_count;
     for (int i = 0; i < ent_count; i++)
     {
+        if (!player->active || player->hp <= 0)
+            break;
+
         Entity* e = &entities[i];
-        if (e->active && e->type == ENTITY_ENEMY_MELEE)
+        if (!e->active)
+            continue;
+
+        switch (e->type)
         {
+        case ENTITY_ENEMY_MELEE:
             chasePlayer(e);
+            break;
+        case ENTITY_ENEMY_RANGED:
+            actRangedEnemy(e);
+            break;
+        case ENTITY_BOSS:
+            actBoss(e);
+            break;
+        default:
+            break;
         }
     }
 }

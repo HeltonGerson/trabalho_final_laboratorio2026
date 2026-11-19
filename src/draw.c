@@ -75,12 +75,106 @@ void drawMinimap(void)
     }
 }
 
+static attr_t entityAttr(EntityType type)
+{
+    if (!has_colors())
+        return (type == ENTITY_PLAYER || type == ENTITY_BOSS) ? A_BOLD : A_NORMAL;
+
+    switch (type)
+    {
+    case ENTITY_PLAYER:
+        return COLOR_PAIR(COLOR_PAIR_PLAYER) | A_BOLD;
+    case ENTITY_ENEMY_MELEE:
+        return COLOR_PAIR(COLOR_PAIR_ENEMY);
+    case ENTITY_ENEMY_RANGED:
+        return COLOR_PAIR(COLOR_PAIR_ARCHER) | A_BOLD;
+    case ENTITY_BOSS:
+        return COLOR_PAIR(COLOR_PAIR_BOSS) | A_BOLD;
+    case ENTITY_ITEM:
+        return COLOR_PAIR(COLOR_PAIR_ITEM) | A_BOLD;
+    }
+    return A_NORMAL;
+}
+
 void drawEntity(Entity* e)
 {
     if (!win || !e || !e->active)
         return;
 
+    attr_t attr = entityAttr(e->type);
+    wattron(win, attr);
     mvwaddch(win, e->pos.y, e->pos.x, e->ch);
+    wattroff(win, attr);
+}
+
+void drawHitFlash(Position pos)
+{
+    if (!win || !curr_room)
+        return;
+    if (pos.x < 0 || pos.x >= ROOM_WIDTH || pos.y < 0 || pos.y >= ROOM_HEIGHT)
+        return;
+
+    drawRoom();
+    drawRoomEntities();
+    drawEntity(player);
+
+    attr_t attr = has_colors() ? (COLOR_PAIR(COLOR_PAIR_HIT) | A_BOLD) : (A_REVERSE | A_BOLD);
+    wattron(win, attr);
+    mvwaddch(win, pos.y, pos.x, 'X');
+    wattroff(win, attr);
+    wrefresh(win);
+    napms(100);
+}
+
+void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player,
+                        bool hit_target)
+{
+    if (!win || !curr_room || (dx == 0 && dy == 0))
+        return;
+
+    chtype glyph = '*';
+    if (dx == 0)
+        glyph = '|';
+    else if (dy == 0)
+        glyph = '-';
+    else if (dx * dy > 0)
+        glyph = '\\';
+    else
+        glyph = '/';
+
+    attr_t attr = A_BOLD;
+    if (has_colors())
+        attr |= COLOR_PAIR(is_player ? COLOR_PAIR_SHOT_PLAYER : COLOR_PAIR_SHOT_ENEMY);
+
+    drawRoom();
+    drawRoomEntities();
+    drawEntity(player);
+    wrefresh(win);
+
+    int x = from.x;
+    int y = from.y;
+    while (x != to.x || y != to.y)
+    {
+        x += dx;
+        y += dy;
+        if (x < 0 || x >= ROOM_WIDTH || y < 0 || y >= ROOM_HEIGHT)
+            break;
+
+        wattron(win, attr);
+        mvwaddch(win, y, x, glyph);
+        wattroff(win, attr);
+        wrefresh(win);
+        napms(30);
+
+        drawRoom();
+        drawRoomEntities();
+        drawEntity(player);
+    }
+
+    if (hit_target)
+        drawHitFlash(to);
+    else
+        wrefresh(win);
 }
 
 void drawRoomEntities(void)

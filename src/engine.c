@@ -1,7 +1,7 @@
 #include "rogue.h"
 #include <locale.h>
 
-void cursesSetup()
+void cursesSetup(void)
 {
     setlocale(LC_ALL, "");
     initscr();            /* Inicia o modo curses */
@@ -9,6 +9,19 @@ void cursesSetup()
     cbreak();             /* Comandos nao sao executados (ex: Ctrl-C) */
     keypad(stdscr, TRUE); /* Permite pegar caracteres como as setas e teclas F(n) */
     curs_set(0);          /* Cursor nao aparece */
+    if (has_colors())
+    {
+        start_color();
+        use_default_colors();
+        init_pair(COLOR_PAIR_PLAYER, COLOR_GREEN, -1);
+        init_pair(COLOR_PAIR_ENEMY, COLOR_RED, -1);
+        init_pair(COLOR_PAIR_ARCHER, COLOR_YELLOW, -1);
+        init_pair(COLOR_PAIR_BOSS, COLOR_MAGENTA, -1);
+        init_pair(COLOR_PAIR_ITEM, COLOR_CYAN, -1);
+        init_pair(COLOR_PAIR_SHOT_PLAYER, COLOR_CYAN, -1);
+        init_pair(COLOR_PAIR_SHOT_ENEMY, COLOR_RED, -1);
+        init_pair(COLOR_PAIR_HIT, COLOR_WHITE, COLOR_RED);
+    }
 }
 
 bool saveExists(void)
@@ -78,28 +91,84 @@ MenuOption showMainMenu(void)
     }
 }
 
-void gameLoop()
+bool showGameOver(void)
+{
+    const char* labels[2] = {"Voltar ao Menu", "Sair"};
+    int         count     = 2;
+    int         selected  = 0;
+
+    flushinp();
+
+    while (1)
+    {
+        werase(stdscr);
+        int start_y = (LINES - (count + 3)) / 2;
+        if (start_y < 0)
+            start_y = 0;
+
+        const char* title = "=== GAME OVER ===";
+        int         tx    = (COLS - (int)strlen(title)) / 2;
+        if (tx < 0)
+            tx = 0;
+        mvprintw(start_y, tx, "%s", title);
+
+        for (int i = 0; i < count; ++i)
+        {
+            int y = start_y + 2 + i;
+            if (y >= LINES)
+                break;
+            int x = (COLS - (int)strlen(labels[i]) - 5) / 2;
+            if (x < 0)
+                x = 0;
+            if (i == selected)
+                attron(A_REVERSE);
+            mvprintw(y, x, " %s %s  ", (i == selected) ? ">" : " ", labels[i]);
+            if (i == selected)
+                attroff(A_REVERSE);
+        }
+        refresh();
+
+        int ch = getch();
+        if (ch == KEY_UP || ch == 'w' || ch == 'k')
+            selected = (selected - 1 + count) % count;
+        else if (ch == KEY_DOWN || ch == 's' || ch == 'j')
+            selected = (selected + 1) % count;
+        else if (ch == '\n' || ch == '\r' || ch == KEY_ENTER)
+            return selected == 0;
+        else if (ch == 'q')
+            return false;
+    }
+}
+
+bool gameLoop(void)
 {
     int ch;
 
     drawEverything();
 
-    while ((ch = getch()) != 'q')
+    while (player && player->active && player->hp > 0)
     {
+        ch = getch();
+        if (ch == 'q')
+            return false;
+
         if (ch == KEY_RESIZE)
             layoutWindows();
         else if (win && win_minimapa && win_hud)
             handleInput(ch);
 
         drawEverything();
+
+        if (!player || !player->active || player->hp <= 0)
+            return true;
     }
+
+    return true;
 }
 
-/* Termina o jogo, libera memoria */
-void closeGame(void)
+void cleanupRun(void)
 {
     destroyWindows();
-    endwin();
 
     free(player);
     player = NULL;
@@ -111,4 +180,12 @@ void closeGame(void)
     }
 
     freeMap();
+    curr_room = NULL;
+}
+
+/* Termina o jogo, libera memoria */
+void closeGame(void)
+{
+    cleanupRun();
+    endwin();
 }

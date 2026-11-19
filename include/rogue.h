@@ -11,6 +11,15 @@
 
 #define SAVE_PATH "saves/savegame.dat"
 
+#define COLOR_PAIR_PLAYER      1
+#define COLOR_PAIR_ENEMY       2
+#define COLOR_PAIR_ARCHER      3
+#define COLOR_PAIR_BOSS        4
+#define COLOR_PAIR_ITEM        5
+#define COLOR_PAIR_SHOT_PLAYER 6
+#define COLOR_PAIR_SHOT_ENEMY  7
+#define COLOR_PAIR_HIT         8
+
 typedef enum
 {
     MENU_NEW_GAME,
@@ -42,6 +51,9 @@ typedef struct
     int        hp;
     int        max_hp;
     int        attack;
+    int        ranged_attack;
+    int        ranged_range;
+    int        ranged_cooldown;
     int        defense;
     bool       active;
 } Entity;
@@ -114,7 +126,9 @@ void        eraseLogQueue(logQueue* q);
 void       cursesSetup(void);
 bool       saveExists(void);
 MenuOption showMainMenu(void);
-void       gameLoop(void);
+bool       gameLoop(void);
+bool       showGameOver(void);
+void       cleanupRun(void);
 void       closeGame(void);
 
 // funcoes das rooms
@@ -129,11 +143,18 @@ void    initEntity(Entity* e, EntityType type, int x, int y);
 int     spawnRoomEntities(MapCell* cell);
 void    freeRoomEntities(MapCell* cell);
 Entity* getEntityAt(int x, int y);
+void    dealDamage(int raw_attack, Entity* target);
 void    attackEntity(Entity* attacker, Entity* target);
+bool    canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx,
+                          int* out_dy);
+bool    fireRangedAttack(Entity* attacker, int dx, int dy);
 Entity* createPlayer(Position start_pos);
 void    handleInput(int ch);
 void    movePlayer(Position newPos);
 void    chasePlayer(Entity* e);
+void    actRangedEnemy(Entity* e);
+void    evadePlayer(Entity* e);
+void    actBoss(Entity* e);
 void    chooseItem(Entity* e);
 
 // funcoes do draw
@@ -142,6 +163,9 @@ void drawRoomEntities(void);
 void drawMinimap(void);
 void drawHud(void);
 void drawEntity(Entity* e);
+void drawHitFlash(Position pos);
+void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player,
+                        bool hit_target);
 void drawEverything(void);
 void drawLogs();
 
@@ -157,7 +181,7 @@ void    layoutWindows(void);
 void    destroyWindows(void);
 
 // tempo
-void passTime();
+void passTime(void);
 
 // logs
 void logDefault(const char* msg);
