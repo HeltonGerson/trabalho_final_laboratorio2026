@@ -5,11 +5,21 @@
 static bool     player_moved_turn = false;
 static Position prev_player_pos   = {0, 0};
 
+/*
+ * Verifica se as posições a e b estão adjacentes nas 4 direções cardeais
+ * (distância de Manhattan igual a 1).
+ * Chamada por: chasePlayer e actBoss (src/entity.c).
+ */
 static bool isCardinalAdjacent(Position a, Position b)
 {
     return abs(a.x - b.x) + abs(a.y - b.y) == 1;
 }
 
+/*
+ * Converte um caractere do template de sala ('E', 'A', 'B', 'I') para o
+ * respectivo EntityType em out_type; retorna false se não for entidade.
+ * Chamada por: spawnRoomEntities (src/entity.c).
+ */
 static bool charToEntityType(chtype ch, EntityType* out_type)
 {
     switch (ch)
@@ -31,6 +41,11 @@ static bool charToEntityType(chtype ch, EntityType* out_type)
     }
 }
 
+/*
+ * Inicializa a struct Entity e com posição (x, y), tipo, estado ativo e atributos
+ * base (HP, ataque corpo a corpo/distância, alcance e defesa); itens chamam chooseItem.
+ * Chamada por: spawnRoomEntities e createPlayer (src/entity.c), e tests/test_floor.c.
+ */
 void initEntity(Entity* e, EntityType type, int x, int y)
 {
     if (!e)
@@ -86,6 +101,11 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     }
 }
 
+/*
+ * Sorteia um entre 8 tipos de item e configura os bônus de atributo (hp, max_hp,
+ * attack ou defense) da entidade ENTITY_ITEM.
+ * Chamada por: initEntity (src/entity.c).
+ */
 void chooseItem(Entity* e)
 {
     int item   = rand() % 8 + 1;
@@ -123,6 +143,11 @@ void chooseItem(Entity* e)
     }
 }
 
+/*
+ * Varre o interior de cell->tiles contando marcadores de entidade, aloca o vetor
+ * cell->entities, inicializa cada entidade via initEntity e troca o tile para '.'.
+ * Chamada por: setRoom (src/room.c).
+ */
 int spawnRoomEntities(MapCell* cell)
 {
     if (!cell || !cell->tiles)
@@ -166,6 +191,10 @@ int spawnRoomEntities(MapCell* cell)
     return 0;
 }
 
+/*
+ * Libera o vetor dinâmico entities de uma MapCell e zera entity_count.
+ * Chamada por: spawnRoomEntities (src/entity.c), freeMap (src/map.c) e tests/test_floor.c.
+ */
 void freeRoomEntities(MapCell* cell)
 {
     if (!cell)
@@ -176,6 +205,12 @@ void freeRoomEntities(MapCell* cell)
     cell->entity_count = 0;
 }
 
+/*
+ * Procura e retorna o ponteiro para a entidade ativa na coordenada (x, y) da sala
+ * atual, ou NULL caso a posição esteja livre.
+ * Chamada por: canHitLineOfSight, fireRangedAttack, movePlayer, chasePlayer e
+ * evadePlayer (src/entity.c).
+ */
 Entity* getEntityAt(int x, int y)
 {
     if (!map || map_x < 0 || map_x >= MAP_WIDTH || map_y < 0 || map_y >= MAP_HEIGHT)
@@ -191,6 +226,11 @@ Entity* getEntityAt(int x, int y)
     return NULL;
 }
 
+/*
+ * Calcula o dano efetivo (raw_attack - target->defense, mínimo 1), exibe o flash
+ * visual com drawHitFlash, reduz o HP do alvo e o desativa se chegar a 0.
+ * Chamada por: attackEntity e fireRangedAttack (src/entity.c), e tests/test_floor.c.
+ */
 void dealDamage(int raw_attack, Entity* target)
 {
     if (!target || !target->active)
@@ -210,6 +250,11 @@ void dealDamage(int raw_attack, Entity* target)
     }
 }
 
+/*
+ * Executa um ataque corpo a corpo de attacker em target aplicando attacker->attack
+ * por meio de dealDamage.
+ * Chamada por: movePlayer, chasePlayer e actBoss (src/entity.c), e tests/test_floor.c.
+ */
 void attackEntity(Entity* attacker, Entity* target)
 {
     if (!attacker || !attacker->active)
@@ -218,6 +263,12 @@ void attackEntity(Entity* attacker, Entity* target)
     dealDamage(attacker->attack, target);
 }
 
+/*
+ * Verifica se target está alinhado a origin (cardeal, ou também diagonal se
+ * allow_diag for true), dentro de range e sem obstáculos no caminho; grava a
+ * direção unitária em out_dx/out_dy quando fornecidos.
+ * Chamada por: actRangedEnemy e actBoss (src/entity.c).
+ */
 bool canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx,
                        int* out_dy)
 {
@@ -263,6 +314,12 @@ bool canHitLineOfSight(Position origin, Position target, int range, bool allow_d
     return true;
 }
 
+/*
+ * Dispara um projétil em linha reta na direção (dx, dy) até attacker->ranged_range,
+ * parando em paredes ou bloqueadores; anima com drawProjectilePath, aplica dano
+ * via dealDamage se acertar e registra o resultado em logs.
+ * Chamada por: handleInput, actRangedEnemy e actBoss (src/entity.c), e tests/test_floor.c.
+ */
 bool fireRangedAttack(Entity* attacker, int dx, int dy)
 {
     // shortcut: hitscan raycast; swap this body to spawn projectile entities later
@@ -333,6 +390,11 @@ bool fireRangedAttack(Entity* attacker, int dx, int dy)
     return false;
 }
 
+/*
+ * Aloca dinamicamente a entidade do jogador e a inicializa em start_pos como
+ * ENTITY_PLAYER usando initEntity.
+ * Chamada por: main (src/main.c) e tests/test_floor.c.
+ */
 Entity* createPlayer(Position start_pos)
 {
     Entity* newPlayer = malloc(sizeof(Entity));
@@ -343,6 +405,11 @@ Entity* createPlayer(Position start_pos)
     return newPlayer;
 }
 
+/*
+ * Converte a tecla pressionada em movimentação (WASD/hjkl) via movePlayer ou em
+ * ataque à distância nas setas direcionais via fireRangedAttack + passTime.
+ * Chamada por: gameLoop (src/engine.c) e tests/test_floor.c.
+ */
 void handleInput(int input)
 {
     if (!player || !player->active || player->hp <= 0)
@@ -401,6 +468,12 @@ void handleInput(int input)
     movePlayer(newPos);
 }
 
+/*
+ * Move o jogador para newPos: troca de sala ao pisar em portas, coleta itens
+ * (ENTITY_ITEM) ou ataca inimigos adjacentes (attackEntity), salvando a posição
+ * anterior para a prioridade de primeiro ataque antes de chamar passTime.
+ * Chamada por: handleInput (src/entity.c) e tests/test_floor.c.
+ */
 void movePlayer(Position newPos)
 {
     if (!player || !player->active || player->hp <= 0 || !curr_room)
@@ -495,6 +568,12 @@ void movePlayer(Position newPos)
     }
 }
 
+/*
+ * Calcula o menor caminho até o jogador via busca em largura (BFS) com coordQueue:
+ * se estiver adjacente (respeitando a prioridade do jogador), ataca com
+ * attackEntity; caso contrário, avança um passo na direção do alvo.
+ * Chamada por: passTime (src/time.c) e actBoss (src/entity.c).
+ */
 void chasePlayer(Entity* chaser)
 {
     int     dx[]  = {0, 0, -1, 1};
@@ -594,6 +673,12 @@ void chasePlayer(Entity* chaser)
     eraseCoordQueue(q);
 }
 
+/*
+ * Controla a IA do Goblin Arqueiro ('A'): decrementa ranged_cooldown se estiver
+ * em recarga ou dispara em linha cardeal via fireRangedAttack (apenas mirando no
+ * turno em que o jogador acabou de entrar na linha de tiro).
+ * Chamada por: passTime (src/time.c).
+ */
 void actRangedEnemy(Entity* e)
 {
     if (!e || !e->active || !player || !player->active)
@@ -619,6 +704,11 @@ void actRangedEnemy(Entity* e)
     }
 }
 
+/*
+ * Calcula uma pontuação heurística para a posição pos usando distância de Chebyshev
+ * até target, favorecendo manter-se dentro de range e alinhado para tiro.
+ * Chamada por: evadePlayer (src/entity.c).
+ */
 static int evadeScore(Position pos, Position target, int range)
 {
     int dx    = abs(pos.x - target.x);
@@ -630,6 +720,11 @@ static int evadeScore(Position pos, Position target, int range)
     return score;
 }
 
+/*
+ * Avalia os 8 vizinhos caminháveis e livres ao redor de e usando evadeScore e
+ * move a entidade para a posição que oferece melhor fuga/posicionamento à distância.
+ * Chamada por: actBoss (src/entity.c).
+ */
 void evadePlayer(Entity* e)
 {
     if (!e || !e->active || !player || !player->active || !curr_room)
@@ -667,6 +762,12 @@ void evadePlayer(Entity* e)
     e->pos = best_pos;
 }
 
+/*
+ * Executa a IA do Boss ('B') em duas fases: acima de 50% de HP persegue com
+ * chasePlayer e ataca corpo a corpo; com 50% ou menos prioriza tiros em 8
+ * direções (cooldown 1), recua com evadePlayer na recarga e ataca melee se encurralado.
+ * Chamada por: passTime (src/time.c).
+ */
 void actBoss(Entity* e)
 {
     if (!e || !e->active || !player || !player->active)

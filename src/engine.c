@@ -1,6 +1,11 @@
 #include "rogue.h"
 #include <locale.h>
 
+/*
+ * Configura o locale UTF-8, inicializa o modo ncurses (sem eco, cbreak, keypad,
+ * cursor oculto) e registra os pares de cores usados em entidades, tiros e dano.
+ * Chamada por: main (src/main.c).
+ */
 void cursesSetup(void)
 {
     setlocale(LC_ALL, "");
@@ -24,6 +29,10 @@ void cursesSetup(void)
     }
 }
 
+/*
+ * Verifica se o arquivo de save (SAVE_PATH) existe e pode ser aberto para leitura.
+ * Chamada por: showMainMenu (src/engine.c).
+ */
 bool saveExists(void)
 {
     FILE* f = fopen(SAVE_PATH, "rb");
@@ -33,6 +42,11 @@ bool saveExists(void)
     return true;
 }
 
+/*
+ * Exibe o menu principal centralizado (Start New Game, Continue se saveExists()
+ * for verdadeiro, e Quit), trata a navegação por teclado e retorna a MenuOption.
+ * Chamada por: main (src/main.c).
+ */
 MenuOption showMainMenu(void)
 {
     const char* labels[3];
@@ -91,6 +105,11 @@ MenuOption showMainMenu(void)
     }
 }
 
+/*
+ * Limpa o buffer de entrada (flushinp), exibe a tela de Game Over com as opções
+ * "Voltar ao Menu" e "Sair" e retorna true para reiniciar ou false para sair.
+ * Chamada por: main (src/main.c).
+ */
 bool showGameOver(void)
 {
     const char* labels[2] = {"Voltar ao Menu", "Sair"};
@@ -140,6 +159,12 @@ bool showGameOver(void)
     }
 }
 
+/*
+ * Executa o loop principal da partida enquanto o jogador estiver ativo e vivo:
+ * lê comandos, trata saída ('q'), redimensionamento (KEY_RESIZE) ou ações
+ * (handleInput), redesenha a tela e retorna true se o player morreu ou false se saiu.
+ * Chamada por: main (src/main.c).
+ */
 bool gameLoop(void)
 {
     int ch;
@@ -166,6 +191,11 @@ bool gameLoop(void)
     return true;
 }
 
+/*
+ * Libera todos os recursos alocados para uma partida (janelas, player, fila logs,
+ * matriz map e zera curr_room).
+ * Chamada por: main (src/main.c) e closeGame (src/engine.c).
+ */
 void cleanupRun(void)
 {
     destroyWindows();
@@ -183,7 +213,11 @@ void cleanupRun(void)
     curr_room = NULL;
 }
 
-/* Termina o jogo, libera memoria */
+/*
+ * Termina o jogo: libera toda a memória da partida via cleanupRun e encerra o
+ * modo ncurses com endwin().
+ * Chamada por: main (src/main.c).
+ */
 void closeGame(void)
 {
     cleanupRun();

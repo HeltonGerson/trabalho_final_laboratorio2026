@@ -1,5 +1,10 @@
 #include "rogue.h"
 
+/*
+ * Converte o id da sala no glifo exibido no minimapa ('S' inicial, 'B' boss,
+ * 'I' item ou 'X' sala normal).
+ * Chamada por: drawMinimap (src/draw.c).
+ */
 static char roomGlyph(int id)
 {
     if (id == -1)
@@ -11,7 +16,10 @@ static char roomGlyph(int id)
     return 'X';
 }
 
-// desenha a room atual em escala 1:1
+/*
+ * Desenha todos os tiles da sala atual (curr_room) na janela win em escala 1:1.
+ * Chamada por: drawHitFlash, drawProjectilePath e drawEverything (src/draw.c).
+ */
 void drawRoom(void)
 {
     if (!win || !curr_room)
@@ -26,6 +34,12 @@ void drawRoom(void)
     }
 }
 
+/*
+ * Renderiza a janela win_minimapa como uma janela deslizante 3x3 centrada na sala
+ * atual, mostrando salas visitadas, descobertas ([?]), jogador ([@]), bordas
+ * fora do grid (###) e conectores ('-' e '|').
+ * Chamada por: drawEverything (src/draw.c).
+ */
 void drawMinimap(void)
 {
     if (!win_minimapa || !map)
@@ -75,6 +89,11 @@ void drawMinimap(void)
     }
 }
 
+/*
+ * Retorna o atributo de cor e destaque do ncurses correspondente ao EntityType
+ * (ou apenas A_BOLD/A_NORMAL se o terminal não suportar cores).
+ * Chamada por: drawEntity (src/draw.c).
+ */
 static attr_t entityAttr(EntityType type)
 {
     if (!has_colors())
@@ -96,6 +115,11 @@ static attr_t entityAttr(EntityType type)
     return A_NORMAL;
 }
 
+/*
+ * Desenha uma entidade ativa e na janela win aplicando a cor de entityAttr.
+ * Chamada por: drawHitFlash, drawProjectilePath, drawRoomEntities e
+ * drawEverything (src/draw.c).
+ */
 void drawEntity(Entity* e)
 {
     if (!win || !e || !e->active)
@@ -107,6 +131,11 @@ void drawEntity(Entity* e)
     wattroff(win, attr);
 }
 
+/*
+ * Redesenha a sala e exibe um flash vermelho 'X' na posição pos por 100 ms
+ * como feedback visual ao aplicar dano.
+ * Chamada por: drawProjectilePath (src/draw.c) e dealDamage (src/entity.c).
+ */
 void drawHitFlash(Position pos)
 {
     if (!win || !curr_room)
@@ -126,6 +155,12 @@ void drawHitFlash(Position pos)
     napms(100);
 }
 
+/*
+ * Anima o trajeto de um projétil de from até to na direção (dx, dy) usando o
+ * glifo direcional ('|', '-', '/', '\') e cor de player ou inimigo; ao final,
+ * aciona drawHitFlash se hit_target for verdadeiro.
+ * Chamada por: fireRangedAttack (src/entity.c).
+ */
 void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player,
                         bool hit_target)
 {
@@ -177,6 +212,10 @@ void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_play
         wrefresh(win);
 }
 
+/*
+ * Percorre todas as entidades da sala atual e desenha cada uma via drawEntity.
+ * Chamada por: drawHitFlash, drawProjectilePath e drawEverything (src/draw.c).
+ */
 void drawRoomEntities(void)
 {
     if (!win || !map)
@@ -189,6 +228,11 @@ void drawRoomEntities(void)
     }
 }
 
+/*
+ * Atualiza a janela win_hud exibindo a barra de vida proporcional (8 blocos) e os
+ * valores numéricos de HP, ataque e defesa do jogador.
+ * Chamada por: drawEverything (src/draw.c).
+ */
 void drawHud(void)
 {
     if (!win_hud || !player)
@@ -221,6 +265,11 @@ void drawHud(void)
     mvwprintw(win_hud, 8, 3, "⛨ DEFESA: %d", player->defense);
 }
 
+/*
+ * Consome e imprime sequencialmente as mensagens da fila logs via logDefault,
+ * pausando com getch() caso ainda existam mais mensagens pendentes.
+ * Chamada por: drawEverything (src/draw.c).
+ */
 void drawLogs()
 {
     if (!logs)
@@ -242,6 +291,11 @@ void drawLogs()
     }
 }
 
+/*
+ * Verifica o tamanho mínimo do terminal (77x14) e redesenha em lote a sala,
+ * entidades, jogador, minimapa, HUD e logs usando wnoutrefresh/doupdate.
+ * Chamada por: gameLoop (src/engine.c).
+ */
 void drawEverything(void)
 {
     werase(stdscr);

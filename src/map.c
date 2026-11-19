@@ -1,6 +1,11 @@
 #include "rogue.h"
 #include <curses.h>
 
+/*
+ * Aloca dinamicamente a matriz MAP_SIZE x MAP_SIZE de MapCell, inicializando cada
+ * célula com zeros via calloc.
+ * Chamada por: main (src/main.c) e tests/test_floor.c.
+ */
 MapCell** createMap(void)
 {
     MapCell** m = malloc(sizeof(MapCell*) * MAP_SIZE);
@@ -11,6 +16,12 @@ MapCell** createMap(void)
     return m;
 }
 
+/*
+ * Gera proceduralmente o andar via busca em profundidade (DFS) usando coordStack:
+ * cria a sala inicial em (start_pos_x, start_pos_y), expande até number_of_rooms
+ * garantindo ao menos uma sala de itens e uma de boss, e atualiza a névoa de guerra.
+ * Chamada por: main (src/main.c) e tests/test_floor.c.
+ */
 void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
 {
     coordStack* st = initializeCoordStack();
@@ -80,6 +91,11 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
     eraseStack(st);
 }
 
+/*
+ * Marca a sala atual (map_x, map_y) como visitada e descoberta e revela as salas
+ * adjacentes cardeais válidas como descobertas para o minimapa.
+ * Chamada por: setupFloor (src/map.c), movePlayer (src/entity.c) e tests/test_floor.c.
+ */
 void updateFogOfWar(void)
 {
     if (!map || map[map_y][map_x].id == 0)
@@ -99,6 +115,11 @@ void updateFogOfWar(void)
         map[map_y][map_x + 1].discovered = true;
 }
 
+/*
+ * Percorre toda a matriz map, libera os tiles e entidades de cada MapCell, libera
+ * as linhas e o ponteiro principal e redefine map para NULL.
+ * Chamada por: cleanupRun (src/engine.c) e tests/test_floor.c.
+ */
 void freeMap(void)
 {
     if (!map)

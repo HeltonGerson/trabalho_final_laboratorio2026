@@ -1,5 +1,10 @@
 #include "rogue.h"
 
+/*
+ * Centraliza e imprime a mensagem msg na penúltima linha do terminal (LINES - 2),
+ * limpando o conteúdo anterior da linha.
+ * Chamada por: drawLogs (src/draw.c).
+ */
 void logDefault(const char* msg)
 {
     int row = LINES - 2;

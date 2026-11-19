@@ -9,6 +9,11 @@
  * 3.2(depois): Os projeteis seguem o seu percurso
  */
 
+/*
+ * Executa o turno de todas as entidades ativas na sala atual enquanto o jogador
+ * estiver vivo, despachando a IA de cada tipo (chasePlayer, actRangedEnemy, actBoss).
+ * Chamada por: handleInput e movePlayer (src/entity.c), e tests/test_floor.c.
+ */
 void passTime(void)
 {
     if (!map || map_x < 0 || map_x >= MAP_WIDTH || map_y < 0 || map_y >= MAP_HEIGHT)

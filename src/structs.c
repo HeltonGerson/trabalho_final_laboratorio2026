@@ -1,6 +1,9 @@
 #include "rogue.h"
 
-// inicializa a pilha de coordenadas
+/*
+ * Aloca e inicializa uma pilha vazia de coordenadas (coordStack).
+ * Chamada por: setupFloor (src/map.c).
+ */
 coordStack* initializeCoordStack()
 {
     coordStack* stack = malloc(sizeof(coordStack));
@@ -9,7 +12,10 @@ coordStack* initializeCoordStack()
     return stack;
 }
 
-// push na pilha de coordenadas
+/*
+ * Aloca um coordNode com as coordenadas (x, y) e o empilha no topo de stack.
+ * Chamada por: setupFloor (src/map.c).
+ */
 void pushCoord(int x, int y, coordStack* stack)
 {
     coordNode* node = malloc(sizeof(coordNode));
@@ -33,7 +39,10 @@ void pushCoord(int x, int y, coordStack* stack)
     stack->size++;
 }
 
-// pop na pilha de coordenadas
+/*
+ * Remove e libera o nó do topo da pilha stack, decrementando stack->size.
+ * Chamada por: setupFloor (src/map.c) e eraseStack (src/structs.c).
+ */
 void popCoord(coordStack* stack)
 {
     coordNode* aux = stack->top;
@@ -42,7 +51,10 @@ void popCoord(coordStack* stack)
     free(aux);
 }
 
-// erase na pilha de coordenadas
+/*
+ * Desempilha todos os nós restantes com popCoord e libera a struct coordStack.
+ * Chamada por: setupFloor (src/map.c).
+ */
 void eraseStack(coordStack* stack)
 {
     while (stack->size != 0)
@@ -52,7 +64,10 @@ void eraseStack(coordStack* stack)
     free(stack);
 }
 
-// funcoes da Queue
+/*
+ * Aloca e inicializa uma fila FIFO vazia de coordenadas (coordQueue).
+ * Chamada por: chasePlayer (src/entity.c).
+ */
 coordQueue* initializeCoordQueue()
 {
     coordQueue* q = malloc(sizeof(coordQueue));
@@ -62,6 +77,10 @@ coordQueue* initializeCoordQueue()
     return q;
 }
 
+/*
+ * Aloca um coordNode com (x, y) e o insere no final (back) da fila q.
+ * Chamada por: chasePlayer (src/entity.c).
+ */
 void pushCoordQueue(int x, int y, coordQueue* q)
 {
     coordNode* new = malloc(sizeof(coordNode));
@@ -87,6 +106,10 @@ void pushCoordQueue(int x, int y, coordQueue* q)
     q->size++;
 }
 
+/*
+ * Remove e libera o nó da frente (front) da fila q e retorna uma cópia do nó.
+ * Chamada por: eraseCoordQueue (src/structs.c) e chasePlayer (src/entity.c).
+ */
 coordNode popCoordQueue(coordQueue* q)
 {
     coordNode* aux = q->front;
@@ -97,6 +120,10 @@ coordNode popCoordQueue(coordQueue* q)
     return r;
 }
 
+/*
+ * Esvazia todos os nós da fila q via popCoordQueue e libera a struct coordQueue.
+ * Chamada por: chasePlayer (src/entity.c).
+ */
 void eraseCoordQueue(coordQueue* q)
 {
     while (q->size > 0)
@@ -106,6 +133,10 @@ void eraseCoordQueue(coordQueue* q)
     free(q);
 }
 
+/*
+ * Aloca e inicializa uma fila FIFO vazia para mensagens de log (logQueue).
+ * Chamada por: main (src/main.c) e tests/test_floor.c.
+ */
 logQueue* initializeLogQueue()
 {
     logQueue* q = malloc(sizeof(logQueue));
@@ -118,6 +149,11 @@ logQueue* initializeLogQueue()
     return q;
 }
 
+/*
+ * Aloca um logNode apontando para msg e o enfileira no final da fila q.
+ * Chamada por: fireRangedAttack, movePlayer, chasePlayer, actRangedEnemy e
+ * actBoss (src/entity.c).
+ */
 void pushLogQueue(char* msg, logQueue* q)
 {
     if (!q)
@@ -145,6 +181,11 @@ void pushLogQueue(char* msg, logQueue* q)
     q->size++;
 }
 
+/*
+ * Remove e libera o nó da frente da fila q e retorna o ponteiro msg armazenado
+ * (ou NULL se a fila estiver vazia).
+ * Chamada por: eraseLogQueue (src/structs.c) e drawLogs (src/draw.c).
+ */
 char* popLogQueue(logQueue* q)
 {
     if (!q || !q->front)
@@ -160,6 +201,10 @@ char* popLogQueue(logQueue* q)
     return msg;
 }
 
+/*
+ * Esvazia todos os nós da fila q via popLogQueue e libera a struct logQueue.
+ * Chamada por: cleanupRun (src/engine.c) e tests/test_floor.c.
+ */
 void eraseLogQueue(logQueue* q)
 {
     if (!q)
