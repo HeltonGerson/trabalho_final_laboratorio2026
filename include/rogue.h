@@ -11,14 +11,17 @@
 
 #define SAVE_PATH "saves/savegame.dat"
 
-#define COLOR_PAIR_PLAYER      1
-#define COLOR_PAIR_ENEMY       2
-#define COLOR_PAIR_ARCHER      3
-#define COLOR_PAIR_BOSS        4
-#define COLOR_PAIR_ITEM        5
-#define COLOR_PAIR_SHOT_PLAYER 6
-#define COLOR_PAIR_SHOT_ENEMY  7
-#define COLOR_PAIR_HIT         8
+typedef enum
+{
+    COLOR_PAIR_PLAYER = 1,
+    COLOR_PAIR_ENEMY,
+    COLOR_PAIR_ARCHER,
+    COLOR_PAIR_BOSS,
+    COLOR_PAIR_ITEM,
+    COLOR_PAIR_SHOT_PLAYER,
+    COLOR_PAIR_SHOT_ENEMY,
+    COLOR_PAIR_HIT
+} ColorOption;
 
 typedef enum
 {
