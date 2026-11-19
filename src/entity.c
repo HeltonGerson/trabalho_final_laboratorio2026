@@ -71,7 +71,7 @@ void initEntity(Entity* e, EntityType type, int x, int y)
 
 void chooseItem(Entity* e)
 {
-    int item   = rand() % 8;
+    int item   = rand() % 8 + 1;
     e->ch      = 'I';
     e->hp      = 0;
     e->max_hp  = 0;
@@ -80,6 +80,7 @@ void chooseItem(Entity* e)
     switch (item)
     {       // mudar depois, talvez um txt
     case 1: // hp
+        e->hp = 10;
         break;
     case 2:
         e->hp = 20;
@@ -277,7 +278,7 @@ void movePlayer(Position newPos)
                 }
                 else
                 {
-                    player->hp = target->hp;
+                    player->hp += target->hp;
                 }
                 if (target->max_hp > 0)
                 {

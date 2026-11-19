@@ -83,7 +83,7 @@ void layoutWindows(void)
     // Recria as janelas para impedir que resizeterm() mantenha dimensoes cortadas
     destroyWindows();
 
-    if (COLS < total_w || LINES < ROOM_HEIGHT)
+    if (COLS < total_w || LINES < ROOM_HEIGHT + 3)
         return;
 
     int minimap_x = (COLS - total_w) / 2;
