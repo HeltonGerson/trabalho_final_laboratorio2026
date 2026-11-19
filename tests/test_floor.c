@@ -157,22 +157,24 @@ int main(void)
     assert(map[3][2].entities[0].active == false);
     assert(player->pos.x == 6 && player->pos.y == 5);
 
-    // Teste 5: Combate corpo a corpo contra Goblin Melee (8/3/0) em (7, 5)
-    // 1o golpe: dano 4, HP 8 -> 4, player nao avanca
-    movePlayer((Position){7, 5});
-    assert(map[3][2].entities[1].hp == 4);
-    assert(map[3][2].entities[1].active == true);
-    assert(player->pos.x == 6 && player->pos.y == 5);
-
-    // 2o golpe: dano 4, HP 4 -> 0, inimigo desativado
+    // Teste 5: Combate corpo a corpo contra Goblin Melee (4/3/0) em (7, 5)
+    // 1o golpe: dano 4, HP 4 -> 0, inimigo desativado e player nao avanca
     movePlayer((Position){7, 5});
     assert(map[3][2].entities[1].hp == 0);
     assert(map[3][2].entities[1].active == false);
     assert(player->pos.x == 6 && player->pos.y == 5);
 
-    // 3o movimento: espaco livre, player avanca para (7, 5)
+    // 2o movimento: espaco livre, player avanca para (7, 5)
     movePlayer((Position){7, 5});
     assert(player->pos.x == 7 && player->pos.y == 5);
+
+    // Combate em 2 golpes contra Goblin Ranged (8/3/0)
+    attackEntity(player, &map[3][2].entities[2]);
+    assert(map[3][2].entities[2].hp == 4);
+    assert(map[3][2].entities[2].active == true);
+    attackEntity(player, &map[3][2].entities[2]);
+    assert(map[3][2].entities[2].hp == 0);
+    assert(map[3][2].entities[2].active == false);
 
     // Teste 6: Combate contra Boss (50/20/10) garante dano minimo 1
     Entity boss;

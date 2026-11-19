@@ -109,6 +109,9 @@ void eraseCoordQueue(coordQueue* q)
 logQueue* initializeLogQueue()
 {
     logQueue* q = malloc(sizeof(logQueue));
+    if (!q)
+        return NULL;
+
     q->size  = 0;
     q->front = NULL;
     q->back  = NULL;
@@ -144,16 +147,24 @@ void pushLogQueue(char* msg, logQueue* q)
 
 char* popLogQueue(logQueue* q)
 {
+    if (!q || !q->front)
+        return NULL;
+
     logNode* aux = q->front;
-    logNode  r   = *(aux);
-    q->front       = q->front->next;
+    char*    msg = aux->msg;
+    q->front     = q->front->next;
     q->size--;
+    if (q->size == 0)
+        q->back = NULL;
     free(aux);
-    return r.msg;
+    return msg;
 }
 
 void eraseLogQueue(logQueue* q)
 {
+    if (!q)
+        return;
+
     while (q->size > 0)
     {
         popLogQueue(q);

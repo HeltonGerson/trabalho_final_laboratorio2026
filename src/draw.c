@@ -135,7 +135,8 @@ void drawLogs()
     while (logs->size > 0)
     {
         char* msg = popLogQueue(logs);
-        logDefault(msg);
+        if (msg)
+            logDefault(msg);
         // se nao for o ultimo
         refresh();
         if (logs->size > 0)
@@ -152,11 +153,11 @@ void drawEverything(void)
     werase(stdscr);
     wnoutrefresh(stdscr);
 
-    if (COLS < 77 || LINES < ROOM_HEIGHT || !win || !win_minimapa || !win_hud)
+    if (COLS < 77 || LINES < ROOM_HEIGHT + 3 || !win || !win_minimapa || !win_hud)
     {
         if (LINES > 0 && COLS > 0)
         {
-            const char* msg = "Terminal pequeno! Min: 77x11";
+            const char* msg = "Terminal pequeno! Min: 77x14";
             int         y   = LINES / 2;
             int         x   = (COLS - (int)strlen(msg)) / 2;
             if (x < 0)
