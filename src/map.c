@@ -3,10 +3,10 @@
 
 MapCell** createMap(void)
 {
-    MapCell** m = malloc(sizeof(MapCell*) * MAP_SIZE);
+    MapCell** m = malloc(sizeof(MapCell*) * MAP_WIDTH);
     for (int i = 0; i < MAP_SIZE; ++i)
     {
-        m[i] = calloc(MAP_SIZE, sizeof(MapCell));
+        m[i] = calloc(MAP_HEIGHT, sizeof(MapCell));
     }
     return m;
 }

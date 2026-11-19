@@ -23,7 +23,7 @@ static bool charToEntityType(chtype ch, EntityType* out_type)
     }
 }
 
-void initEntity(Entity* e, EntityType type, int x, int y)
+void initEntity(Entity* e, EntityType type, int x, int y, bool r)
 {
     if (!e)
         return;
@@ -31,43 +31,51 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     e->pos.x  = x;
     e->pos.y  = y;
     e->type   = type;
-    e->active = true;
 
-    switch (type)
+    if(!r)
     {
-    case ENTITY_PLAYER:
-        e->ch      = '@';
-        e->max_hp  = 10;
-        e->hp      = e->max_hp;
-        e->attack  = 4;
-        e->defense = 0;
-        break;
-    case ENTITY_ENEMY_MELEE:
-        e->ch      = 'E';
-        e->max_hp  = 8;
-        e->hp      = e->max_hp;
-        e->attack  = 3;
-        e->defense = 0;
-        break;
-    case ENTITY_ENEMY_RANGED:
-        e->ch      = 'A';
-        e->max_hp  = 8;
-        e->hp      = e->max_hp;
-        e->attack  = 3;
-        e->defense = 0;
-        break;
-    case ENTITY_BOSS:
-        e->ch      = 'B';
-        e->max_hp  = 50;
-        e->hp      = e->max_hp;
-        e->attack  = 20;
-        e->defense = 10;
-        break;
-    case ENTITY_ITEM:
-        chooseItem(e);
-        break;
+        e->active = true;
+        switch (type)
+        {
+        case ENTITY_PLAYER:
+            e->ch      = '@';
+            e->max_hp  = 999999999;
+            e->hp      = e->max_hp;
+            e->attack  = 200;
+            e->defense = 0;
+            break;
+        case ENTITY_ENEMY_MELEE:
+            e->ch      = 'E';
+            e->max_hp  = 8;
+            e->hp      = e->max_hp;
+            e->attack  = 3;
+            e->defense = 0;
+            break;
+        case ENTITY_ENEMY_RANGED:
+            e->ch      = 'A';
+            e->max_hp  = 8;
+            e->hp      = e->max_hp;
+            e->attack  = 3;
+            e->defense = 0;
+            break;
+        case ENTITY_BOSS:
+            e->ch      = 'B';
+            e->max_hp  = 50;
+            e->hp      = e->max_hp;
+            e->attack  = 20;
+            e->defense = 10;
+            break;
+        case ENTITY_ITEM:
+            chooseItem(e);
+            break;
+        }
+    }
+    else
+    {
+        
     }
 }
+
 
 void chooseItem(Entity *e)
 {
@@ -138,7 +146,7 @@ int spawnRoomEntities(MapCell* cell)
         {
             if (charToEntityType(cell->tiles[y][x].ch, &type))
             {
-                initEntity(&cell->entities[idx], type, x, y);
+                initEntity(&cell->entities[idx], type, x, y, 0);
                 cell->tiles[y][x].ch       = '.';
                 cell->tiles[y][x].walkable = true;
                 idx++;
@@ -197,7 +205,7 @@ Entity* createPlayer(Position start_pos)
     if (!newPlayer)
         return NULL;
 
-    initEntity(newPlayer, ENTITY_PLAYER, start_pos.x, start_pos.y);
+    initEntity(newPlayer, ENTITY_PLAYER, start_pos.x, start_pos.y, 0);
     return newPlayer;
 }
 
@@ -275,11 +283,11 @@ void movePlayer(Position newPos)
                 if(player->hp + target->hp >= player->max_hp){
                     player->hp = player->max_hp;
                 }else{
-                    player->hp = target->hp;
+                    player->hp += target->hp;
                 }
                 if(target->max_hp > 0){
                     player->max_hp = target->max_hp;
-                    player->hp = player->max_hp;
+                    player->hp += target->max_hp;
                 }
                 player->attack += target->attack;
                 player->defense+= target->defense;

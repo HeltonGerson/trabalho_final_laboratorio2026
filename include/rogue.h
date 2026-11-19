@@ -9,7 +9,7 @@
 #include <string.h>
 #include <time.h>
 
-#define SAVE_PATH "saves/savegame.dat"
+#define SAVE_PATH "data/save/save.txt"
 
 typedef enum
 {
@@ -98,6 +98,8 @@ bool       saveExists(void);
 MenuOption showMainMenu(void);
 void       gameLoop(void);
 void       closeGame(void);
+void       save(Entity *player);
+void       continueGame(void);
 
 // funcoes das rooms
 Tile** readRoom(int room_type);
@@ -107,7 +109,7 @@ int    setRoom(int x, int y, int choosed_room);
 int    countTxtFiles(const char* dir_path);
 
 // funcoes de entidades e player
-void    initEntity(Entity* e, EntityType type, int x, int y);
+void    initEntity(Entity* e, EntityType type, int x, int y, bool r);
 int     spawnRoomEntities(MapCell* cell);
 void    freeRoomEntities(MapCell* cell);
 Entity* getEntityAt(int x, int y);
@@ -117,6 +119,7 @@ void    handleInput(int ch);
 void    movePlayer(Position newPos);
 void    chasePlayer(Entity* e);
 void    chooseItem(Entity* e);
+void    respawnEntity(Entity* e, int x, int y);
 
 // funcoes do draw
 void drawRoom(void);

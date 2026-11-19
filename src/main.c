@@ -1,4 +1,5 @@
 #include "rogue.h"
+#include <curses.h>
 
 // declaracoes globais
 Entity*   player;
@@ -19,29 +20,47 @@ const int MAP_HEIGHT  = 7;
 int main(void)
 {
     cursesSetup();
-
-    if (showMainMenu() == MENU_QUIT)
+    int mReturn = showMainMenu();
+    if (mReturn == 3)
     {
         endwin();
         return 0;
     }
-
     srand(time(NULL));
-    int number_of_rooms = rand() % 8 + 8;
-
     layoutWindows();
-
     map = createMap();
-    setupFloor(map_x, map_y, number_of_rooms);
 
+
+    if(mReturn == 0)
+    {
+        int number_of_rooms = rand() % 8 + 8;
+        setupFloor(map_x, map_y, number_of_rooms);
+        Position start_pos = {5, 5};
+        player             = createPlayer(start_pos);
+        
+    }else if(mReturn == 1)
+    {
+        continueGame();
+        for(int i = 0; i < MAP_HEIGHT; i++){
+            for(int j = 0; j < MAP_WIDTH; j++){
+                mvprintw(i,j, "%p", map[i][j].tiles);
+            }
+        }
+    }
+    printw("%i %i", map_y, map_x);
+    getch();
     curr_room = map[map_y][map_x].tiles;
-
-    Position start_pos = {5, 5};
-    player             = createPlayer(start_pos);
-
+    curr_room[0][0].ch = 0;
+    printw("aaaaaaaaaaaaaa");
+    getch(); 
+    printw("%i %i ", map_y, map_x);
+    
     roomDoors();
-    gameLoop();
 
+
+
+    gameLoop();
+    save(player);
     closeGame();
     return 0;
 }
