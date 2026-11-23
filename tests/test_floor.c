@@ -382,6 +382,35 @@ int main(void)
     handleInput(KEY_RIGHT);
     assert(map[3][2].entities[1].hp == 6);
 
+    // Teste 12: Coleta de item com max_hp > 0 soma ao max_hp do jogador (sem sobrescrever)
+    clearRoomInterior(curr_room);
+    freeRoomEntities(&map[3][2]);
+    map[3][2].entities     = malloc(sizeof(Entity) * 2);
+    map[3][2].entity_count = 2;
+    assert(map[3][2].entities != NULL);
+
+    initEntity(player, ENTITY_PLAYER, 5, 5);
+    player->hp = 6;
+    initEntity(&map[3][2].entities[0], ENTITY_ITEM, 6, 5);
+    map[3][2].entities[0].hp      = 0;
+    map[3][2].entities[0].max_hp  = 5;
+    map[3][2].entities[0].attack  = 0;
+    map[3][2].entities[0].defense = 0;
+
+    initEntity(&map[3][2].entities[1], ENTITY_ITEM, 7, 5);
+    map[3][2].entities[1].hp      = 0;
+    map[3][2].entities[1].max_hp  = 10;
+    map[3][2].entities[1].attack  = 0;
+    map[3][2].entities[1].defense = 0;
+
+    movePlayer((Position){6, 5});
+    assert(map[3][2].entities[0].active == false);
+    assert(player->max_hp == 15 && player->hp == 15);
+
+    movePlayer((Position){7, 5});
+    assert(map[3][2].entities[1].active == false);
+    assert(player->max_hp == 25 && player->hp == 25);
+
     free(player);
     player = NULL;
     eraseLogQueue(logs);
@@ -389,6 +418,6 @@ int main(void)
     freeMap();
     assert(map == NULL);
 
-    printf("Todos os 11 testes do mapa procedural, entidades, combate e IA passaram com sucesso!\n");
+    printf("Todos os 12 testes do mapa procedural, entidades, combate e IA passaram com sucesso!\n");
     return 0;
 }

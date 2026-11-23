@@ -530,7 +530,7 @@ void movePlayer(Position newPos)
                 }
                 if (target->max_hp > 0)
                 {
-                    player->max_hp = target->max_hp;
+                    player->max_hp += target->max_hp;
                     player->hp     = player->max_hp;
                 }
                 player->attack += target->attack;
