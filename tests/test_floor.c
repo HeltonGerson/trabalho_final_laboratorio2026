@@ -19,6 +19,9 @@ const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
 
+void layoutWindows(void) {}
+void destroyWindows(void) {}
+
 static void clearRoomInterior(Tile** tiles)
 {
     for (int y = 1; y < ROOM_HEIGHT - 1; ++y)
@@ -44,8 +47,8 @@ int main(void)
     int target_rooms = 10;
     setupFloor(map_x, map_y, target_rooms);
 
-    // Centro (3, 3) deve ser sala inicial (-1), visitada e descoberta
-    assert(map[3][3].id == -1);
+    // Centro (3, 3) deve ser sala inicial (tipo 0), visitada e descoberta
+    assert(map[3][3].id / ROOM_ID_BASE == 0 && map[3][3].id % ROOM_ID_BASE >= 1);
     assert(map[3][3].tiles != NULL);
     assert(map[3][3].visited == true);
     assert(map[3][3].discovered == true);
@@ -59,8 +62,10 @@ int main(void)
         {
             if (map[y][x].id != 0)
             {
+                int type   = map[y][x].id / ROOM_ID_BASE;
+                int room_n = map[y][x].id % ROOM_ID_BASE;
                 count_rooms++;
-                assert(map[y][x].id == -1 || (map[y][x].id >= 1 && map[y][x].id <= 20));
+                assert(type >= 0 && type <= 3 && room_n >= 1);
                 assert(map[y][x].tiles != NULL);
             }
             else
@@ -418,6 +423,98 @@ int main(void)
     freeMap();
     assert(map == NULL);
 
-    printf("Todos os 12 testes do mapa procedural, entidades, combate e IA passaram com sucesso!\n");
+    // Teste 13: Save/Load round-trip (persistencia completa de mapa, entidades e player)
+    logs = initializeLogQueue();
+    assert(logs != NULL);
+    map   = createMap();
+    map_x = 3;
+    map_y = 3;
+    setupFloor(map_x, map_y, 8);
+    curr_room = map[map_y][map_x].tiles;
+    player    = createPlayer((Position){8, 4});
+    assert(player != NULL);
+    player->hp              = 7;
+    player->max_hp          = 15;
+    player->attack          = 6;
+    player->ranged_attack   = 4;
+    player->ranged_range    = 9;
+    player->ranged_cooldown = 1;
+    player->defense         = 2;
+
+    int expected_ids[7][7];
+    int expected_counts[7][7];
+    bool expected_visited[7][7];
+    for (int y = 0; y < MAP_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAP_WIDTH; ++x)
+        {
+            expected_ids[y][x]     = map[y][x].id;
+            expected_counts[y][x]  = map[y][x].entity_count;
+            expected_visited[y][x] = map[y][x].visited;
+        }
+    }
+
+    int target_ey = -1, target_ex = -1;
+    for (int y = 0; y < MAP_HEIGHT && target_ey == -1; ++y)
+    {
+        for (int x = 0; x < MAP_WIDTH && target_ey == -1; ++x)
+        {
+            if (map[y][x].id != 0 && map[y][x].entity_count > 0)
+            {
+                target_ey = y;
+                target_ex = x;
+            }
+        }
+    }
+    assert(target_ey != -1 && target_ex != -1);
+    map[target_ey][target_ex].entities[0].hp              = 2;
+    map[target_ey][target_ex].entities[0].ranged_cooldown = 1;
+    Entity expected_entity                                = map[target_ey][target_ex].entities[0];
+
+    save(player);
+    assert(saveExists() == true);
+
+    cleanupRun();
+    assert(map == NULL && player == NULL);
+
+    logs = initializeLogQueue();
+    map  = createMap();
+    assert(continueGame() == true);
+    assert(player != NULL);
+    assert(map_x == 3 && map_y == 3);
+    assert(player->hp == 7 && player->max_hp == 15);
+    assert(player->attack == 6 && player->defense == 2);
+    assert(player->ranged_attack == 4 && player->ranged_range == 9 && player->ranged_cooldown == 1);
+    assert(player->pos.x == 8 && player->pos.y == 4);
+
+    for (int y = 0; y < MAP_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAP_WIDTH; ++x)
+        {
+            assert(map[y][x].id == expected_ids[y][x]);
+            assert(map[y][x].entity_count == expected_counts[y][x]);
+            assert(map[y][x].visited == expected_visited[y][x]);
+        }
+    }
+
+    Entity* loaded_entity = &map[target_ey][target_ex].entities[0];
+    assert(loaded_entity->active == expected_entity.active);
+    assert(loaded_entity->ch == expected_entity.ch);
+    assert(loaded_entity->type == expected_entity.type);
+    assert(loaded_entity->hp == expected_entity.hp);
+    assert(loaded_entity->max_hp == expected_entity.max_hp);
+    assert(loaded_entity->attack == expected_entity.attack);
+    assert(loaded_entity->ranged_attack == expected_entity.ranged_attack);
+    assert(loaded_entity->ranged_range == expected_entity.ranged_range);
+    assert(loaded_entity->ranged_cooldown == expected_entity.ranged_cooldown);
+    assert(loaded_entity->defense == expected_entity.defense);
+    assert(loaded_entity->pos.x == expected_entity.pos.x);
+    assert(loaded_entity->pos.y == expected_entity.pos.y);
+
+    cleanupRun();
+    remove(SAVE_PATH);
+    assert(map == NULL && player == NULL);
+
+    printf("Todos os 13 testes do mapa procedural, entidades, combate, IA e save/load passaram com sucesso!\n");
     return 0;
 }

@@ -31,28 +31,41 @@ int main(void)
 
     while (1)
     {
-        if (showMainMenu() == MENU_QUIT)
+        MenuOption choice = showMainMenu();
+        if (choice == MENU_QUIT)
             break;
 
         map_x = 3;
         map_y = 3;
-
-        int number_of_rooms = rand() % 8 + 8;
-        logs                = initializeLogQueue();
+        logs  = initializeLogQueue();
 
         layoutWindows();
 
         map = createMap();
-        setupFloor(map_x, map_y, number_of_rooms);
+        if (choice == MENU_CONTINUE)
+        {
+            if (!continueGame())
+            {
+                cleanupRun();
+                continue;
+            }
+        }
+        else
+        {
+            int number_of_rooms = rand() % 8 + 8;
+            setupFloor(map_x, map_y, number_of_rooms);
+            Position start_pos = {5, 5};
+            player             = createPlayer(start_pos);
+        }
 
         curr_room = map[map_y][map_x].tiles;
-
-        Position start_pos = {5, 5};
-        player             = createPlayer(start_pos);
 
         roomDoors();
 
         bool game_over = gameLoop();
+        if (!game_over && player && player->active && player->hp > 0)
+            save(player);
+
         cleanupRun();
 
         if (game_over)
@@ -65,7 +78,6 @@ int main(void)
             break;
         }
     }
-
     closeGame();
     return 0;
 }

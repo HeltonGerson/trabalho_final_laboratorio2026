@@ -102,6 +102,28 @@ void initEntity(Entity* e, EntityType type, int x, int y)
 }
 
 /*
+ * Limpa os caracteres de entidades do template já carregado em posMap->tiles,
+ * mantendo apenas '.' e '#' e tornando as demais células internas caminháveis.
+ * Chamada por: continueGame (src/engine.c).
+ */
+void removeEntityChars(MapCell* posMap)
+{
+    if (!posMap || !posMap->tiles)
+        return;
+
+    for (int i = 1; i < ROOM_HEIGHT - 1; i++)
+    {
+        for (int j = 1; j < ROOM_WIDTH - 1; j++)
+        {
+            if (posMap->tiles[i][j].ch == '.' || posMap->tiles[i][j].ch == '#')
+                continue;
+            posMap->tiles[i][j].ch       = '.';
+            posMap->tiles[i][j].walkable = true;
+        }
+    }
+}
+
+/*
  * Sorteia um entre 8 tipos de item e configura os bônus de atributo (hp, max_hp,
  * attack ou defense) da entidade ENTITY_ITEM.
  * Chamada por: initEntity (src/entity.c).
@@ -415,8 +437,8 @@ void handleInput(int input)
     if (!player || !player->active || player->hp <= 0)
         return;
 
-    int dx = 0, dy = 0;
-    bool ranged = false;
+    int      dx = 0, dy = 0;
+    bool     ranged = false;
     Position newPos = player->pos;
 
     switch (input)
@@ -531,7 +553,7 @@ void movePlayer(Position newPos)
                 if (target->max_hp > 0)
                 {
                     player->max_hp += target->max_hp;
-                    player->hp     = player->max_hp;
+                    player->hp = player->max_hp;
                 }
                 player->attack += target->attack;
                 player->defense += target->defense;

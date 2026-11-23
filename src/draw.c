@@ -7,11 +7,13 @@
  */
 static char roomGlyph(int id)
 {
-    if (id == -1)
+    int type = id / ROOM_ID_BASE;
+
+    if (type == 0)
         return 'S';
-    if (id == 1)
+    if (type == 1)
         return 'B';
-    if (id == 2 || id == 3)
+    if (type == 2)
         return 'I';
     return 'X';
 }
@@ -161,8 +163,7 @@ void drawHitFlash(Position pos)
  * aciona drawHitFlash se hit_target for verdadeiro.
  * Chamada por: fireRangedAttack (src/entity.c).
  */
-void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player,
-                        bool hit_target)
+void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player, bool hit_target)
 {
     if (!win || !curr_room || (dx == 0 && dy == 0))
         return;

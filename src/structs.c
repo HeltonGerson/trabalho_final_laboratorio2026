@@ -166,8 +166,8 @@ void pushLogQueue(char* msg, logQueue* q)
         fprintf(stderr, "Erro ao alocar o nó da queue em structs.c");
         exit(1);
     }
-    new->msg = msg;
-    new->next    = NULL;
+    new->msg  = msg;
+    new->next = NULL;
 
     if (q->size == 0)
     {
