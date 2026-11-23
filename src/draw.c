@@ -156,6 +156,7 @@ void drawHitFlash(Position pos)
     wattroff(win, attr);
     wrefresh(win);
     napms(100);
+    flushinp();
 }
 
 /*
@@ -187,6 +188,7 @@ void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_play
     drawRoomEntities();
     drawEntity(player);
     wrefresh(win);
+    flushinp();
 
     int x = from.x;
     int y = from.y;
@@ -212,6 +214,7 @@ void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_play
         drawHitFlash(to);
     else
         wrefresh(win);
+    flushinp();
 }
 
 /*
