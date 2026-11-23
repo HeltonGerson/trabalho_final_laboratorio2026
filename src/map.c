@@ -16,6 +16,7 @@ MapCell** createMap(void)
         return m;
     }
 
+}
     /*
      * Gera proceduralmente o andar via busca em profundidade (DFS) usando coordStack:
      * cria a sala inicial em (start_pos_x, start_pos_y), expande até number_of_rooms
