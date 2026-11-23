@@ -13,9 +13,8 @@ MapCell** createMap(void)
     {
         m[i] = calloc(MAP_WIDTH, sizeof(MapCell));
 
-        return m;
     }
-
+    return m;
 }
     /*
      * Gera proceduralmente o andar via busca em profundidade (DFS) usando coordStack:
