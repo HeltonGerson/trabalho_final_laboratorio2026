@@ -18,49 +18,85 @@ const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
 
+/*
+ * Ponto de entrada do jogo: inicializa o ncurses e a semente aleatória, executa
+ * o loop de partidas (menu inicial, geração do andar, gameLoop, limpeza e Game Over)
+ * e encerra a aplicação com closeGame.
+ * Chamada por: sistema operacional ao executar o binário principal.
+ */
 int main(void)
 {
     cursesSetup();
-    int mReturn = showMainMenu();
-    if (mReturn == 2)
+    srand((unsigned int)time(NULL));
+
+    while (1)
     {
-        endwin();
-        return 0;
+        MenuOption choice = showMainMenu();
+        if (choice == MENU_QUIT)
+            break;
+
+        map_x = 3;
+        map_y = 3;
+        logs  = initializeLogQueue();
+
+        layoutWindows();
+
+        map = createMap();
+        if (choice == MENU_CONTINUE)
+        {
+            if (!continueGame())
+            {
+                cleanupRun();
+                continue;
+            }
+        }
+        else
+        {
+            int number_of_rooms = rand() % 8 + 8;
+            setupFloor(map_x, map_y, number_of_rooms);
+            Position start_pos = {5, 5};
+            player             = createPlayer(start_pos);
+        }
+
+        curr_room = map[map_y][map_x].tiles;
+
+        roomDoors();
+
+        bool game_over = gameLoop();
+        if (!game_over && player && player->active && player->hp > 0)
+            save(player);
+
+        cleanupRun();
+
+        if (game_over)
+        {
+            if (!showGameOver())
+                break;
+        }
+        else
+        {
+            break;
+        }
     }
-    srand(time(NULL));
-    int number_of_rooms = rand() % 8 + 8;
-    logs = initializeLogQueue();
-    
-    layoutWindows();
-    map = createMap();
-
-
-    if(mReturn == 0)
-    {
-        int number_of_rooms = rand() % 8 + 8;
-        setupFloor(map_x, map_y, number_of_rooms);
-        Position start_pos = {5, 5};
-        player             = createPlayer(start_pos);
-
-    }else if(mReturn == 1)
-    {
-        continueGame();
-    }
-    curr_room = map[map_y][map_x].tiles;
-
-    roomDoors();
-
-    gameLoop();
-    save(player);
     closeGame();
     return 0;
 }
 
+/*
+ * Wrapper de newwin() que cria e retorna uma janela ncurses com dimensões
+ * (height x width) na posição (starty, startx).
+ * Chamada por: layoutWindows (src/main.c).
+ */
 WINDOW* create_newwin(int height, int width, int starty, int startx)
 {
     return newwin(height, width, starty, startx);
 }
 
+/*
+ * Libera com delwin() e anula os ponteiros das janelas win_minimapa, win e win_hud
+ * caso estejam alocadas.
+ * Chamada por: layoutWindows (src/main.c) e cleanupRun (src/engine.c).
+ */
 void destroyWindows(void)
 {
     if (win_minimapa)
@@ -80,6 +116,11 @@ void destroyWindows(void)
     }
 }
 
+/*
+ * Calcula o posicionamento centralizado das janelas (minimapa, sala e HUD) com base
+ * em COLS e LINES e as recria (ou mantém destruídas se o terminal for pequeno demais).
+ * Chamada por: main (src/main.c) e gameLoop (src/engine.c, em KEY_RESIZE).
+ */
 void layoutWindows(void)
 {
     int minimap_w = 15, minimap_h = 7;

@@ -1,6 +1,11 @@
 #include "rogue.h"
 #include <curses.h>
 
+/*
+ * Desenha os caracteres de porta (ACS_LARROW, ACS_RARROW, ACS_UARROW, ACS_DARROW)
+ * no centro das quatro paredes da sala informada.
+ * Chamada por: readRoom e roomDoors (src/room.c).
+ */
 void fillDoors(Tile** room)
 {
     for (int i = 0; i < 2; i++)
@@ -13,7 +18,11 @@ void fillDoors(Tile** room)
         room[ROOM_HEIGHT - 1][(ROOM_WIDTH) / 2 - 2 + i].ch = ACS_DARROW;
 }
 
-// Conta quantos arquivos existem no diretório informado pra saber quantas salas tem
+/*
+ * Abre o diretório dir_path e conta quantos arquivos não ocultos (templates de sala)
+ * existem nele, retornando -1 em caso de falha ao abrir.
+ * Chamada por: readRoom (src/room.c) e tests/test_floor.c.
+ */
 int countTxtFiles(const char* dir_path)
 {
     DIR* dir = opendir(dir_path);
@@ -35,7 +44,11 @@ int countTxtFiles(const char* dir_path)
     closedir(dir);
     return count;
 }
-// Agora gera o ID unico (tipo * 1000 + numero_da_sala) antes de chamar readRoom
+/*
+ * Valida coordenadas e room_type, sorteia o template, gera o ID único
+ * (tipo * ROOM_ID_BASE + room_n), carrega os tiles via readRoom e gera entidades.
+ * Chamada por: setupFloor (src/map.c) e tests/test_floor.c.
+ */
 int setRoom(int x, int y, int room_type)
 {
     if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT && room_type >= 0 && room_type <= 20)
@@ -92,7 +105,11 @@ int setRoom(int x, int y, int room_type)
     return 1;
 }
 
-/* Le uma room especifica a partir do ID unico (tipo * ROOM_ID_BASE + room_n) */
+/*
+ * Carrega uma sala específica em data/rooms/<tipo>/<room_n>.txt a partir de room_id
+ * (tipo * ROOM_ID_BASE + room_n), aloca Tile**, preenche bordas, cantos, piso '.' e portas.
+ * Chamada por: setRoom (src/room.c) e continueGame (src/engine.c).
+ */
 Tile** readRoom(int room_id)
 {
     if (room_id <= 0)
@@ -156,7 +173,10 @@ Tile** readRoom(int room_id)
     return room;
 }
 
-/* Liberacao dos tiles de uma room */
+/*
+ * Libera cada linha alocada da matriz tiles e o vetor de ponteiros principal.
+ * Chamada por: setRoom (src/room.c) e freeMap (src/map.c).
+ */
 void freeRoomTiles(Tile** tiles)
 {
     if (!tiles)
@@ -168,7 +188,12 @@ void freeRoomTiles(Tile** tiles)
     free(tiles);
 }
 
-/* Verificar se as portas da room atual */
+/*
+ * Atualiza as portas da sala atual (curr_room): restaura todas com fillDoors e
+ * substitui por parede (ACS_VLINE/ACS_HLINE) as que apontam para fora do mapa ou
+ * para células sem sala (id == 0).
+ * Chamada por: main (src/main.c) e movePlayer (src/entity.c).
+ */
 void roomDoors(void)
 {
     fillDoors(curr_room);
