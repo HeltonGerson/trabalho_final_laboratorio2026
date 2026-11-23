@@ -1,5 +1,7 @@
 #include "rogue.h"
+#include <curses.h>
 #include <locale.h>
+#include <stdio.h>
 
 /*
  * Configura o locale UTF-8, inicializa o modo ncurses (sem eco, cbreak, keypad,
@@ -47,6 +49,12 @@ bool saveExists(void)
  * e estado de visitação) e do jogador (atributos e posição no mapa) em SAVE_PATH.
  * Chamada por: main (src/main.c) e tests/test_floor.c.
  */
+
+void eraseSave(){
+    if(!saveExists())
+        remove(SAVE_PATH);
+}
+
 void save(Entity* p)
 {
     if (!p || !map || !p->active || p->hp <= 0)
@@ -74,9 +82,9 @@ void save(Entity* p)
             for (int t = 0; t < map[i][j].entity_count; t++)
             {
                 Entity* e = &map[i][j].entities[t];
-                fprintf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d\n", (int)e->active, (char)e->ch,
+                fprintf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d %d\n", (int)e->active, (char)e->ch,
                         (int)e->type, e->attack, e->ranged_attack, e->ranged_range,
-                        e->ranged_cooldown, e->defense, e->hp, e->max_hp, e->pos.x, e->pos.y);
+                        e->ranged_cooldown, e->defense, e->hp, e->max_hp, e->healingItem, e->pos.x, e->pos.y);
             }
         }
     }
@@ -154,11 +162,12 @@ bool continueGame(void)
                         int    auxT = 0;
                         char   auxC = '\0';
 
-                        if (fscanf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d", &auxB, &auxC, &auxT,
+                        if (fscanf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d %d", &auxB, &auxC, &auxT,
                                    &auxEntity.attack, &auxEntity.ranged_attack,
                                    &auxEntity.ranged_range, &auxEntity.ranged_cooldown,
                                    &auxEntity.defense, &auxEntity.hp, &auxEntity.max_hp,
-                                   &auxEntity.pos.x, &auxEntity.pos.y) != 12)
+                                   &auxEntity.healingItem, &auxEntity.pos.x, 
+                                   &auxEntity.pos.y) != 13)
                         {
                             fclose(fp);
                             return false;
@@ -181,9 +190,10 @@ bool continueGame(void)
         return false;
     }
 
-    player->active = true;
-    player->ch     = '@';
-    player->type   = ENTITY_PLAYER;
+    player->healingItem = 0;
+    player->active      = true;
+    player->ch          = '@';
+    player->type        = ENTITY_PLAYER;
 
     if (fscanf(fp, "%d %d %d %d %d %d %d %d %d %d %d", &player->hp, &player->max_hp,
                &player->attack, &player->ranged_attack, &player->ranged_range,
@@ -265,9 +275,8 @@ MenuOption showMainMenu(void)
         {
             return opts[selected];
         }
-        else if (ch == 'q')
+        else if ((int)ch == 27)
         {
-
             return MENU_QUIT;
         }
     }
@@ -342,7 +351,7 @@ bool gameLoop(void)
     while (player && player->active && player->hp > 0)
     {
         ch = getch();
-        if (ch == 'q')
+        if (ch == 27)
             return false;
 
         if (ch == KEY_RESIZE)

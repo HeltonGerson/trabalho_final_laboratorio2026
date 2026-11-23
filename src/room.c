@@ -8,13 +8,13 @@
  */
 void fillDoors(Tile** room)
 {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
         room[(ROOM_HEIGHT) / 2 - 1 + i][0].ch = ACS_LARROW;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
         room[(ROOM_HEIGHT) / 2 - 1 + i][ROOM_WIDTH - 1].ch = ACS_RARROW;
-    for (int i = 0; i < 4; i++)
+    for (int i = 1; i < 4; i++)
         room[0][(ROOM_WIDTH) / 2 - 2 + i].ch = ACS_UARROW;
-    for (int i = 0; i < 4; i++)
+    for (int i = 1; i < 4; i++)
         room[ROOM_HEIGHT - 1][(ROOM_WIDTH) / 2 - 2 + i].ch = ACS_DARROW;
 }
 
