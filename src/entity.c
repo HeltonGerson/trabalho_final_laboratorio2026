@@ -58,7 +58,9 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     e->ranged_range    = 0;
     e->ranged_cooldown = 0;
     e->active          = true;
-
+    e->healingItem     = 0;
+    int healing = rand() % 10 + 1;
+    
     switch (type)
     {
     case ENTITY_PLAYER:
@@ -76,6 +78,10 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
+        if(healing == 1)
+            e->healingItem = 5;
+        else if(healing == 2)
+            e->healingItem = 10;
         break;
     case ENTITY_ENEMY_RANGED:
         e->ch            = 'A';
@@ -85,6 +91,10 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->ranged_attack = 2;
         e->ranged_range  = 7;
         e->defense       = 0;
+        if(healing == 1)
+            e->healingItem = 5;
+        else if(healing == 2)
+            e->healingItem = 10;
         break;
     case ENTITY_BOSS:
         e->ch            = 'B';
@@ -96,7 +106,10 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->defense       = 1;
         break;
     case ENTITY_ITEM:
-        chooseItem(e);
+        chooseItem(e, 'i');
+        break;
+    case ENTITY_CONSUMABLE:
+        chooseItem(e, 'c');
         break;
     }
 }
@@ -128,40 +141,38 @@ void removeEntityChars(MapCell* posMap)
  * attack ou defense) da entidade ENTITY_ITEM.
  * Chamada por: initEntity (src/entity.c).
  */
-void chooseItem(Entity* e)
+void chooseItem(Entity *e, char type)
 {
-    int item   = rand() % 8 + 1;
-    e->ch      = 'I';
     e->hp      = 0;
     e->max_hp  = 0;
     e->attack  = 0;
     e->defense = 0;
-    switch (item)
-    {       // mudar depois, talvez um txt
-    case 1: // hp
-        e->hp = 10;
-        break;
-    case 2:
-        e->hp = 20;
-        break;
-    case 3: // healing
-        e->max_hp = 5;
-        break;
-    case 4:
-        e->max_hp = 10;
-        break;
-    case 5: // dano
-        e->attack = 5;
-        break;
-    case 6:
-        e->attack = 10;
-        break;
-    case 7: // defesa
-        e->defense = 5;
-        break;
-    case 8:
-        e->defense = 10;
-        break;
+    if(type == 'i'){
+        int item = rand() % 5 + 1;
+        e->ch = 'I'; 
+        switch (item) 
+        { // mudar depois, talvez um txt
+        case 1: //hp
+            e->max_hp = 10;
+            break;
+        case 2:
+            e->max_hp = 20;
+            break;
+        case 3: // ataque
+            e->attack = 5;
+            break;
+        case 4:
+            e->attack = 10;
+            break;
+        case 5: // defesa
+            e->defense = 5;
+            break;
+        case 6:
+            e->defense = 10;
+            break;
+        }
+    }else if(type == 'c'){ 
+        e->ch = 'C'; 
     }
 }
 
@@ -267,6 +278,15 @@ void dealDamage(int raw_attack, Entity* target)
     target->hp -= damage;
     if (target->hp <= 0)
     {
+        if(target->healingItem > 0){
+            Entity *healingI = malloc(sizeof(Entity));
+            initEntity(healingI, ENTITY_CONSUMABLE, target->pos.x, target->pos.y);
+            healingI->hp = target->healingItem;
+            map[map_y][map_x].tiles[target->pos.y][target->pos.x].walkable = true;
+            map[map_y][map_x].entities[map[map_y][map_x].entity_count-1] = *healingI;
+            map[map_y][map_x].entity_count++;
+            pushLogQueue("The enemy has spawned a consumable", logs);
+        }
         target->hp     = 0;
         target->active = false;
     }
@@ -275,7 +295,7 @@ void dealDamage(int raw_attack, Entity* target)
 /*
  * Executa um ataque corpo a corpo de attacker em target aplicando attacker->attack
  * por meio de dealDamage.
- * Chamada por: movePlayer, chasePlayer e actBoss (src/entity.c), e tests/test_floor.c.
+ * Chamada por: movePlayer, chasePlayer e actBoss (src/entity.c), e tests/test_floor.c./
  */
 void attackEntity(Entity* attacker, Entity* target)
 {
@@ -436,29 +456,43 @@ void handleInput(int input)
 {
     if (!player || !player->active || player->hp <= 0)
         return;
-
-    int      dx = 0, dy = 0;
+    int dxv[8]      = {-1, 0, 1, -1, 1, -1, 0, 1};
+    int dyv[8]      = {-1, -1, -1, 0, 0, 1, 1, 1};
+    int      dx     = 0, dy = 0;
     bool     ranged = false;
     Position newPos = player->pos;
-
     switch (input)
     {
-    case 'w':
-    case 'k':
-        newPos.y--;
+    case 'q':
+        newPos.y += dyv[0];
+        newPos.x += dxv[0];
         break;
-    case 's':
-    case 'j':
-        newPos.y++;
+    case 'w':
+        newPos.y += dyv[1];
+        break;
+    case 'e':
+        newPos.y += dyv[2];
+        newPos.x += dxv[2];
         break;
     case 'a':
-    case 'h':
-        newPos.x--;
+        newPos.x += dxv[3];
         break;
     case 'd':
-    case 'l':
-        newPos.x++;
+        newPos.x += dxv[4];
+        newPos.y += dyv[4];
         break;
+    case 'z':
+        newPos.x += dxv[5];
+        newPos.y += dyv[5];
+        break;
+    case 's':
+        newPos.y += dyv[6];
+        break;
+    case 'c':
+        newPos.x += dxv[7];
+        newPos.y += dyv[7];
+        break;
+        
     case KEY_UP:
         dy     = -1;
         ranged = true;
@@ -540,7 +574,7 @@ void movePlayer(Position newPos)
         Entity* target = getEntityAt(newPos.x, newPos.y);
         if (target != NULL)
         {
-            if (target->type == ENTITY_ITEM)
+            if (target->type == ENTITY_ITEM || target->type == ENTITY_CONSUMABLE)
             {
                 if (player->hp + target->hp >= player->max_hp)
                 {

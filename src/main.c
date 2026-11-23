@@ -28,6 +28,8 @@ int main(void)
 {
     cursesSetup();
     srand((unsigned int)time(NULL));
+    initscr();
+    set_escdelay(0); 
 
     while (1)
     {
@@ -72,6 +74,7 @@ int main(void)
         {
             if (!showGameOver())
                 break;
+            eraseSave();
         }
         else
         {

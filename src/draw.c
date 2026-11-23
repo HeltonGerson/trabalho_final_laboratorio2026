@@ -112,6 +112,7 @@ static attr_t entityAttr(EntityType type)
     case ENTITY_BOSS:
         return COLOR_PAIR(COLOR_PAIR_BOSS) | A_BOLD;
     case ENTITY_ITEM:
+    case ENTITY_CONSUMABLE:
         return COLOR_PAIR(COLOR_PAIR_ITEM) | A_BOLD;
     }
     return A_NORMAL;

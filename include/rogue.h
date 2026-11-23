@@ -44,7 +44,8 @@ typedef enum
     ENTITY_ENEMY_MELEE,
     ENTITY_ENEMY_RANGED,
     ENTITY_BOSS,
-    ENTITY_ITEM
+    ENTITY_ITEM, 
+    ENTITY_CONSUMABLE
 } EntityType;
 
 typedef struct
@@ -59,6 +60,7 @@ typedef struct
     int        ranged_range;
     int        ranged_cooldown;
     int        defense;
+    int        healingItem;
     bool       active;
 } Entity;
 
@@ -129,6 +131,7 @@ void        eraseLogQueue(logQueue* q);
 // funcoes da engine
 void       cursesSetup(void);
 bool       saveExists(void);
+void       eraseSave(void);
 MenuOption showMainMenu(void);
 bool       gameLoop(void);
 bool       showGameOver(void);
@@ -161,7 +164,7 @@ void    chasePlayer(Entity* e);
 void    actRangedEnemy(Entity* e);
 void    evadePlayer(Entity* e);
 void    actBoss(Entity* e);
-void    chooseItem(Entity* e);
+void    chooseItem(Entity* e, char type);
 void    removeEntityChars(MapCell* posMap);
 
 // funcoes do draw
