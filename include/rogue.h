@@ -109,7 +109,7 @@ int    setRoom(int x, int y, int choosed_room);
 int    countTxtFiles(const char* dir_path);
 
 // funcoes de entidades e player
-void    initEntity(Entity* e, EntityType type, int x, int y, bool r);
+void    initEntity(Entity* e, EntityType type, int x, int y);
 int     spawnRoomEntities(MapCell* cell);
 void    freeRoomEntities(MapCell* cell);
 Entity* getEntityAt(int x, int y);
@@ -120,6 +120,7 @@ void    movePlayer(Position newPos);
 void    chasePlayer(Entity* e);
 void    chooseItem(Entity* e);
 void    respawnEntity(Entity* e, int x, int y);
+void removeEntityChars(MapCell *posMap);
 
 // funcoes do draw
 void drawRoom(void);

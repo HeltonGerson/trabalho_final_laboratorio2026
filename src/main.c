@@ -42,17 +42,9 @@ int main(void)
     {
         continueGame();
     }
-    printw("%i %i", map_y, map_x);
-    getch();
     curr_room = map[map_y][map_x].tiles;
-    curr_room[0][0].ch = 0;
-    printw("aaaaaaaaaaaaaa");
-    getch();
-    printw("%i %i ", map_y, map_x);
 
     roomDoors();
-
-
 
     gameLoop();
     save(player);

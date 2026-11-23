@@ -137,8 +137,6 @@ void freeRoomTiles(Tile** tiles)
 /* Verificar se as portas da room atual */
 void roomDoors(void)
 {
-    printw("afsdaaaaaaaaaaa");
-    getch();
     fillDoors(curr_room);
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {

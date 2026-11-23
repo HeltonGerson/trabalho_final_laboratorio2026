@@ -59,7 +59,7 @@ void continueGame()
         return;
 
     FILE *save = fopen(SAVE_PATH, "r");
-    int countRoom = 0, countEntity = 0, totalEntities = 0, idx = 0;
+    int countRoom = 0, countEntity = 0, totalEntities = 0;
     fscanf(save, "%i", &totalEntities);
     for(int i = 0; i < MAP_HEIGHT; i++)
     {
@@ -69,32 +69,33 @@ void continueGame()
             fscanf(save, "%i", &countEntity);
             map[i][j].id = countRoom;
             map[i][j].entity_count = countEntity;
-            mvprintw(i,j,"%d", countRoom);
-            getch();
-            map[i][j].tiles = readRoom(1);
-             if(countRoom != 0 && countRoom != -1)
+            if(countRoom != 0)
             {
-                Entity auxEntity;
-                map[i][j].entities = malloc(countEntity * sizeof(Entity));
-                for(int t = 0; t < countEntity; t++)
-                {
-                    int auxB, auxT;
-                    char auxC;
-                    fscanf(save, "%i", &auxB);
-                    auxEntity.active = auxB;
-                    fscanf(save, " %c", &auxC);
-                    auxEntity.ch = (chtype)auxC;
-                    fscanf(save, "%i", &auxT);
-                    auxEntity.type = (EntityType)auxT;
-                    fscanf(save, "%i %i %i %i %i %i", &auxEntity.attack, &auxEntity.defense, &auxEntity.hp, &auxEntity.max_hp, &auxEntity.pos.x, &auxEntity.pos.y);
-                    map[i][j].entities[t] = auxEntity;
+                map[i][j].tiles = countRoom == -1 ? readRoom(0) : readRoom(countRoom);
+                removeEntityChars(&map[i][j]);
+                if(countRoom != -1){
+                    Entity auxEntity;
+                    map[i][j].entities = malloc(countEntity * sizeof(Entity));
+                    for(int t = 0; t < countEntity; t++)
+                    {
+                        int auxB, auxT;
+                        char auxC;
+                        fscanf(save, "%i", &auxB);
+                        auxEntity.active = auxB;
+                        fscanf(save, " %c", &auxC);
+                        auxEntity.ch = (chtype)auxC;
+                        fscanf(save, "%i", &auxT);
+                        auxEntity.type = (EntityType)auxT;
+                        fscanf(save, "%i %i %i %i %i %i", &auxEntity.attack, &auxEntity.defense, &auxEntity.hp, &auxEntity.max_hp, &auxEntity.pos.x, &auxEntity.pos.y);
+                        map[i][j].entities[t] = auxEntity;
+                    } 
                 }
-                idx = 0;
             }
         }
     }
     player = malloc(sizeof(Entity));
     player->active = 1;
+    player->ch = '@';
     fscanf(save, "%i %i %i %i %i %i %i %i\n", &player->hp, &player->max_hp, &player->attack, &player->defense, &player->pos.x, &player->pos.y, &map_y, &map_x);
     fclose(save);
 }
