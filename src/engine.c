@@ -1,10 +1,9 @@
 #include "rogue.h"
-#include <curses.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <locale.h>
 
 void cursesSetup()
 {
+    setlocale(LC_ALL, "");
     initscr();            /* Inicia o modo curses */
     noecho();             /* Faz com que eh digitado nao apareca no term */
     cbreak();             /* Comandos nao sao executados (ex: Ctrl-C) */
@@ -188,7 +187,7 @@ void gameLoop()
     {
         if (ch == KEY_RESIZE)
             layoutWindows();
-        else if (win && win_minimapa)
+        else if (win && win_minimapa && win_hud)
             handleInput(ch);
 
         drawEverything();
@@ -203,6 +202,12 @@ void closeGame(void)
 
     free(player);
     player = NULL;
+
+    if (logs)
+    {
+        eraseLogQueue(logs);
+        logs = NULL;
+    }
 
     freeMap();
 }

@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -std=c99 -g
 CPPFLAGS = -I./include/
-LDLIBS = -lncurses
+LDLIBS = -lncursesw
 SOURCES = src/*.c
 
 all: compile run clean
@@ -10,7 +10,7 @@ compile: $(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES) $(CPPFLAGS) $(LDLIBS) -o game
 
 test: tests/test_floor.c src/map.c src/room.c src/structs.c src/entity.c
-	$(CC) $(CFLAGS) tests/test_floor.c src/map.c src/room.c src/structs.c src/entity.c src/time.c $(CPPFLAGS) $(LDLIBS) -o test_runner
+	$(CC) $(CFLAGS) tests/test_floor.c src/map.c src/room.c src/structs.c src/entity.c src/time.c src/log.c $(CPPFLAGS) $(LDLIBS) -o test_runner
 	./test_runner
 	rm -f test_runner
 
