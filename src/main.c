@@ -21,7 +21,7 @@ int main(void)
 {
     cursesSetup();
     int mReturn = showMainMenu();
-    if (mReturn == 3)
+    if (mReturn == 2)
     {
         endwin();
         return 0;

@@ -3,10 +3,10 @@
 
 MapCell** createMap(void)
 {
-    MapCell** m = malloc(sizeof(MapCell*) * MAP_WIDTH);
+    MapCell** m = malloc(sizeof(MapCell*) * MAP_HEIGHT);
     for (int i = 0; i < MAP_SIZE; ++i)
     {
-        m[i] = calloc(MAP_HEIGHT, sizeof(MapCell));
+        m[i] = calloc(MAP_WIDTH, sizeof(MapCell));
     }
     return m;
 }
@@ -85,18 +85,28 @@ void updateFogOfWar(void)
     if (!map || map[map_y][map_x].id == 0)
         return;
 
-    map[map_y][map_x].visited    = true;
-    map[map_y][map_x].discovered = true;
+    map[map_y][map_x].visited = true;
 
-    // Adjacentes conectadas reveladas como ?
-    if (map_y > 0 && map[map_y - 1][map_x].id != 0)
-        map[map_y - 1][map_x].discovered = true;
-    if (map_y + 1 < MAP_SIZE && map[map_y + 1][map_x].id != 0)
-        map[map_y + 1][map_x].discovered = true;
-    if (map_x > 0 && map[map_y][map_x - 1].id != 0)
-        map[map_y][map_x - 1].discovered = true;
-    if (map_x + 1 < MAP_SIZE && map[map_y][map_x + 1].id != 0)
-        map[map_y][map_x + 1].discovered = true;
+    for (int y = 0; y < MAP_HEIGHT; ++y)
+    {
+        for (int x = 0; x < MAP_WIDTH; ++x)
+        {
+            if (map[y][x].id == 0 || !map[y][x].visited)
+                continue;
+
+            map[y][x].discovered = true;
+
+            // Adjacentes conectadas a qualquer sala visitada reveladas como ?
+            if (y > 0 && map[y - 1][x].id != 0)
+                map[y - 1][x].discovered = true;
+            if (y + 1 < MAP_HEIGHT && map[y + 1][x].id != 0)
+                map[y + 1][x].discovered = true;
+            if (x > 0 && map[y][x - 1].id != 0)
+                map[y][x - 1].discovered = true;
+            if (x + 1 < MAP_WIDTH && map[y][x + 1].id != 0)
+                map[y][x + 1].discovered = true;
+        }
+    }
 }
 
 void freeMap(void)

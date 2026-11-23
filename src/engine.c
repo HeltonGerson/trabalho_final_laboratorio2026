@@ -23,7 +23,7 @@ bool saveExists(void) // acho que não precisa
 
 void save(Entity *player)
 {
-    FILE *save = fopen("data/save/save.txt", "w");
+    FILE *save = fopen(SAVE_PATH, "w");
     if(!save){
         return;
     }
@@ -42,10 +42,19 @@ void save(Entity *player)
     {
         for(int j = 0; j < MAP_WIDTH; j++)
         {
-            fprintf(save, "%i %i \n", map[i][j].id, map[i][j].entity_count);
+            fprintf(save, "%i %i %i \n", map[i][j].id, map[i][j].entity_count, (int)map[i][j].visited);
             for(int t = 0; t < map[i][j].entity_count; t++)
             {
-                fprintf(save, "%i %c %i %i %i %i %i %i %i \n", map[i][j].entities[t].active,  map[i][j].entities[t].ch, map[i][j].entities[t].type, map[i][j].entities[t].attack,  map[i][j].entities[t].defense,  map[i][j].entities[t].hp,  map[i][j].entities[t].max_hp,  map[i][j].entities[t].pos.x,  map[i][j].entities[t].pos.y);
+                fprintf(save, "%i %c %i %i %i %i %i %i %i \n",
+                    map[i][j].entities[t].active,
+                    (char)map[i][j].entities[t].ch,
+                    map[i][j].entities[t].type,
+                    map[i][j].entities[t].attack,
+                    map[i][j].entities[t].defense,
+                    map[i][j].entities[t].hp,
+                    map[i][j].entities[t].max_hp,
+                    map[i][j].entities[t].pos.x,
+                    map[i][j].entities[t].pos.y);
             }
         }
     }
@@ -59,21 +68,26 @@ void continueGame()
         return;
 
     FILE *save = fopen(SAVE_PATH, "r");
-    int countRoom = 0, countEntity = 0, totalEntities = 0;
+    if(!save)
+        return;
+
+    int countRoom = 0, countEntity = 0, auxVisited = 0, totalEntities = 0;
     fscanf(save, "%i", &totalEntities);
     for(int i = 0; i < MAP_HEIGHT; i++)
     {
         for(int j = 0; j < MAP_WIDTH; j++)
         {
-            fscanf(save, "%i", &countRoom);
-            fscanf(save, "%i", &countEntity);
+            fscanf(save, "%i %i %i", &countRoom, &countEntity, &auxVisited);
             map[i][j].id = countRoom;
             map[i][j].entity_count = countEntity;
+            map[i][j].visited = (auxVisited != 0);
             if(countRoom != 0)
             {
-                map[i][j].tiles = countRoom == -1 ? readRoom(0) : readRoom(countRoom);
-                removeEntityChars(&map[i][j]);
-                if(countRoom != -1){
+                map[i][j].tiles = readRoom(countRoom);
+                if(map[i][j].tiles)
+                    removeEntityChars(&map[i][j]);
+
+                if(countEntity > 0){
                     Entity auxEntity;
                     map[i][j].entities = malloc(countEntity * sizeof(Entity));
                     for(int t = 0; t < countEntity; t++)
@@ -96,8 +110,11 @@ void continueGame()
     player = malloc(sizeof(Entity));
     player->active = 1;
     player->ch = '@';
+    player->type = ENTITY_PLAYER;
     fscanf(save, "%i %i %i %i %i %i %i %i\n", &player->hp, &player->max_hp, &player->attack, &player->defense, &player->pos.x, &player->pos.y, &map_y, &map_x);
     fclose(save);
+
+    updateFogOfWar();
 }
 
 MenuOption showMainMenu(void)
@@ -116,7 +133,6 @@ MenuOption showMainMenu(void)
     }
     labels[count] = "Quit";
     opts[count++] = MENU_QUIT;
-
     while (1)
     {
         werase(stdscr);
@@ -154,8 +170,11 @@ MenuOption showMainMenu(void)
         else if (ch == '\n' || ch == '\r' || ch == KEY_ENTER){
             return opts[selected];
         }
-        else if (ch == 'q')
+        else if (ch == 'q'){
+            
+        
             return MENU_QUIT;
+        }
     }
 }
 

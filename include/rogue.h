@@ -10,6 +10,7 @@
 #include <time.h>
 
 #define SAVE_PATH "data/save/save.txt"
+#define ROOM_ID_BASE 1000
 
 typedef enum
 {
