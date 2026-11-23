@@ -21,30 +21,37 @@ const int MAP_HEIGHT  = 7;
 int main(void)
 {
     cursesSetup();
-
-    if (showMainMenu() == MENU_QUIT)
+    int mReturn = showMainMenu();
+    if (mReturn == 2)
     {
         endwin();
         return 0;
     }
-
     srand(time(NULL));
     int number_of_rooms = rand() % 8 + 8;
     logs = initializeLogQueue();
     
     layoutWindows();
-
     map = createMap();
-    setupFloor(map_x, map_y, number_of_rooms);
 
+
+    if(mReturn == 0)
+    {
+        int number_of_rooms = rand() % 8 + 8;
+        setupFloor(map_x, map_y, number_of_rooms);
+        Position start_pos = {5, 5};
+        player             = createPlayer(start_pos);
+
+    }else if(mReturn == 1)
+    {
+        continueGame();
+    }
     curr_room = map[map_y][map_x].tiles;
 
-    Position start_pos = {5, 5};
-    player             = createPlayer(start_pos);
-
     roomDoors();
-    gameLoop();
 
+    gameLoop();
+    save(player);
     closeGame();
     return 0;
 }

@@ -31,15 +31,15 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     e->pos.x  = x;
     e->pos.y  = y;
     e->type   = type;
-    e->active = true;
 
+    e->active = true;
     switch (type)
     {
     case ENTITY_PLAYER:
         e->ch      = '@';
-        e->max_hp  = 10;
+        e->max_hp  = 999999999;
         e->hp      = e->max_hp;
-        e->attack  = 4;
+        e->attack  = 200;
         e->defense = 0;
         break;
     case ENTITY_ENEMY_MELEE:
@@ -69,7 +69,20 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     }
 }
 
-void chooseItem(Entity* e)
+
+void removeEntityChars(MapCell *posMap){
+    for(int i = 1; i < ROOM_HEIGHT-1; i++){
+        for(int j = 1; j < ROOM_WIDTH-1; j++){
+            if(posMap->tiles[i][j].ch == '.' || posMap->tiles[i][j].ch == '#')
+                continue;
+            posMap->tiles[i][j].ch = '.';
+            
+            posMap->tiles[i][j].walkable = true; 
+        }
+    }
+}
+
+void chooseItem(Entity *e)
 {
     int item   = rand() % 8 + 1;
     e->ch      = 'I';
@@ -275,6 +288,8 @@ void movePlayer(Position newPos)
                 if (player->hp + target->hp >= player->max_hp)
                 {
                     player->hp = player->max_hp;
+                }else{
+                    player->hp += target->hp;
                 }
                 else
                 {
@@ -282,8 +297,8 @@ void movePlayer(Position newPos)
                 }
                 if (target->max_hp > 0)
                 {
-                    player->max_hp = target->max_hp;
-                    player->hp     = player->max_hp;
+                    player->max_hp += target->max_hp;
+                    player->hp     += target->max_hp;
                 }
                 player->attack += target->attack;
                 player->defense += target->defense;

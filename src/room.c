@@ -35,16 +35,50 @@ int countTxtFiles(const char* dir_path)
     closedir(dir);
     return count;
 }
-// faz as verificações para ver se os parâmetros passados são válidos para uma sala
+// Agora gera o ID unico (tipo * 1000 + numero_da_sala) antes de chamar readRoom
 int setRoom(int x, int y, int room_type)
 {
     if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT && room_type >= 0 && room_type <= 20)
     {
-        Tile** tiles = readRoom(room_type);
+        int         type     = 0;
+        const char* room_dir = NULL;
+
+        if (room_type == 0)
+        {
+            type     = 0;
+            room_dir = "start";
+        }
+        else if (room_type == 1)
+        {
+            type     = 1;
+            room_dir = "boss";
+        }
+        else if (room_type == 2 || room_type == 3)
+        {
+            type     = 2;
+            room_dir = "items";
+        }
+        else
+        {
+            type     = 3;
+            room_dir = "normal";
+        }
+
+        char dir_path[50];
+        snprintf(dir_path, sizeof(dir_path), "data/rooms/%s", room_dir);
+        int total_rooms = countTxtFiles(dir_path);
+
+        if (total_rooms <= 0)
+            return 1;
+
+        int room_n  = rand() % total_rooms + 1;
+        int room_id = type * ROOM_ID_BASE + room_n;
+
+        Tile** tiles = readRoom(room_id);
         if (!tiles)
             return 1;
 
-        map[y][x].id    = (room_type == 0) ? -1 : room_type;
+        map[y][x].id    = room_id;
         map[y][x].tiles = tiles;
         if (spawnRoomEntities(&map[y][x]) != 0)
         {
@@ -58,34 +92,34 @@ int setRoom(int x, int y, int room_type)
     return 1;
 }
 
-/* Le uma room do data/rooms */
-Tile** readRoom(int type)
+/* Le uma room especifica a partir do ID unico (tipo * ROOM_ID_BASE + room_n) */
+Tile** readRoom(int room_id)
 {
-    FILE* fp;
-    char  room_type[8];
-    int   room_n = 0;
+    if (room_id <= 0)
+        return NULL;
+
+    int type   = room_id / ROOM_ID_BASE;
+    int room_n = room_id % ROOM_ID_BASE;
+
+    if (room_n <= 0)
+        return NULL;
+
+    const char* room_type = NULL;
     if (type == 0)
-        strcpy(room_type, "start");
+        room_type = "start";
     else if (type == 1)
-        strcpy(room_type, "boss");
-    else if (type == 2 || type == 3)
-        strcpy(room_type, "items");
-    else if (type >= 4 && type <= 20)
-        strcpy(room_type, "normal");
+        room_type = "boss";
+    else if (type == 2)
+        room_type = "items";
+    else if (type == 3)
+        room_type = "normal";
     else
         return NULL;
 
-    char dir_path[50];
-    snprintf(dir_path, sizeof(dir_path), "data/rooms/%s", room_type);
-    int total_rooms = countTxtFiles(dir_path);
-
-    if (total_rooms <= 0)
-        return NULL;
-
     char file_path[128];
-    room_n = rand() % total_rooms + 1;
-    snprintf(file_path, sizeof(file_path), "%s/%d.txt", dir_path, room_n);
-    fp = fopen(file_path, "r");
+    snprintf(file_path, sizeof(file_path), "data/rooms/%s/%d.txt", room_type, room_n);
+
+    FILE* fp = fopen(file_path, "r");
     if (!fp)
         return NULL;
 
