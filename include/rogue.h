@@ -45,7 +45,8 @@ typedef enum
     ENTITY_ENEMY_RANGED,
     ENTITY_BOSS,
     ENTITY_ITEM, 
-    ENTITY_CONSUMABLE
+    ENTITY_CONSUMABLE, 
+    ENTITY_NEXT_FLOOR_DOOR
 } EntityType;
 
 typedef struct
@@ -139,6 +140,7 @@ void       cleanupRun(void);
 void       closeGame(void);
 void       save(Entity* p);
 bool       continueGame(void);
+void       winGame(void);
 
 // funcoes das rooms
 Tile** readRoom(int room_id);
@@ -154,8 +156,7 @@ void    freeRoomEntities(MapCell* cell);
 Entity* getEntityAt(int x, int y);
 void    dealDamage(int raw_attack, Entity* target);
 void    attackEntity(Entity* attacker, Entity* target);
-bool    canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx,
-                          int* out_dy);
+bool    canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx, int* out_dy);
 bool    fireRangedAttack(Entity* attacker, int dx, int dy);
 Entity* createPlayer(Position start_pos);
 void    handleInput(int ch);
@@ -174,8 +175,7 @@ void drawMinimap(void);
 void drawHud(void);
 void drawEntity(Entity* e);
 void drawHitFlash(Position pos);
-void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player,
-                        bool hit_target);
+void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player, bool hit_target);
 void drawEverything(void);
 void drawLogs();
 
@@ -184,6 +184,7 @@ MapCell** createMap(void);
 void      setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms);
 void      updateFogOfWar(void);
 void      freeMap(void);
+void      newFloor(void);
 
 // funcoes de tela
 WINDOW* create_newwin(int height, int width, int starty, int startx);
@@ -195,6 +196,7 @@ void passTime(void);
 
 // logs
 void logDefault(const char* msg);
+char confirmationLog(char* msg);
 
 
 /* extern: variaveis globais compartilhadas */
@@ -203,11 +205,14 @@ extern const int ROOM_WIDTH;
 extern const int MAP_SIZE;
 extern const int MAP_HEIGHT;
 extern const int MAP_WIDTH;
+extern const int LAST_FLOOR;
 extern Entity*   player;
 extern Tile**    curr_room;
 extern MapCell** map;
 extern int       map_y;
 extern int       map_x;
+extern int       number_of_rooms;
+extern int       curr_floor;
 extern WINDOW*   win;
 extern WINDOW*   win_minimapa;
 extern WINDOW*   win_hud;

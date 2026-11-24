@@ -1,6 +1,7 @@
 #include "rogue.h"
 #include <curses.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static bool     player_moved_turn = false;
 static Position prev_player_pos   = {0, 0};
@@ -65,9 +66,9 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     {
     case ENTITY_PLAYER:
         e->ch            = '@';
-        e->max_hp        = 10;
+        e->max_hp        = 99999;
         e->hp            = e->max_hp;
-        e->attack        = 4;
+        e->attack        = 99999;
         e->ranged_attack = 2;
         e->ranged_range  = 10;
         e->defense       = 0;
@@ -110,6 +111,8 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_CONSUMABLE:
         chooseItem(e, 'c');
+        break;
+    case ENTITY_NEXT_FLOOR_DOOR:
         break;
     }
 }
@@ -283,7 +286,38 @@ void dealDamage(int raw_attack, Entity* target)
     
             target->hp     = 0;
             target->active = false;
-    
+            
+            if (target->type == ENTITY_BOSS)
+            {
+                if(curr_floor == 2)
+                {
+                    winGame();
+                }
+                Position boss_pos = target->pos;
+            
+                target->hp     = 0;
+                target->active = false;
+            
+                MapCell* cell     = &map[map_y][map_x];
+                Entity*  new_list = realloc(cell->entities, sizeof(Entity) * (cell->entity_count + 1));
+                if (new_list == NULL)
+                {
+                    fprintf(stderr, "Error when allocating the next floor door entity\n");
+                    return;
+                }
+            
+                cell->entities = new_list;
+            
+                Entity door = {0};
+                door.active = true;
+                door.ch     = '/';
+                door.pos    = boss_pos;
+                door.type   = ENTITY_NEXT_FLOOR_DOOR;
+            
+                cell->entities[cell->entity_count] = door;
+                cell->entity_count++;
+                cell->tiles[boss_pos.y][boss_pos.x].walkable = true;
+            }
             if (heal_amount > 0)
             {
                 MapCell* cell     = &map[map_y][map_x];
@@ -605,6 +639,17 @@ void movePlayer(Position newPos)
                 player->pos.x     = newPos.x;
                 player_moved_turn = true;
             }
+            else if(target->type == ENTITY_NEXT_FLOOR_DOOR)
+            {
+                if(confirmationLog("Do you want to go to the next floor? y to confirm") == 'y')
+                {
+                    newFloor();
+                }
+                else
+                {
+                    passTime();
+                }
+            }
             else
             {
                 attackEntity(player, target);
@@ -632,6 +677,7 @@ void movePlayer(Position newPos)
         roomDoors();
     }
 }
+
 
 /*
  * Calcula o menor caminho até o jogador via busca em largura (BFS) com coordQueue:

@@ -1,4 +1,5 @@
 #include "rogue.h"
+#include <curses.h>
 
 // declaracoes globais
 Entity*   player;
@@ -9,14 +10,17 @@ WINDOW*   win_hud;
 MapCell** map;
 logQueue* logs;
 
-// indices atuais no mapa
+// Variáveis globais
 int       map_y       = 3;
 int       map_x       = 3;
+int       curr_floor  = 1;
+int       number_of_rooms = 0;
 const int ROOM_WIDTH  = 31;
 const int ROOM_HEIGHT = 11;
 const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
+const int LAST_FLOOR   = 2;
 
 /*
  * Ponto de entrada do jogo: inicializa o ncurses e a semente aleatória, executa
@@ -54,9 +58,9 @@ int main(void)
         }
         else
         {
-            int number_of_rooms = rand() % 8 + 8;
+            number_of_rooms = rand() % 8 + 8;
             setupFloor(map_x, map_y, number_of_rooms);
-            Position start_pos = {5, 5};
+            Position start_pos = {15, 5};
             player             = createPlayer(start_pos);
         }
 

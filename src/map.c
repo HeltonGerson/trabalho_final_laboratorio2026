@@ -16,6 +16,25 @@ MapCell** createMap(void)
     }
     return m;
 }
+
+void newFloor(void)
+{
+    freeMap();
+    map = createMap();
+
+    number_of_rooms = rand() % 8 + 8;
+    map_x = MAP_WIDTH / 2;  
+    map_y = MAP_HEIGHT / 2; 
+    curr_floor++;
+
+    setupFloor(map_x, map_y, number_of_rooms);
+
+    curr_room = map[map_y][map_x].tiles;
+    roomDoors();
+
+    player->pos.x = 15;
+    player->pos.y = 5;
+}
     /*
      * Gera proceduralmente o andar via busca em profundidade (DFS) usando coordStack:
      * cria a sala inicial em (start_pos_x, start_pos_y), expande até number_of_rooms
