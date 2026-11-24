@@ -50,7 +50,8 @@ bool saveExists(void)
  * Chamada por: main (src/main.c) e tests/test_floor.c.
  */
 
-void eraseSave(){
+void eraseSave()
+{
     if(!saveExists())
         remove(SAVE_PATH);
 }
@@ -334,6 +335,13 @@ bool showGameOver(void)
         else if (ch == 'q')
             return false;
     }
+}
+
+void winGame()
+{
+    eraseSave();
+    printw("Alguém faz aí a tela de ganhar e pra, sei lá, voltar pro menu principal");
+    getch();
 }
 
 /*

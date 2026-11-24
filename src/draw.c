@@ -113,6 +113,7 @@ static attr_t entityAttr(EntityType type)
         return COLOR_PAIR(COLOR_PAIR_BOSS) | A_BOLD;
     case ENTITY_ITEM:
     case ENTITY_CONSUMABLE:
+    case ENTITY_NEXT_FLOOR_DOOR:
         return COLOR_PAIR(COLOR_PAIR_ITEM) | A_BOLD;
     }
     return A_NORMAL;

@@ -1,4 +1,5 @@
 #include "rogue.h"
+#include <curses.h>
 
 /*
  * Centraliza e imprime a mensagem msg na penúltima linha do terminal (LINES - 2),
@@ -16,4 +17,10 @@ void logDefault(const char* msg)
     move(row, 0);
     clrtoeol();
     mvprintw(row, col, "%s", msg);
+}
+
+char confirmationLog(char* msg){
+    logDefault(msg);
+    char resposta = getch();
+    return resposta;
 }
