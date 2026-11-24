@@ -276,22 +276,31 @@ void dealDamage(int raw_attack, Entity* target)
     drawHitFlash(target->pos);
 
     target->hp -= damage;
-    if (target->hp <= 0)
-    {
-        if(target->healingItem > 0){
-            Entity *healingI = malloc(sizeof(Entity));
-            initEntity(healingI, ENTITY_CONSUMABLE, target->pos.x, target->pos.y);
-            healingI->hp = target->healingItem;
-            map[map_y][map_x].tiles[target->pos.y][target->pos.x].walkable = true;
-            map[map_y][map_x].entities[map[map_y][map_x].entity_count-1] = *healingI;
-            map[map_y][map_x].entity_count++;
-            pushLogQueue("The enemy has spawned a consumable", logs);
+        if (target->hp <= 0)
+        {
+            int      heal_amount = target->healingItem;
+            Position drop_pos    = target->pos;
+    
+            target->hp     = 0;
+            target->active = false;
+    
+            if (heal_amount > 0)
+            {
+                MapCell* cell     = &map[map_y][map_x];
+                Entity*  new_list = realloc(cell->entities, sizeof(Entity) * (cell->entity_count + 1));
+                if (new_list != NULL)
+                {
+                    cell->entities = new_list;
+                    initEntity(&cell->entities[cell->entity_count], ENTITY_CONSUMABLE, drop_pos.x, drop_pos.y);
+                    cell->entities[cell->entity_count].hp = heal_amount;
+                    cell->entity_count++;
+    
+                    cell->tiles[drop_pos.y][drop_pos.x].walkable = true;
+                    pushLogQueue("The enemy has spawned a consumable", logs);
+                }
+            }
         }
-        target->hp     = 0;
-        target->active = false;
-    }
 }
-
 /*
  * Executa um ataque corpo a corpo de attacker em target aplicando attacker->attack
  * por meio de dealDamage.
