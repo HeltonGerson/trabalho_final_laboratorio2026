@@ -21,18 +21,15 @@ void passTime(void)
     if (!player || !player->active || player->hp <= 0)
         return;
 
-    MapCell* cell      = &map[map_y][map_x];
-    Entity*  entities  = cell->entities;
-    int      ent_count = cell->entity_count;
-    for (int i = 0; i < ent_count; i++)
+    MapCell* cell = &map[map_y][map_x];
+    for (int i = 0; i < cell->entity_count; i++)
     {
         if (!player->active || player->hp <= 0)
             break;
 
-        Entity* e = &entities[i];
+        Entity* e = &cell->entities[i];
         if (!e->active)
             continue;
-
         switch (e->type)
         {
         case ENTITY_ENEMY_MELEE:
@@ -49,3 +46,4 @@ void passTime(void)
         }
     }
 }
+
