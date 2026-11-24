@@ -60,8 +60,8 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     e->ranged_cooldown = 0;
     e->active          = true;
     e->healingItem     = 0;
-    int healing = rand() % 10 + 1;
-    
+    int healing        = rand() % 10 + 1;
+
     switch (type)
     {
     case ENTITY_PLAYER:
@@ -79,9 +79,9 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->hp      = e->max_hp;
         e->attack  = 3;
         e->defense = 0;
-        if(healing == 1)
+        if (healing == 1)
             e->healingItem = 5;
-        else if(healing == 2)
+        else if (healing == 2)
             e->healingItem = 10;
         break;
     case ENTITY_ENEMY_RANGED:
@@ -92,9 +92,9 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->ranged_attack = 2;
         e->ranged_range  = 7;
         e->defense       = 0;
-        if(healing == 1)
+        if (healing == 1)
             e->healingItem = 5;
-        else if(healing == 2)
+        else if (healing == 2)
             e->healingItem = 10;
         break;
     case ENTITY_BOSS:
@@ -144,18 +144,19 @@ void removeEntityChars(MapCell* posMap)
  * attack ou defense) da entidade ENTITY_ITEM.
  * Chamada por: initEntity (src/entity.c).
  */
-void chooseItem(Entity *e, char type)
+void chooseItem(Entity* e, char type)
 {
     e->hp      = 0;
     e->max_hp  = 0;
     e->attack  = 0;
     e->defense = 0;
-    if(type == 'i'){
+    if (type == 'i')
+    {
         int item = rand() % 5 + 1;
-        e->ch = 'I'; 
-        switch (item) 
-        { // mudar depois, talvez um txt
-        case 1: //hp
+        e->ch    = 'I';
+        switch (item)
+        {       // mudar depois, talvez um txt
+        case 1: // hp
             e->max_hp = 10;
             break;
         case 2:
@@ -174,8 +175,10 @@ void chooseItem(Entity *e, char type)
             e->defense = 10;
             break;
         }
-    }else if(type == 'c'){ 
-        e->ch = 'C'; 
+    }
+    else if (type == 'c')
+    {
+        e->ch = 'C';
     }
 }
 
@@ -279,61 +282,58 @@ void dealDamage(int raw_attack, Entity* target)
     drawHitFlash(target->pos);
 
     target->hp -= damage;
-        if (target->hp <= 0)
+    if (target->hp <= 0)
+    {
+        int      heal_amount = target->healingItem;
+        Position drop_pos    = target->pos;
+
+        target->hp     = 0;
+        target->active = false;
+
+        if (target->type == ENTITY_BOSS && curr_floor < LAST_FLOOR)
         {
-            int      heal_amount = target->healingItem;
-            Position drop_pos    = target->pos;
-    
+            Position boss_pos = target->pos;
+
             target->hp     = 0;
             target->active = false;
-            
-            if (target->type == ENTITY_BOSS)
+
+            MapCell* cell     = &map[map_y][map_x];
+            Entity*  new_list = realloc(cell->entities, sizeof(Entity) * (cell->entity_count + 1));
+            if (new_list == NULL)
             {
-                if(curr_floor == 2)
-                {
-                    winGame();
-                }
-                Position boss_pos = target->pos;
-            
-                target->hp     = 0;
-                target->active = false;
-            
-                MapCell* cell     = &map[map_y][map_x];
-                Entity*  new_list = realloc(cell->entities, sizeof(Entity) * (cell->entity_count + 1));
-                if (new_list == NULL)
-                {
-                    fprintf(stderr, "Error when allocating the next floor door entity\n");
-                    return;
-                }
-            
-                cell->entities = new_list;
-            
-                Entity door = {0};
-                door.active = true;
-                door.ch     = '/';
-                door.pos    = boss_pos;
-                door.type   = ENTITY_NEXT_FLOOR_DOOR;
-            
-                cell->entities[cell->entity_count] = door;
-                cell->entity_count++;
-                cell->tiles[boss_pos.y][boss_pos.x].walkable = true;
+                fprintf(stderr, "Error when allocating the next floor door entity\n");
+                return;
             }
-            if (heal_amount > 0)
+
+            cell->entities = new_list;
+
+            Entity door = {0};
+            door.active = true;
+            door.ch     = '/';
+            door.pos    = boss_pos;
+            door.type   = ENTITY_NEXT_FLOOR_DOOR;
+
+            cell->entities[cell->entity_count] = door;
+            cell->entity_count++;
+            cell->tiles[boss_pos.y][boss_pos.x].walkable = true;
+        }
+        if (heal_amount > 0)
+        {
+            MapCell* cell     = &map[map_y][map_x];
+            Entity*  new_list = realloc(cell->entities, sizeof(Entity) * (cell->entity_count + 1));
+            if (new_list != NULL)
             {
-                MapCell* cell     = &map[map_y][map_x];
-                Entity*  new_list = realloc(cell->entities, sizeof(Entity) * (cell->entity_count + 1));
-                if (new_list != NULL)
-                {
-                    cell->entities = new_list;
-                    initEntity(&cell->entities[cell->entity_count], ENTITY_CONSUMABLE, drop_pos.x, drop_pos.y);
-                    cell->entities[cell->entity_count].hp = heal_amount;
-                    cell->entity_count++;
-    
-                    cell->tiles[drop_pos.y][drop_pos.x].walkable = true;
-                    pushLogQueue("The enemy has spawned a consumable", logs);
-                }
+                cell->entities = new_list;
+                initEntity(&cell->entities[cell->entity_count], ENTITY_CONSUMABLE, drop_pos.x,
+                           drop_pos.y);
+                cell->entities[cell->entity_count].hp = heal_amount;
+                cell->entity_count++;
+
+                cell->tiles[drop_pos.y][drop_pos.x].walkable = true;
+                pushLogQueue("The enemy has spawned a consumable", logs);
             }
         }
+    }
 }
 /*
  * Executa um ataque corpo a corpo de attacker em target aplicando attacker->attack
@@ -499,9 +499,9 @@ void handleInput(int input)
 {
     if (!player || !player->active || player->hp <= 0)
         return;
-    int dxv[8]      = {-1, 0, 1, -1, 1, -1, 0, 1};
-    int dyv[8]      = {-1, -1, -1, 0, 0, 1, 1, 1};
-    int      dx     = 0, dy = 0;
+    int      dxv[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+    int      dyv[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+    int      dx = 0, dy = 0;
     bool     ranged = false;
     Position newPos = player->pos;
     switch (input)
@@ -535,7 +535,7 @@ void handleInput(int input)
         newPos.x += dxv[7];
         newPos.y += dyv[7];
         break;
-        
+
     case KEY_UP:
         dy     = -1;
         ranged = true;
@@ -567,6 +567,24 @@ void handleInput(int input)
     movePlayer(newPos);
 }
 
+static bool isFinalBossRoomCleared(void)
+{
+    if (curr_floor < LAST_FLOOR)
+        return false;
+    MapCell* cell     = &map[map_y][map_x];
+    bool     has_boss = false;
+    for (int i = 0; i < cell->entity_count; ++i)
+    {
+        Entity* e = &cell->entities[i];
+        if (e->type == ENTITY_BOSS)
+            has_boss = true;
+        if (e->active && (e->type == ENTITY_ENEMY_MELEE || e->type == ENTITY_ENEMY_RANGED ||
+                          e->type == ENTITY_BOSS))
+            return false;
+    }
+    return has_boss;
+}
+
 /*
  * Move o jogador para newPos: troca de sala ao pisar em portas, coleta itens
  * (ENTITY_ITEM) ou ataca inimigos adjacentes (attackEntity), salvando a posição
@@ -582,7 +600,19 @@ void movePlayer(Position newPos)
     if (x >= ROOM_WIDTH || x < 0 || y >= ROOM_HEIGHT || y < 0)
         return;
 
-    bool room_changed = false;
+    bool   room_changed = false;
+    chtype dest_ch      = curr_room[newPos.y][newPos.x].ch;
+    bool   is_door = (dest_ch == ACS_UARROW || dest_ch == ACS_DARROW || dest_ch == ACS_LARROW ||
+                      dest_ch == ACS_RARROW);
+
+    if (is_door && isFinalBossRoomCleared())
+    {
+        char ans =
+            confirmationLog("You have defeated the final boss, press 'y' if you want to quit!");
+        if (ans == 'y' || ans == 'Y')
+            game_won = true;
+        return;
+    }
 
     /* Entrada e saida das salas */
     if (curr_room[newPos.y][newPos.x].ch == ACS_UARROW)
@@ -639,9 +669,9 @@ void movePlayer(Position newPos)
                 player->pos.x     = newPos.x;
                 player_moved_turn = true;
             }
-            else if(target->type == ENTITY_NEXT_FLOOR_DOOR)
+            else if (target->type == ENTITY_NEXT_FLOOR_DOOR)
             {
-                if(confirmationLog("Do you want to go to the next floor? y to confirm") == 'y')
+                if (confirmationLog("Do you want to go to the next floor? y to confirm") == 'y')
                 {
                     newFloor();
                 }
@@ -677,7 +707,6 @@ void movePlayer(Position newPos)
         roomDoors();
     }
 }
-
 
 /*
  * Calcula o menor caminho até o jogador via busca em largura (BFS) com coordQueue:
