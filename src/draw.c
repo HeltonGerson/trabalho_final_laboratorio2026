@@ -361,6 +361,7 @@ void drawHud(void)
     mvwprintw(win_hud, 2, 3, "♥ VIDA: [%s]", bar);
     mvwprintw(win_hud, 3, hp_x, "%s", hp_text);
     mvwprintw(win_hud, 6, 3, "⚔ ATAQUE: %d", player->attack);
+    mvwprintw(win_hud, 7, 3, "→ ARCO: %d", player->ranged_attack);
     mvwprintw(win_hud, 8, 3, "⛨ DEFESA: %d", player->defense);
 }
 

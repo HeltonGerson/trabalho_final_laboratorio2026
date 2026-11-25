@@ -12,7 +12,8 @@ static Position prev_player_pos   = {0, 0};
  */
 static bool isCardinalAdjacent(Position a, Position b)
 {
-    // O nome antigo foi mantido para não quebrar outras partes, mas ela confere as 8 direções ao redor
+    // O nome antigo foi mantido para não quebrar outras partes, mas ela confere as 8 direções ao
+    // redor
     int dx = abs(a.x - b.x);
     int dy = abs(a.y - b.y);
     return dx <= 1 && dy <= 1 && (dx != 0 || dy != 0);
@@ -72,44 +73,44 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     {
     case ENTITY_PLAYER:
         e->ch            = '@';
-        e->max_hp        = 99999;
+        e->max_hp        = 20;
         e->hp            = e->max_hp;
-        e->attack        = 3;
+        e->attack        = 4;
         e->ranged_attack = 2;
-        e->ranged_range  = 10;
+        e->ranged_range  = 8;
         e->defense       = 0;
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
-        e->max_hp  = 4;
+        e->max_hp  = 6;
         e->hp      = e->max_hp;
-        e->attack  = 3;
+        e->attack  = 4;
         e->defense = 0;
         if (healing == 1)
-            e->healingItem = 5;
+            e->healingItem = 4;
         else if (healing == 2)
-            e->healingItem = 10;
+            e->healingItem = 7;
         break;
     case ENTITY_ENEMY_RANGED:
         e->ch            = 'A';
-        e->max_hp        = 8;
+        e->max_hp        = 6;
         e->hp            = e->max_hp;
         e->attack        = 3;
         e->ranged_attack = 2;
-        e->ranged_range  = 7;
+        e->ranged_range  = 5;
         e->defense       = 0;
         if (healing == 1)
-            e->healingItem = 5;
+            e->healingItem = 4;
         else if (healing == 2)
-            e->healingItem = 10;
+            e->healingItem = 7;
         break;
     case ENTITY_BOSS:
         e->ch            = 'B';
-        e->max_hp        = 20;
+        e->max_hp        = 35;
         e->hp            = e->max_hp;
-        e->attack        = 5;
-        e->ranged_attack = 3;
-        e->ranged_range  = 7;
+        e->attack        = 7;
+        e->ranged_attack = 5;
+        e->ranged_range  = 8;
         e->defense       = 1;
         break;
     case ENTITY_ITEM:
@@ -120,6 +121,20 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_NEXT_FLOOR_DOOR:
         break;
+    }
+
+    // shortcut: usa 0.35f local para nao alterar ENEMIES_MULTIPLIER de outro autor em main.c
+    if (curr_floor > 1 &&
+        (type == ENTITY_ENEMY_MELEE || type == ENTITY_ENEMY_RANGED || type == ENTITY_BOSS))
+    {
+        int   extra      = curr_floor - 1;
+        float mult       = 1.0f + extra * 0.35f;
+        e->max_hp        = (int)(e->max_hp * mult + 0.5f);
+        e->hp            = e->max_hp;
+        e->attack        = (int)(e->attack * mult + 0.5f);
+        e->ranged_attack = (int)(e->ranged_attack * mult + 0.5f);
+        if (type != ENTITY_ENEMY_RANGED)
+            e->defense += extra;
     }
 }
 
@@ -152,33 +167,40 @@ void removeEntityChars(MapCell* posMap)
  */
 void chooseItem(Entity* e, char type)
 {
-    e->hp      = 0;
-    e->max_hp  = 0;
-    e->attack  = 0;
-    e->defense = 0;
+    e->hp            = 0;
+    e->max_hp        = 0;
+    e->attack        = 0;
+    e->ranged_attack = 0;
+    e->defense       = 0;
     if (type == 'i')
     {
-        int item = rand() % 5 + 1;
+        int item = rand() % 8 + 1;
         e->ch    = 'I';
         switch (item)
         {       // No futuro dá para ler esses itens de um arquivo de texto
         case 1: // Aumenta a vida máxima
-            e->max_hp = 10;
+            e->max_hp = 4;
             break;
         case 2:
-            e->max_hp = 20;
+            e->max_hp = 7;
             break;
         case 3: // Aumenta o ataque
-            e->attack = 5;
+            e->attack = 1;
             break;
         case 4:
-            e->attack = 10;
+            e->attack = 2;
             break;
         case 5: // Aumenta a defesa
-            e->defense = 5;
+            e->defense = 1;
             break;
         case 6:
-            e->defense = 10;
+            e->defense = 2;
+            break;
+        case 7: // Aumenta o ataque do arco
+            e->ranged_attack = 1;
+            break;
+        case 8:
+            e->ranged_attack = 2;
             break;
         }
     }
@@ -299,13 +321,15 @@ void dealDamage(int raw_attack, Entity* target)
     if (target->type == ENTITY_ENEMY_MELEE || target->type == ENTITY_ENEMY_RANGED ||
         target->type == ENTITY_BOSS)
     {
-        // Usa um espaço fixo para a mensagem porque acontece no máximo um golpe do jogador por turno antes de mostrar na tela
+        // Usa um espaço fixo para a mensagem porque acontece no máximo um golpe do jogador por
+        // turno antes de mostrar na tela
         static char combat_log[64];
-        const char* name = (target->type == ENTITY_BOSS)          ? "Boss (B)"
+        const char* name = (target->type == ENTITY_BOSS)           ? "Boss (B)"
                            : (target->type == ENTITY_ENEMY_RANGED) ? "Archer (A)"
-                                                                  : "Goblin (E)";
+                                                                   : "Goblin (E)";
         if (target->hp == 0)
-            snprintf(combat_log, sizeof(combat_log), "You killed %s! HP: 0/%d", name, target->max_hp);
+            snprintf(combat_log, sizeof(combat_log), "You killed %s! HP: 0/%d", name,
+                     target->max_hp);
         else
             snprintf(combat_log, sizeof(combat_log), "You hit %s! HP: %d/%d", name, target->hp,
                      target->max_hp);
@@ -443,7 +467,8 @@ bool canHitLineOfSight(Position origin, Position target, int range, bool allow_d
  */
 bool fireRangedAttack(Entity* attacker, int dx, int dy)
 {
-    // O tiro acerta na mesma hora em linha reta; no futuro pode virar um projétil que anda turno a turno
+    // O tiro acerta na mesma hora em linha reta; no futuro pode virar um projétil que anda turno a
+    // turno
     if (!attacker || !attacker->active || attacker->ranged_range <= 0 || !curr_room)
         return false;
     if (dx == 0 && dy == 0)
@@ -687,9 +712,10 @@ void movePlayer(Position newPos)
                 if (target->max_hp > 0)
                 {
                     player->max_hp += target->max_hp;
-                    player->hp = player->max_hp;
+                    player->hp += target->max_hp;
                 }
                 player->attack += target->attack;
+                player->ranged_attack += target->ranged_attack;
                 player->defense += target->defense;
                 target->active    = false;
                 player->pos.y     = newPos.y;
@@ -706,7 +732,8 @@ void movePlayer(Position newPos)
                     }
                     else
                     {
-                        char ans = confirmationLog("You have defeated the final boss, press 'y' if you want to quit!");
+                        char ans = confirmationLog(
+                            "You have defeated the final boss, press 'y' if you want to quit!");
                         if (ans == 'y' || ans == 'Y')
                         {
                             game_won = true;
@@ -714,7 +741,8 @@ void movePlayer(Position newPos)
                         }
                     }
                 }
-                else if (confirmationLog("Do you want to go to the next floor? y to confirm") == 'y')
+                else if (confirmationLog("Do you want to go to the next floor? y to confirm") ==
+                         'y')
                 {
                     newFloor();
                 }
@@ -742,14 +770,16 @@ void movePlayer(Position newPos)
     if (room_changed)
     {
         curr_room = map[map_y][map_x].tiles;
-        for(int i = 0; i < map[map_y][map_x].entity_count; i++)
+        for (int i = 0; i < map[map_y][map_x].entity_count; i++)
         {
-            if(map[map_y][map_x].entities[i].ch == 'B' && map[map_y][map_x].entities[i].active == true)
+            if (map[map_y][map_x].entities[i].ch == 'B' &&
+                map[map_y][map_x].entities[i].active == true)
             {
                 pushLogQueue("You entered the boss room", logs);
                 break;
             }
-            else if(map[map_y][map_x].entities[i].ch == 'I' && map[map_y][map_x].entities[i].active == true)
+            else if (map[map_y][map_x].entities[i].ch == 'I' &&
+                     map[map_y][map_x].entities[i].active == true)
             {
                 pushLogQueue("You entered a item room", logs);
                 break;
@@ -841,7 +871,8 @@ void chasePlayer(Entity* chaser)
     // Se essa posição já for a do próprio inimigo, quer dizer que ele está colado no jogador
     if (prevY == chaser->pos.y && prevX == chaser->pos.x)
     {
-        // Se o jogador acabou de se aproximar nesse turno, o inimigo espera para o jogador ter a chance de bater primeiro
+        // Se o jogador acabou de se aproximar nesse turno, o inimigo espera para o jogador ter a
+        // chance de bater primeiro
         if (player_moved_turn && !isCardinalAdjacent(chaser->pos, prev_player_pos))
         {
             eraseCoordQueue(q);
@@ -881,8 +912,8 @@ static bool hasBresenhamLineOfSight(Position origin, Position target, int range)
     if (target.x < 0 || target.x >= ROOM_WIDTH || target.y < 0 || target.y >= ROOM_HEIGHT)
         return false;
 
-    int dx = target.x - origin.x;
-    int dy = target.y - origin.y;
+    int dx      = target.x - origin.x;
+    int dy      = target.y - origin.y;
     int dist_sq = dx * dx + dy * dy;
     if (dist_sq <= 0 || dist_sq > range * range)
         return false;
@@ -964,7 +995,7 @@ void actRangedEnemy(Entity* e)
     dealDamage(e->ranged_attack, player);
     pushLogQueue("Archer (A) shot you!", logs);
     e->aim_turns       = 0;
-    e->ranged_cooldown = 5;
+    e->ranged_cooldown = 3;
 }
 
 /*
@@ -1055,7 +1086,8 @@ void actBossI(Entity* e)
     }
 
     int dx = 0, dy = 0;
-    if (e->ranged_cooldown == 0 && canHitLineOfSight(e->pos, player->pos, e->ranged_range, true, &dx, &dy))
+    if (e->ranged_cooldown == 0 &&
+        canHitLineOfSight(e->pos, player->pos, e->ranged_range, true, &dx, &dy))
     {
         if (player_moved_turn &&
             !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, true, NULL, NULL))
@@ -1065,7 +1097,8 @@ void actBossI(Entity* e)
         }
 
         fireRangedAttack(e, dx, dy);
-        e->ranged_cooldown = 2; // Marca 2 para que, diminuindo 1 no começo do próximo turno, ele fique 1 turno sem atirar
+        e->ranged_cooldown = 2; // Marca 2 para que, diminuindo 1 no começo do próximo turno, ele
+                                // fique 1 turno sem atirar
         return;
     }
 
