@@ -447,7 +447,8 @@ bool canHitLineOfSight(Position origin, Position target, int range, bool allow_d
         if (!curr_room[ny][nx].walkable)
             return false;
         Entity* blocker = getEntityAt(nx, ny);
-        if (blocker != NULL && blocker->type != ENTITY_ITEM)
+        if (blocker != NULL && blocker->type != ENTITY_ITEM &&
+            blocker->type != ENTITY_CONSUMABLE && blocker->type != ENTITY_NEXT_FLOOR_DOOR)
             return false;
     }
 
@@ -497,7 +498,8 @@ bool fireRangedAttack(Entity* attacker, int dx, int dy)
         if (is_player)
         {
             Entity* target = getEntityAt(nx, ny);
-            if (!target || target->type == ENTITY_ITEM)
+            if (!target || target->type == ENTITY_ITEM || target->type == ENTITY_CONSUMABLE ||
+                target->type == ENTITY_NEXT_FLOOR_DOOR)
                 continue;
 
             drawProjectilePath(attacker->pos, last_pos, dx, dy, true, false);
@@ -517,7 +519,8 @@ bool fireRangedAttack(Entity* attacker, int dx, int dy)
             }
 
             Entity* blocker = getEntityAt(nx, ny);
-            if (blocker && blocker->type != ENTITY_ITEM)
+            if (blocker && blocker->type != ENTITY_ITEM && blocker->type != ENTITY_CONSUMABLE &&
+                blocker->type != ENTITY_NEXT_FLOOR_DOOR)
             {
                 hit_wall = true;
                 break;

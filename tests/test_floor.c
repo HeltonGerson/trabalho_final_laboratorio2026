@@ -258,6 +258,21 @@ int main(void)
     assert(fireRangedAttack(player, 1, 0) == false);
     assert(map[3][2].entities[0].hp == 6);
 
+    // Flecha atravessa consumível ('C') e porta de saída ('/') sem destruí-los e acerta inimigo atrás
+    freeRoomEntities(&map[3][2]);
+    map[3][2].entities     = malloc(sizeof(Entity) * 3);
+    map[3][2].entity_count = 3;
+    assert(map[3][2].entities != NULL);
+    initEntity(&map[3][2].entities[0], ENTITY_CONSUMABLE, 7, 5);
+    map[3][2].entities[0].hp = 4;
+    initEntity(&map[3][2].entities[1], ENTITY_NEXT_FLOOR_DOOR, 8, 5);
+    map[3][2].entities[1].ch = '/';
+    initEntity(&map[3][2].entities[2], ENTITY_ENEMY_MELEE, 10, 5);
+    assert(fireRangedAttack(player, 1, 0) == true);
+    assert(map[3][2].entities[0].active == true && map[3][2].entities[0].hp == 4);
+    assert(map[3][2].entities[1].active == true);
+    assert(map[3][2].entities[2].hp == 6 - player->ranged_attack);
+
     // Teste 8: Comportamento do Arqueiro (enxerga em 360°, mira por 2 turnos, descansa 3 turnos parado, reposiciona via BFS 8 direções quando sem visão)
     clearRoomInterior(curr_room);
     freeRoomEntities(&map[3][2]);
