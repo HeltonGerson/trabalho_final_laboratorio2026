@@ -167,6 +167,7 @@ void    evadePlayer(Entity* e);
 void    actBossI(Entity* e);
 void    chooseItem(Entity* e, char type);
 void    removeEntityChars(MapCell* posMap);
+bool    roomHasAliveEnemies(void);
 
 // funcoes do draw
 void drawRoom(void);

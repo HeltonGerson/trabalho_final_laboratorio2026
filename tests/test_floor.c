@@ -550,6 +550,71 @@ int main(void)
 
     cleanupRun();
 
-    printf("Todos os 14 testes do mapa procedural, entidades, combate, IA, save/load e vitoria passaram com sucesso!\n");
+    // Teste 15: Trancamento de portas por inimigos vivos e desbloqueio ao zerar
+    acs_map[(unsigned char)'+'] = '>';
+    acs_map[(unsigned char)','] = '<';
+    acs_map[(unsigned char)'-'] = '^';
+    acs_map[(unsigned char)'.'] = 'v';
+    acs_map[(unsigned char)'x'] = '|';
+    acs_map[(unsigned char)'q'] = '-';
+    logs  = initializeLogQueue();
+    map   = createMap();
+    map_x = 3;
+    map_y = 3;
+    assert(setRoom(3, 3, 0) == 0);
+    assert(setRoom(4, 3, 4) == 0);
+
+    freeRoomEntities(&map[3][3]);
+    map[3][3].entities     = malloc(sizeof(Entity) * 2);
+    map[3][3].entity_count = 2;
+    assert(map[3][3].entities != NULL);
+    initEntity(&map[3][3].entities[0], ENTITY_ITEM, 10, 5);
+    initEntity(&map[3][3].entities[1], ENTITY_CONSUMABLE, 11, 5);
+
+    freeRoomEntities(&map[3][4]);
+    map[3][4].entities     = malloc(sizeof(Entity) * 2);
+    map[3][4].entity_count = 2;
+    assert(map[3][4].entities != NULL);
+    initEntity(&map[3][4].entities[0], ENTITY_ENEMY_MELEE, 20, 5);
+    map[3][4].entities[0].healingItem = 0;
+    initEntity(&map[3][4].entities[1], ENTITY_ENEMY_RANGED, 22, 5);
+    map[3][4].entities[1].healingItem = 5;
+
+    curr_room = map[3][3].tiles;
+    clearRoomInterior(curr_room);
+    clearRoomInterior(map[3][4].tiles);
+    player = createPlayer((Position){ROOM_WIDTH - 2, 5});
+    roomDoors();
+    assert(roomHasAliveEnemies() == false);
+    assert(curr_room[5][ROOM_WIDTH - 1].ch == ACS_RARROW);
+
+    // Entra na sala vizinha (4, 3) com 2 inimigos vivos: porta esquerda tranca com '#'
+    movePlayer((Position){ROOM_WIDTH - 1, 5});
+    assert(map_x == 4 && map_y == 3);
+    assert(roomHasAliveEnemies() == true);
+    assert(curr_room[5][0].ch == '#');
+    assert(curr_room[5][ROOM_WIDTH - 1].ch == ACS_VLINE);
+
+    // Tentar sair pela porta trancada nao muda de sala
+    movePlayer((Position){0, 5});
+    assert(map_x == 4 && map_y == 3);
+
+    // Mata 1o inimigo: porta continua trancada
+    dealDamage(100, &map[3][4].entities[0]);
+    assert(roomHasAliveEnemies() == true);
+    assert(curr_room[5][0].ch == '#');
+
+    // Mata 2o inimigo (mesmo dropando consumivel): porta destranca para ACS_LARROW
+    dealDamage(100, &map[3][4].entities[1]);
+    assert(roomHasAliveEnemies() == false);
+    assert(curr_room[5][0].ch == ACS_LARROW);
+
+    // Agora o player consegue sair de volta para (3, 3)
+    movePlayer((Position){0, 5});
+    assert(map_x == 3 && map_y == 3);
+
+    cleanupRun();
+
+    printf("Todos os 15 testes do mapa procedural, entidades, combate, IA, save/load, vitoria e tranca de portas passaram com sucesso!\n");
     return 0;
 }

@@ -196,6 +196,10 @@ void freeRoomTiles(Tile** tiles)
  */
 void roomDoors(void)
 {
+    if (!curr_room)
+        return;
+
+    bool locked = roomHasAliveEnemies();
     fillDoors(curr_room);
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
@@ -205,12 +209,20 @@ void roomDoors(void)
             {
                 curr_room[y][ROOM_WIDTH - 1].ch = ACS_VLINE;
             }
+            else if (locked)
+            {
+                curr_room[y][ROOM_WIDTH - 1].ch = '#';
+            }
         }
         if (curr_room[y][0].ch == ACS_LARROW)
         {
             if (map_x - 1 < 0 || map[map_y][map_x - 1].id == 0)
             {
                 curr_room[y][0].ch = ACS_VLINE;
+            }
+            else if (locked)
+            {
+                curr_room[y][0].ch = '#';
             }
         }
     }
@@ -222,12 +234,20 @@ void roomDoors(void)
             {
                 curr_room[ROOM_HEIGHT - 1][x].ch = ACS_HLINE;
             }
+            else if (locked)
+            {
+                curr_room[ROOM_HEIGHT - 1][x].ch = '#';
+            }
         }
         if (curr_room[0][x].ch == ACS_UARROW)
         {
             if (map_y - 1 < 0 || map[map_y - 1][map_x].id == 0)
             {
                 curr_room[0][x].ch = ACS_HLINE;
+            }
+            else if (locked)
+            {
+                curr_room[0][x].ch = '#';
             }
         }
     }

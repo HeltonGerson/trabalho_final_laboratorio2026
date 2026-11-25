@@ -282,15 +282,35 @@ void dealDamage(int raw_attack, Entity* target)
     drawHitFlash(target->pos);
 
     target->hp -= damage;
+    if (target->hp < 0)
+        target->hp = 0;
+
+    if (target->type == ENTITY_ENEMY_MELEE || target->type == ENTITY_ENEMY_RANGED ||
+        target->type == ENTITY_BOSS)
+    {
+        // shortcut: static buffer assumes at most one player hit log per turn before drawLogs drains logs; copy strings in logQueue if multi-hit per turn is added
+        static char combat_log[64];
+        const char* name = (target->type == ENTITY_BOSS)          ? "Boss (B)"
+                           : (target->type == ENTITY_ENEMY_RANGED) ? "Archer (A)"
+                                                                  : "Goblin (E)";
+        if (target->hp == 0)
+            snprintf(combat_log, sizeof(combat_log), "You killed %s! HP: 0/%d", name, target->max_hp);
+        else
+            snprintf(combat_log, sizeof(combat_log), "You hit %s! HP: %d/%d", name, target->hp,
+                     target->max_hp);
+        pushLogQueue(combat_log, logs);
+    }
+
     if (target->hp <= 0)
     {
-        int      heal_amount = target->healingItem;
-        Position drop_pos    = target->pos;
+        int        heal_amount = target->healingItem;
+        Position   drop_pos    = target->pos;
+        EntityType target_type = target->type;
 
         target->hp     = 0;
         target->active = false;
 
-        if (target->type == ENTITY_BOSS)
+        if (target_type == ENTITY_BOSS)
         {
             Position boss_pos = target->pos;
 
@@ -332,6 +352,12 @@ void dealDamage(int raw_attack, Entity* target)
                 cell->tiles[drop_pos.y][drop_pos.x].walkable = true;
                 pushLogQueue("The enemy has spawned a consumable", logs);
             }
+        }
+        if ((target_type == ENTITY_ENEMY_MELEE || target_type == ENTITY_ENEMY_RANGED ||
+             target_type == ENTITY_BOSS) &&
+            !roomHasAliveEnemies())
+        {
+            roomDoors();
         }
     }
 }
@@ -442,10 +468,6 @@ bool fireRangedAttack(Entity* attacker, int dx, int dy)
 
             drawProjectilePath(attacker->pos, last_pos, dx, dy, true, false);
             dealDamage(attacker->ranged_attack, target);
-            if (target->hp == 0)
-                pushLogQueue("Arrow killed the enemy!", logs);
-            else
-                pushLogQueue("Arrow hit the enemy!", logs);
             return true;
         }
         else
@@ -567,14 +589,18 @@ void handleInput(int input)
     movePlayer(newPos);
 }
 
-static bool roomHasAliveEnemies(void)
+bool roomHasAliveEnemies(void)
 {
+    if (!map || map_x < 0 || map_x >= MAP_WIDTH || map_y < 0 || map_y >= MAP_HEIGHT)
+        return false;
+
     MapCell* cell = &map[map_y][map_x];
     for (int i = 0; i < cell->entity_count; ++i)
     {
         Entity* e = &cell->entities[i];
-        if (e->active && (e->type == ENTITY_ENEMY_MELEE || e->type == ENTITY_ENEMY_RANGED ||
-                          e->type == ENTITY_BOSS))
+        if (e->active && e->hp > 0 &&
+            (e->type == ENTITY_ENEMY_MELEE || e->type == ENTITY_ENEMY_RANGED ||
+             e->type == ENTITY_BOSS))
             return true;
     }
     return false;
@@ -682,10 +708,6 @@ void movePlayer(Position newPos)
             else
             {
                 attackEntity(player, target);
-                if (target->hp == 0)
-                    pushLogQueue("The enemy died.", logs);
-                else
-                    pushLogQueue("You attacked.", logs);
             }
         }
         else
