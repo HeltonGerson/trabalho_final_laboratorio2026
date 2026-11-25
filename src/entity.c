@@ -68,7 +68,7 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->ch            = '@';
         e->max_hp        = 99999;
         e->hp            = e->max_hp;
-        e->attack        = 99999;
+        e->attack        = 3;
         e->ranged_attack = 2;
         e->ranged_range  = 10;
         e->defense       = 0;
@@ -702,6 +702,19 @@ void movePlayer(Position newPos)
     if (room_changed)
     {
         curr_room = map[map_y][map_x].tiles;
+        for(int i = 0; i < map[map_y][map_x].entity_count; i++)
+        {
+            if(map[map_y][map_x].entities[i].ch == 'B' && map[map_y][map_x].entities[i].active == true)
+            {
+                pushLogQueue("You entered the boss room", logs);
+                break;
+            }
+            else if(map[map_y][map_x].entities[i].ch == 'I' && map[map_y][map_x].entities[i].active == true)
+            {
+                pushLogQueue("You entered a item room", logs);
+                break;
+            }
+        }
         updateFogOfWar();
         roomDoors();
     }
@@ -907,32 +920,28 @@ void evadePlayer(Entity* e)
  * direções (cooldown 1), recua com evadePlayer na recarga e ataca melee se encurralado.
  * Chamada por: passTime (src/time.c).
  */
-void actBoss(Entity* e)
+void actBossI(Entity* e)
 {
     if (!e || !e->active || !player || !player->active)
         return;
 
+    if (e->ranged_cooldown > 0)
+        e->ranged_cooldown--;
+
     bool adjacent = isCardinalAdjacent(e->pos, player->pos);
 
-    if (e->hp > e->max_hp / 2)
+    if (adjacent)
     {
-        if (adjacent)
-        {
-            if (player_moved_turn && !isCardinalAdjacent(e->pos, prev_player_pos))
-                return;
-            attackEntity(e, player);
-            pushLogQueue("Boss (B) hit you!", logs);
-        }
-        else
-        {
-            chasePlayer(e);
-        }
+        if (player_moved_turn && !isCardinalAdjacent(e->pos, prev_player_pos))
+            return;
+
+        attackEntity(e, player);
+        pushLogQueue("Boss (B) hit you!", logs);
         return;
     }
 
     int dx = 0, dy = 0;
-    if (e->ranged_cooldown == 0 &&
-        canHitLineOfSight(e->pos, player->pos, e->ranged_range, true, &dx, &dy))
+    if (e->ranged_cooldown == 0 && canHitLineOfSight(e->pos, player->pos, e->ranged_range, true, &dx, &dy))
     {
         if (player_moved_turn &&
             !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, true, NULL, NULL))
@@ -940,21 +949,17 @@ void actBoss(Entity* e)
             pushLogQueue("Boss (B) aims at you!", logs);
             return;
         }
+
         fireRangedAttack(e, dx, dy);
-        e->ranged_cooldown = 1;
+        e->ranged_cooldown = 2; // 2 para que, decrementando no inicio do proximo turno, fique 1 turno sem atirar
         return;
     }
 
-    if (e->ranged_cooldown > 0)
-        e->ranged_cooldown--;
+    // Evita que chasePlayer ataque na diagonal se o Boss so deve bater nas 4 direcoes cardeais
+    int dist_x = abs(e->pos.x - player->pos.x);
+    int dist_y = abs(e->pos.y - player->pos.y);
+    if (dist_x == 1 && dist_y == 1)
+        return;
 
-    Position old_pos = e->pos;
-    evadePlayer(e);
-    if (e->pos.x == old_pos.x && e->pos.y == old_pos.y && adjacent)
-    {
-        if (player_moved_turn && !isCardinalAdjacent(e->pos, prev_player_pos))
-            return;
-        attackEntity(e, player);
-        pushLogQueue("Boss (B) hit you!", logs);
-    }
+    chasePlayer(e);
 }

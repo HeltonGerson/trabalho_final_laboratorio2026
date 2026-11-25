@@ -164,7 +164,7 @@ void    movePlayer(Position newPos);
 void    chasePlayer(Entity* e);
 void    actRangedEnemy(Entity* e);
 void    evadePlayer(Entity* e);
-void    actBoss(Entity* e);
+void    actBossI(Entity* e);
 void    chooseItem(Entity* e, char type);
 void    removeEntityChars(MapCell* posMap);
 
@@ -206,6 +206,7 @@ extern const int MAP_SIZE;
 extern const int MAP_HEIGHT;
 extern const int MAP_WIDTH;
 extern const int LAST_FLOOR;
+extern const float ENEMIES_MULTIPLIER;
 extern Entity*   player;
 extern Tile**    curr_room;
 extern MapCell** map;
