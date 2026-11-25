@@ -179,8 +179,8 @@ int main(void)
     initEntity(&map[3][2].entities[1], ENTITY_ENEMY_MELEE, 7, 5);
     initEntity(&map[3][2].entities[2], ENTITY_ENEMY_RANGED, 5, 6);
     assert(map[3][2].entities[2].hp == 6 && map[3][2].entities[2].max_hp == 6 &&
-           map[3][2].entities[2].attack == 3 && map[3][2].entities[2].ranged_attack == 4 &&
-           map[3][2].entities[2].ranged_range == 7 && map[3][2].entities[2].ranged_cooldown == 0 &&
+           map[3][2].entities[2].attack == 3 && map[3][2].entities[2].ranged_attack == 2 &&
+           map[3][2].entities[2].ranged_range == 5 && map[3][2].entities[2].ranged_cooldown == 0 &&
            map[3][2].entities[2].defense == 0);
 
     // Anda até o item em (6, 5): o item é recolhido e o jogador avança para lá
@@ -188,20 +188,17 @@ int main(void)
     assert(map[3][2].entities[0].active == false);
     assert(player->pos.x == 6 && player->pos.y == 5);
 
-    // Teste 5: Luta de perto contra o Goblin (9 de vida, 4 de ataque, 0 de defesa) em (7, 5)
-    // 3 golpes com attack 4: 9 -> 5 -> 1 -> 0
+    // Teste 5: Luta de perto contra o Goblin (6 de vida, 4 de ataque, 0 de defesa) em (7, 5)
+    // 2 golpes com attack 4: 6 -> 2 -> 0
     movePlayer((Position){7, 5});
-    assert(map[3][2].entities[1].hp == 5);
-    assert(map[3][2].entities[1].active == true);
-    movePlayer((Position){7, 5});
-    assert(map[3][2].entities[1].hp == 1);
+    assert(map[3][2].entities[1].hp == 2);
     assert(map[3][2].entities[1].active == true);
     movePlayer((Position){7, 5});
     assert(map[3][2].entities[1].hp == 0);
     assert(map[3][2].entities[1].active == false);
     assert(player->pos.x == 6 && player->pos.y == 5);
 
-    // 4º passo: o espaço agora está livre, então o jogador entra em (7, 5)
+    // 3º passo: o espaço agora está livre, então o jogador entra em (7, 5)
     movePlayer((Position){7, 5});
     assert(player->pos.x == 7 && player->pos.y == 5);
 
@@ -252,16 +249,16 @@ int main(void)
     curr_room[5][7].ch       = '#';
     curr_room[5][7].walkable = false;
     assert(fireRangedAttack(player, 1, 0) == false);
-    assert(map[3][2].entities[0].hp == 9);
+    assert(map[3][2].entities[0].hp == 6);
 
     // Inimigo longe demais (distância 9 > 8) não é atingido pela flecha
     curr_room[5][7].ch        = '.';
     curr_room[5][7].walkable  = true;
     map[3][2].entities[0].pos = (Position){14, 5};
     assert(fireRangedAttack(player, 1, 0) == false);
-    assert(map[3][2].entities[0].hp == 9);
+    assert(map[3][2].entities[0].hp == 6);
 
-    // Teste 8: Comportamento do Arqueiro (enxerga em qualquer ângulo, mira por 2 turnos, descansa 5 turnos, respeita parede e alcance)
+    // Teste 8: Comportamento do Arqueiro (enxerga em 360°, mira por 2 turnos, descansa 3 turnos parado, reposiciona via BFS 8 direções quando sem visão)
     clearRoomInterior(curr_room);
     freeRoomEntities(&map[3][2]);
     map[3][2].entities     = malloc(sizeof(Entity) * 1);
@@ -272,7 +269,7 @@ int main(void)
     player->hp = 10;
     initEntity(&map[3][2].entities[0], ENTITY_ENEMY_RANGED, 15, 6);
 
-    // Turno 1 em ângulo inclinado dentro do alcance (distância 5 <= 7): começa a mirar (1º turno de mira), sem causar dano
+    // Turno 1 em ângulo inclinado dentro do alcance (distância 5 <= 5): começa a mirar (1º turno de mira), sem causar dano
     passTime();
     assert(player->hp == 10);
     assert(map[3][2].entities[0].aim_turns == 1);
@@ -285,40 +282,61 @@ int main(void)
     assert(map[3][2].entities[0].aim_turns == 2);
     assert(map[3][2].entities[0].ranged_cooldown == 0);
 
-    // Turno 3: atira na posição atual do jogador, tira 4 de vida, zera a mira e entra em descanso de 3 turnos
+    // Turno 3: atira na posição atual do jogador, tira 2 de vida, zera a mira e entra em descanso de 3 turnos
     passTime();
-    assert(player->hp == 6);
+    assert(player->hp == 8);
     assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
     assert(map[3][2].entities[0].aim_turns == 0);
     assert(map[3][2].entities[0].ranged_cooldown == 3);
 
-    // Nos próximos 3 turnos descansando: não mira nem atira
+    // Nos próximos 3 turnos descansando (mesmo com parede na visão): fica parado, não mira nem atira
+    curr_room[5][14].ch       = '#';
+    curr_room[5][14].walkable = false;
     for (int cd = 2; cd >= 0; --cd)
     {
         passTime();
-        assert(player->hp == 6);
+        assert(player->hp == 8);
+        assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
         assert(map[3][2].entities[0].aim_turns == 0);
         assert(map[3][2].entities[0].ranged_cooldown == cd);
     }
 
-    // Depois que o descanso zera, volta a mirar no jogador
+    // Remove a parede e confirma que volta a mirar depois que o descanso zera
+    curr_room[5][14].ch       = '.';
+    curr_room[5][14].walkable = true;
     passTime();
-    assert(player->hp == 6);
+    assert(player->hp == 8);
     assert(map[3][2].entities[0].aim_turns == 1);
 
-    // Uma parede '#' na linha de visão entre (15, 6) e (12, 3) cancela a mira
+    // Parede '#' na linha de visão cancela a mira e faz o arqueiro andar 1 passo via BFS para casa com visão 360° mais distante
     curr_room[5][14].ch       = '#';
     curr_room[5][14].walkable = false;
     passTime();
-    assert(player->hp == 6);
+    assert(player->hp == 8);
     assert(map[3][2].entities[0].aim_turns == 0);
+    assert(map[3][2].entities[0].pos.x == 16 && map[3][2].entities[0].pos.y == 5);
 
-    // Sem parede, mas fora do alcance (distância 8 > 7), também não mira
+    // Sem parede, mas fora do alcance (distância > 5), zera mira e anda 1 passo para entrar no alcance
     curr_room[5][14].ch       = '.';
     curr_room[5][14].walkable = true;
     player->pos               = (Position){7, 6};
+    map[3][2].entities[0].pos = (Position){15, 6};
     passTime();
-    assert(player->hp == 6);
+    assert(player->hp == 8);
+    assert(map[3][2].entities[0].aim_turns == 0);
+    assert(map[3][2].entities[0].pos.x == 14);
+
+    // Totalmente cercado por paredes: fica parado com segurança
+    map[3][2].entities[0].pos = (Position){15, 6};
+    for (int dy = -1; dy <= 1; ++dy)
+        for (int dx = -1; dx <= 1; ++dx)
+            if (dx != 0 || dy != 0)
+            {
+                curr_room[6 + dy][15 + dx].ch       = '#';
+                curr_room[6 + dy][15 + dx].walkable = false;
+            }
+    passTime();
+    assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
     assert(map[3][2].entities[0].aim_turns == 0);
 
     // Teste 9: Comportamento do Chefão (disparo alinhado em 8 direções, descanso e ataque de perto)
@@ -404,6 +422,7 @@ int main(void)
     // 11b: Arqueiro estava sem visão -> jogador entra na frente dele, e o arqueiro só começa a mirar
     initEntity(player, ENTITY_PLAYER, 12, 9);
     player->hp                            = 10;
+    map[3][2].entities[1].pos             = (Position){18, 9};
     map[3][2].entities[1].ranged_cooldown = 0;
     map[3][2].entities[1].aim_turns       = 0;
     movePlayer((Position){13, 9});
@@ -455,8 +474,8 @@ int main(void)
     initEntity(&f2_melee, ENTITY_ENEMY_MELEE, 1, 1);
     initEntity(&f2_ranged, ENTITY_ENEMY_RANGED, 2, 1);
     initEntity(&f2_boss, ENTITY_BOSS, 3, 1);
-    assert(f2_melee.max_hp == 12 && f2_melee.attack == 5 && f2_melee.defense == 1);
-    assert(f2_ranged.max_hp == 8 && f2_ranged.ranged_attack == 5 && f2_ranged.defense == 0);
+    assert(f2_melee.max_hp == 8 && f2_melee.attack == 5 && f2_melee.defense == 1);
+    assert(f2_ranged.max_hp == 8 && f2_ranged.ranged_attack == 3 && f2_ranged.defense == 0);
     assert(f2_boss.max_hp == 47 && f2_boss.attack == 9 && f2_boss.ranged_attack == 7 &&
            f2_boss.defense == 2);
     curr_floor = 1;
@@ -673,7 +692,7 @@ int main(void)
     assert(player != NULL);
     player->hp = 20;
 
-    // 16a: Goblin de perto anda na diagonal ((8, 8) -> (7, 7)) e o Arqueiro continua parado
+    // 16a: Goblin de perto anda na diagonal ((8, 8) -> (7, 7)) e o Arqueiro (10, 8) entra no alcance em (9, 7)
     initEntity(&map[3][3].entities[0], ENTITY_ENEMY_MELEE, 8, 8);
     initEntity(&map[3][3].entities[1], ENTITY_ENEMY_RANGED, 10, 8);
     initEntity(&map[3][3].entities[2], ENTITY_BOSS, 20, 8);
@@ -682,7 +701,8 @@ int main(void)
     int hp_before = player->hp;
     passTime();
     assert(map[3][3].entities[0].pos.x == 7 && map[3][3].entities[0].pos.y == 7);
-    assert(map[3][3].entities[1].pos.x == 10 && map[3][3].entities[1].pos.y == 8);
+    assert(map[3][3].entities[1].pos.x == 9 && map[3][3].entities[1].pos.y == 7);
+    assert(map[3][3].entities[1].aim_turns == 0);
     assert(player->hp == hp_before);
 
     // 16b: Jogador tem a vez primeiro na diagonal contra o Goblin, e o Goblin ataca na diagonal no turno seguinte

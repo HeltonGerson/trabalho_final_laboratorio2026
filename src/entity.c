@@ -414,8 +414,7 @@ void attackEntity(Entity* attacker, Entity* target)
  * meio; se puder acertar, guarda a direção do tiro.
  * Onde é chamada: actBossI (src/entity.c).
  */
-bool canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx,
-                       int* out_dy)
+bool canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx, int* out_dy)
 {
     if (!curr_room || range <= 0)
         return false;
@@ -903,7 +902,7 @@ void chasePlayer(Entity* chaser)
  * caminho.
  * Onde é chamada: actRangedEnemy (src/entity.c).
  */
-static bool hasBresenhamLineOfSight(Position origin, Position target, int range)
+static bool hasBresenhamLineOfSight(Position origin, Position target, int range, const Entity* ignore)
 {
     if (!curr_room || range <= 0)
         return false;
@@ -945,8 +944,8 @@ static bool hasBresenhamLineOfSight(Position origin, Position target, int range)
             return false;
 
         Entity* blocker = getEntityAt(x, y);
-        if (blocker && blocker->type != ENTITY_ITEM && blocker->type != ENTITY_CONSUMABLE &&
-            blocker->type != ENTITY_NEXT_FLOOR_DOOR)
+        if (blocker && blocker != ignore && blocker->type != ENTITY_ITEM &&
+            blocker->type != ENTITY_CONSUMABLE && blocker->type != ENTITY_NEXT_FLOOR_DOOR)
             return false;
     }
 
@@ -955,8 +954,10 @@ static bool hasBresenhamLineOfSight(Position origin, Position target, int range)
 
 /*
  * Controla o arqueiro ('A'): se ele acabou de atirar, espera os turnos de
- * descanso passarem; se enxergar o jogador, mira por 2 turnos avisando antes,
- * e no terceiro dispara uma flecha e descansa por 5 turnos.
+ * descanso passarem; se enxergar o jogador em 360°, mira por 2 turnos avisando
+ * antes, e no terceiro dispara uma flecha e descansa por 3 turnos; se não
+ * enxergar, anda em 8 direções via BFS até a casa mais próxima com visão 360°
+ * (desempatando pela maior distância do jogador).
  * Onde é chamada: passTime (src/time.c).
  */
 void actRangedEnemy(Entity* e)
@@ -971,31 +972,139 @@ void actRangedEnemy(Entity* e)
         return;
     }
 
-    if (!hasBresenhamLineOfSight(e->pos, player->pos, e->ranged_range))
+    if (hasBresenhamLineOfSight(e->pos, player->pos, e->ranged_range, e))
     {
-        e->aim_turns = 0;
+        if (e->aim_turns == 0)
+        {
+            e->aim_turns = 1;
+            pushLogQueue("Archer (A) aims at you!", logs);
+            return;
+        }
+
+        if (e->aim_turns == 1)
+        {
+            e->aim_turns = 2;
+            pushLogQueue("Archer (A) is about to shoot!", logs);
+            return;
+        }
+
+        drawBresenhamProjectilePath(e->pos, player->pos, false, false);
+        dealDamage(e->ranged_attack, player);
+        pushLogQueue("Archer (A) shot you!", logs);
+        e->aim_turns       = 0;
+        e->ranged_cooldown = 3;
         return;
     }
 
-    if (e->aim_turns == 0)
+    e->aim_turns = 0;
+
+    if (!map || map_x < 0 || map_x >= MAP_WIDTH || map_y < 0 || map_y >= MAP_HEIGHT)
+        return;
+
+    // Reposicionamento via BFS por camadas:
+    // Regra 1: menor numero de passos ate uma casa com linha de tiro valida.
+    // Regra 2: entre casas com o mesmo numero minimo de passos, escolher a mais distante do player.
+    MapCell cell  = map[map_y][map_x];
+    Tile**  tiles = cell.tiles;
+    if (!tiles)
+        return;
+
+    int      dir_x[8] = {0, 0, -1, 1, -1, 1, -1, 1};
+    int      dir_y[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
+    Position prev[ROOM_HEIGHT][ROOM_WIDTH];
+    int      dist[ROOM_HEIGHT][ROOM_WIDTH];
+
+    for (int y = 0; y < ROOM_HEIGHT; y++)
     {
-        e->aim_turns = 1;
-        pushLogQueue("Archer (A) aims at you!", logs);
+        for (int x = 0; x < ROOM_WIDTH; x++)
+        {
+            prev[y][x].x = -1;
+            prev[y][x].y = -1;
+            dist[y][x]   = -1;
+        }
+    }
+
+    coordQueue* q = initializeCoordQueue();
+    pushCoordQueue(e->pos.x, e->pos.y, q);
+    dist[e->pos.y][e->pos.x] = 0;
+
+    int      best_steps        = -1;
+    int      best_player_dist2 = -1;
+    Position best_target       = {-1, -1};
+
+    while (q->size > 0)
+    {
+        Position p = q->front->coord;
+        popCoordQueue(q);
+
+        int curr_dist = dist[p.y][p.x];
+
+        // Ja encontramos todas as casas possiveis na camada minima; encerra o BFS
+        if (best_steps != -1 && curr_dist >= best_steps)
+            break;
+
+        for (int i = 0; i < 8; i++)
+        {
+            int nx = p.x + dir_x[i];
+            int ny = p.y + dir_y[i];
+
+            if (nx <= 0 || nx >= ROOM_WIDTH - 1 || ny <= 0 || ny >= ROOM_HEIGHT - 1)
+                continue;
+            if (dist[ny][nx] != -1)
+                continue;
+            if (!tiles[ny][nx].walkable)
+                continue;
+            if (ny == player->pos.y && nx == player->pos.x)
+                continue;
+            if (getEntityAt(nx, ny) != NULL)
+                continue;
+
+            int next_dist = curr_dist + 1;
+            dist[ny][nx]  = next_dist;
+            prev[ny][nx]  = p;
+
+            Position cand = {nx, ny};
+            if (hasBresenhamLineOfSight(cand, player->pos, e->ranged_range, e))
+            {
+                int pdx   = nx - player->pos.x;
+                int pdy   = ny - player->pos.y;
+                int dist2 = pdx * pdx + pdy * pdy;
+
+                if (best_steps == -1 || dist2 > best_player_dist2)
+                {
+                    best_steps        = next_dist;
+                    best_player_dist2 = dist2;
+                    best_target       = cand;
+                }
+            }
+            else if (best_steps == -1)
+            {
+                pushCoordQueue(nx, ny, q);
+            }
+        }
+    }
+
+    // Nenhuma casa com linha de tiro alcancavel
+    if (best_steps == -1)
+    {
+        eraseCoordQueue(q);
         return;
     }
 
-    if (e->aim_turns == 1)
+    // Backtracking de best_target ate o primeiro passo adjacente ao arqueiro
+    int stepX = best_target.x;
+    int stepY = best_target.y;
+    while (prev[stepY][stepX].x != e->pos.x || prev[stepY][stepX].y != e->pos.y)
     {
-        e->aim_turns = 2;
-        pushLogQueue("Archer (A) is about to shoot!", logs);
-        return;
+        int auxX = stepX;
+        int auxY = stepY;
+        stepX    = prev[auxY][auxX].x;
+        stepY    = prev[auxY][auxX].y;
     }
 
-    drawBresenhamProjectilePath(e->pos, player->pos, false, false);
-    dealDamage(e->ranged_attack, player);
-    pushLogQueue("Archer (A) shot you!", logs);
-    e->aim_turns       = 0;
-    e->ranged_cooldown = 3;
+    e->pos.x = stepX;
+    e->pos.y = stepY;
+    eraseCoordQueue(q);
 }
 
 /*
