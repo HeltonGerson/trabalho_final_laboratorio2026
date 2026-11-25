@@ -19,7 +19,8 @@ void logDefault(const char* msg)
     mvprintw(row, col, "%s", msg);
 }
 
-char confirmationLog(char* msg){
+char confirmationLog(char* msg)
+{
     logDefault(msg);
     char resposta = getch();
     return resposta;
