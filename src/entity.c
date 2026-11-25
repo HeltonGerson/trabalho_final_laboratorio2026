@@ -78,7 +78,7 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->attack        = 4;
         e->ranged_attack = 2;
         e->ranged_range  = 8;
-        e->defense       = 0;
+        e->defense       = 1;
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
