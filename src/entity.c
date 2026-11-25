@@ -75,10 +75,10 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_ENEMY_MELEE:
         e->ch      = 'E';
-        e->max_hp  = 4;
+        e->max_hp  = 4 + 4 * ENEMIES_MULTIPLIER * curr_floor;
         e->hp      = e->max_hp;
-        e->attack  = 3;
-        e->defense = 0;
+        e->attack  = 3 + 3 * ENEMIES_MULTIPLIER * curr_floor;
+        e->defense = 0 + 0 * ENEMIES_MULTIPLIER * curr_floor;
         if (healing == 1)
             e->healingItem = 5;
         else if (healing == 2)
@@ -86,12 +86,12 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_ENEMY_RANGED:
         e->ch            = 'A';
-        e->max_hp        = 8;
+        e->max_hp        = 8 + 8 * ENEMIES_MULTIPLIER * curr_floor;
         e->hp            = e->max_hp;
-        e->attack        = 3;
-        e->ranged_attack = 2;
-        e->ranged_range  = 7;
-        e->defense       = 0;
+        e->attack        = 3 + 3 * ENEMIES_MULTIPLIER * curr_floor;
+        e->ranged_attack = 2 + 2 * ENEMIES_MULTIPLIER * curr_floor;
+        e->ranged_range  = 7 + 7* ENEMIES_MULTIPLIER * curr_floor;
+        e->defense       = 0 + 0 * ENEMIES_MULTIPLIER * curr_floor;
         if (healing == 1)
             e->healingItem = 5;
         else if (healing == 2)
@@ -99,12 +99,12 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         break;
     case ENTITY_BOSS:
         e->ch            = 'B';
-        e->max_hp        = 20;
+        e->max_hp        = 20 + 20 * ENEMIES_MULTIPLIER * curr_floor;
         e->hp            = e->max_hp;
-        e->attack        = 5;
-        e->ranged_attack = 3;
-        e->ranged_range  = 7;
-        e->defense       = 1;
+        e->attack        = 5 + 5 * ENEMIES_MULTIPLIER * curr_floor;
+        e->ranged_attack = 3+ 3 * ENEMIES_MULTIPLIER * curr_floor;
+        e->ranged_range  = 7 + 7 * ENEMIES_MULTIPLIER * curr_floor;
+        e->defense       = 1 + 1 * ENEMIES_MULTIPLIER * curr_floor;
         break;
     case ENTITY_ITEM:
         chooseItem(e, 'i');
@@ -354,8 +354,7 @@ void attackEntity(Entity* attacker, Entity* target)
  * direção unitária em out_dx/out_dy quando fornecidos.
  * Chamada por: actRangedEnemy e actBoss (src/entity.c).
  */
-bool canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx,
-                       int* out_dy)
+bool canHitLineOfSight(Position origin, Position target, int range, bool allow_diag, int* out_dx, int* out_dy)
 {
     if (!curr_room || range <= 0)
         return false;
@@ -842,8 +841,8 @@ void actRangedEnemy(Entity* e)
         return;
     }
 
-    int dx = 0, dy = 0;
-    if (canHitLineOfSight(e->pos, player->pos, e->ranged_range, false, &dx, &dy))
+    int aim_dx = 0, aim_dy = 0;
+    if (canHitLineOfSight(e->pos, player->pos, e->ranged_range, false, &aim_dx, &aim_dy))
     {
         if (player_moved_turn &&
             !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, false, NULL, NULL))
@@ -851,9 +850,115 @@ void actRangedEnemy(Entity* e)
             pushLogQueue("Archer (A) aims at you!", logs);
             return;
         }
-        fireRangedAttack(e, dx, dy);
+        fireRangedAttack(e, aim_dx, aim_dy);
         e->ranged_cooldown = 1;
+        return;
     }
+
+    // Reposicionamento via BFS por camadas:
+    // Regra 1: menor numero de passos ate uma casa com linha de tiro valida.
+    // Regra 2: entre casas com o mesmo numero minimo de passos, escolher a mais distante do player.
+    MapCell cell  = map[map_y][map_x];
+    Tile**  tiles = cell.tiles;
+    if (!tiles)
+        return;
+
+    int      dir_x[8] = {0, 0, -1, 1, -1, 1, -1, 1};
+    int      dir_y[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
+    Position prev[ROOM_HEIGHT][ROOM_WIDTH];
+    int      dist[ROOM_HEIGHT][ROOM_WIDTH];
+
+    for (int y = 0; y < ROOM_HEIGHT; y++)
+    {
+        for (int x = 0; x < ROOM_WIDTH; x++)
+        {
+            prev[y][x].x = -1;
+            prev[y][x].y = -1;
+            dist[y][x]   = -1;
+        }
+    }
+
+    coordQueue* q = initializeCoordQueue();
+    pushCoordQueue(e->pos.x, e->pos.y, q);
+    dist[e->pos.y][e->pos.x] = 0;
+
+    int      best_steps        = -1;
+    int      best_player_dist2 = -1;
+    Position best_target       = {-1, -1};
+
+    while (q->size > 0)
+    {
+        Position p = q->front->coord;
+        popCoordQueue(q);
+
+        int curr_dist = dist[p.y][p.x];
+
+        // Ja encontramos todas as casas possiveis na camada minima; encerra o BFS
+        if (best_steps != -1 && curr_dist >= best_steps)
+            break;
+
+        for (int i = 0; i < 8; i++)
+        {
+            int nx = p.x + dir_x[i];
+            int ny = p.y + dir_y[i];
+
+            if (nx <= 0 || nx >= ROOM_WIDTH - 1 || ny <= 0 || ny >= ROOM_HEIGHT - 1)
+                continue;
+            if (dist[ny][nx] != -1)
+                continue;
+            if (!tiles[ny][nx].walkable)
+                continue;
+            if (ny == player->pos.y && nx == player->pos.x)
+                continue;
+            if (getEntityAt(nx, ny) != NULL)
+                continue;
+
+            int next_dist = curr_dist + 1;
+            dist[ny][nx]  = next_dist;
+            prev[ny][nx]  = p;
+
+            Position cand = {nx, ny};
+            if (canHitLineOfSight(cand, player->pos, e->ranged_range, false, NULL, NULL))
+            {
+                int pdx   = nx - player->pos.x;
+                int pdy   = ny - player->pos.y;
+                int dist2 = pdx * pdx + pdy * pdy;
+
+                if (best_steps == -1 || dist2 > best_player_dist2)
+                {
+                    best_steps        = next_dist;
+                    best_player_dist2 = dist2;
+                    best_target       = cand;
+                }
+            }
+            else if (best_steps == -1)
+            {
+                pushCoordQueue(nx, ny, q);
+            }
+        }
+    }
+
+    // Nenhuma casa com linha de tiro alcancavel
+    if (best_steps == -1)
+    {
+        eraseCoordQueue(q);
+        return;
+    }
+
+    // Backtracking de best_target ate o primeiro passo adjacente ao arqueiro
+    int stepX = best_target.x;
+    int stepY = best_target.y;
+    while (prev[stepY][stepX].x != e->pos.x || prev[stepY][stepX].y != e->pos.y)
+    {
+        int auxX = stepX;
+        int auxY = stepY;
+        stepX    = prev[auxY][auxX].x;
+        stepY    = prev[auxY][auxX].y;
+    }
+
+    e->pos.x = stepX;
+    e->pos.y = stepY;
+    eraseCoordQueue(q);
 }
 
 /*
@@ -941,10 +1046,10 @@ void actBossI(Entity* e)
     }
 
     int dx = 0, dy = 0;
-    if (e->ranged_cooldown == 0 && canHitLineOfSight(e->pos, player->pos, e->ranged_range, true, &dx, &dy))
+    if (e->ranged_cooldown == 0 && canHitLineOfSight(e->pos, player->pos, e->ranged_range, false, &dx, &dy))
     {
         if (player_moved_turn &&
-            !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, true, NULL, NULL))
+            !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, false, NULL, NULL))
         {
             pushLogQueue("Boss (B) aims at you!", logs);
             return;
@@ -962,4 +1067,11 @@ void actBossI(Entity* e)
         return;
 
     chasePlayer(e);
+}
+
+void actBossII(Entity *e)
+{
+    if (!e || !e->active || !player || !player->active)
+        return;
+
 }
