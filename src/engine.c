@@ -52,7 +52,7 @@ bool saveExists(void)
 
 void eraseSave()
 {
-    if(!saveExists())
+    if (!saveExists())
         remove(SAVE_PATH);
 }
 
@@ -85,7 +85,8 @@ void save(Entity* p)
                 Entity* e = &map[i][j].entities[t];
                 fprintf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d %d\n", (int)e->active, (char)e->ch,
                         (int)e->type, e->attack, e->ranged_attack, e->ranged_range,
-                        e->ranged_cooldown, e->defense, e->hp, e->max_hp, e->healingItem, e->pos.x, e->pos.y);
+                        e->ranged_cooldown, e->defense, e->hp, e->max_hp, e->healingItem, e->pos.x,
+                        e->pos.y);
             }
         }
     }
@@ -163,11 +164,11 @@ bool continueGame(void)
                         int    auxT = 0;
                         char   auxC = '\0';
 
-                        if (fscanf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d %d", &auxB, &auxC, &auxT,
-                                   &auxEntity.attack, &auxEntity.ranged_attack,
+                        if (fscanf(fp, "%d %c %d %d %d %d %d %d %d %d %d %d %d", &auxB, &auxC,
+                                   &auxT, &auxEntity.attack, &auxEntity.ranged_attack,
                                    &auxEntity.ranged_range, &auxEntity.ranged_cooldown,
                                    &auxEntity.defense, &auxEntity.hp, &auxEntity.max_hp,
-                                   &auxEntity.healingItem, &auxEntity.pos.x, 
+                                   &auxEntity.healingItem, &auxEntity.pos.x,
                                    &auxEntity.pos.y) != 13)
                         {
                             fclose(fp);
@@ -337,11 +338,106 @@ bool showGameOver(void)
     }
 }
 
-void winGame()
+bool winGame(void)
 {
+    const char* labels[2] = {"Back to Menu", "Quit"};
+    int         selected  = 0;
+    int         hp        = player ? player->hp : 0;
+    int         max_hp    = player ? player->max_hp : 0;
+    int         atk       = player ? player->attack : 0;
+    int         def       = player ? player->defense : 0;
+    char        stats[48];
+
     eraseSave();
-    printw("Alguém faz aí a tela de ganhar e pra, sei lá, voltar pro menu principal");
-    getch();
+    flushinp();
+    snprintf(stats, sizeof(stats), "HP: %d/%d  |  ATK: %d  |  DEF: %d", hp, max_hp, atk, def);
+
+    while (1)
+    {
+        werase(stdscr);
+        refresh();
+
+        int     ch = 0;
+        WINDOW* win_vic =
+            (LINES >= 13 && COLS >= 46) ? newwin(13, 46, (LINES - 13) / 2, (COLS - 46) / 2) : NULL;
+
+        if (win_vic)
+        {
+            const char* title  = "=== VICTORY! DUNGEON C ===";
+            const char* sub1   = "The Goblin Specialist was defeated!";
+            const char* sub2   = "You conquered the dungeon.";
+            const char* hint   = "[W/S] Move   |  [Enter] Confirm";
+            int         menu_x = (46 - (int)strlen(labels[0]) - 4) / 2;
+
+            keypad(win_vic, TRUE);
+            wborder(win_vic, '|', '|', '-', '-', '+', '+', '+', '+');
+
+            if (has_colors())
+                wattron(win_vic, COLOR_PAIR(COLOR_PAIR_ARCHER) | A_BOLD);
+            mvwprintw(win_vic, 1, (46 - (int)strlen(title)) / 2, "%s", title);
+            if (has_colors())
+                wattroff(win_vic, COLOR_PAIR(COLOR_PAIR_ARCHER) | A_BOLD);
+
+            mvwprintw(win_vic, 3, (46 - (int)strlen(sub1)) / 2, "%s", sub1);
+            mvwprintw(win_vic, 4, (46 - (int)strlen(sub2)) / 2, "%s", sub2);
+
+            if (has_colors())
+                wattron(win_vic, COLOR_PAIR(COLOR_PAIR_PLAYER));
+            mvwprintw(win_vic, 6, (46 - (int)strlen(stats)) / 2, "%s", stats);
+            if (has_colors())
+                wattroff(win_vic, COLOR_PAIR(COLOR_PAIR_PLAYER));
+
+            for (int i = 0; i < 2; ++i)
+            {
+                if (i == selected)
+                    wattron(win_vic, A_REVERSE);
+                mvwprintw(win_vic, 8 + i, menu_x, " %s %s ", (i == selected) ? ">" : " ",
+                          labels[i]);
+                if (i == selected)
+                    wattroff(win_vic, A_REVERSE);
+            }
+
+            mvwprintw(win_vic, 11, (46 - (int)strlen(hint)) / 2, "%s", hint);
+            wrefresh(win_vic);
+            ch = wgetch(win_vic);
+            delwin(win_vic);
+        }
+        else
+        {
+            const char* title   = "=== VICTORY! DUNGEON C ===";
+            int         start_y = (LINES - 5) / 2;
+            int         menu_x  = (COLS - (int)strlen(labels[0]) - 5) / 2;
+            if (start_y < 0)
+                start_y = 0;
+            if (menu_x < 0)
+                menu_x = 0;
+            mvprintw(start_y,
+                     (COLS - (int)strlen(title)) / 2 > 0 ? (COLS - (int)strlen(title)) / 2 : 0,
+                     "%s", title);
+            for (int i = 0; i < 2; ++i)
+            {
+                int y = start_y + 2 + i;
+                if (y >= LINES)
+                    break;
+                if (i == selected)
+                    attron(A_REVERSE);
+                mvprintw(y, menu_x, " %s %s  ", (i == selected) ? ">" : " ", labels[i]);
+                if (i == selected)
+                    attroff(A_REVERSE);
+            }
+            refresh();
+            ch = getch();
+        }
+
+        if (ch == KEY_UP || ch == 'w' || ch == 'k')
+            selected = (selected - 1 + 2) % 2;
+        else if (ch == KEY_DOWN || ch == 's' || ch == 'j')
+            selected = (selected + 1) % 2;
+        else if (ch == '\n' || ch == '\r' || ch == KEY_ENTER)
+            return selected == 0;
+        else if (ch == 'q' || ch == 27)
+            return false;
+    }
 }
 
 /*
@@ -356,7 +452,7 @@ bool gameLoop(void)
 
     drawEverything();
 
-    while (player && player->active && player->hp > 0)
+    while (player && player->active && player->hp > 0 && !game_won)
     {
         ch = getch();
         if (ch == 27)
@@ -366,6 +462,9 @@ bool gameLoop(void)
             layoutWindows();
         else if (win && win_minimapa && win_hud)
             handleInput(ch);
+
+        if (game_won)
+            return false;
 
         drawEverything();
 

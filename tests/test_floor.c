@@ -10,14 +10,18 @@ WINDOW*   win_minimapa = NULL;
 WINDOW*   win_hud      = NULL;
 MapCell** map          = NULL;
 logQueue* logs         = NULL;
-int       map_y        = 3;
-int       map_x        = 3;
+int       map_y           = 3;
+int       map_x           = 3;
+int       curr_floor      = 1;
+int       number_of_rooms = 0;
+bool      game_won        = false;
 
 const int ROOM_WIDTH  = 31;
 const int ROOM_HEIGHT = 11;
 const int MAP_SIZE    = 7;
 const int MAP_WIDTH   = 7;
 const int MAP_HEIGHT  = 7;
+const int LAST_FLOOR  = 2;
 
 void layoutWindows(void) {}
 void destroyWindows(void) {}
@@ -515,6 +519,37 @@ int main(void)
     remove(SAVE_PATH);
     assert(map == NULL && player == NULL);
 
-    printf("Todos os 13 testes do mapa procedural, entidades, combate, IA e save/load passaram com sucesso!\n");
+    // Teste 14: Morte do Boss no ultimo andar gera escada e bloqueia vitoria com inimigos vivos
+    logs       = initializeLogQueue();
+    map        = createMap();
+    curr_floor = LAST_FLOOR;
+    game_won   = false;
+    map_x      = 3;
+    map_y      = 3;
+    assert(setRoom(map_x, map_y, 0) == 0);
+    curr_room = map[map_y][map_x].tiles;
+    clearRoomInterior(curr_room);
+    freeRoomEntities(&map[map_y][map_x]);
+    map[map_y][map_x].entities     = malloc(sizeof(Entity) * 2);
+    map[map_y][map_x].entity_count = 2;
+    assert(map[map_y][map_x].entities != NULL);
+
+    player = createPlayer((Position){10, 5});
+    initEntity(&map[map_y][map_x].entities[0], ENTITY_BOSS, 11, 5);
+    initEntity(&map[map_y][map_x].entities[1], ENTITY_ENEMY_MELEE, 20, 5);
+
+    dealDamage(100, &map[map_y][map_x].entities[0]);
+    assert(map[map_y][map_x].entities[0].active == false);
+    assert(game_won == false);
+    Entity* spawned_door = getEntityAt(11, 5);
+    assert(spawned_door != NULL && spawned_door->type == ENTITY_NEXT_FLOOR_DOOR);
+
+    movePlayer((Position){11, 5});
+    assert(game_won == false);
+    assert(logs->size > 0);
+
+    cleanupRun();
+
+    printf("Todos os 14 testes do mapa procedural, entidades, combate, IA, save/load e vitoria passaram com sucesso!\n");
     return 0;
 }

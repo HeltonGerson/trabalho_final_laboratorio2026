@@ -11,16 +11,17 @@ MapCell** map;
 logQueue* logs;
 
 // Variáveis globais
-int       map_y                = 3;
-int       map_x                = 3;
-int       curr_floor           = 1;
-int       number_of_rooms      = 0;
-const int ROOM_WIDTH           = 31;
-const int ROOM_HEIGHT          = 11;
-const int MAP_SIZE             = 7;
-const int MAP_WIDTH            = 7;
-const int MAP_HEIGHT           = 7;
-const int LAST_FLOOR           = 2;
+int         map_y              = 3;
+int         map_x              = 3;
+int         curr_floor         = 1;
+bool        game_won           = false;
+int         number_of_rooms    = 0;
+const int   ROOM_WIDTH         = 31;
+const int   ROOM_HEIGHT        = 11;
+const int   MAP_SIZE           = 7;
+const int   MAP_WIDTH          = 7;
+const int   MAP_HEIGHT         = 7;
+const int   LAST_FLOOR         = 2;
 const float ENEMIES_MULTIPLIER = 0.15;
 
 /*
@@ -34,7 +35,7 @@ int main(void)
     cursesSetup();
     srand((unsigned int)time(NULL));
     initscr();
-    set_escdelay(0); 
+    set_escdelay(0);
 
     while (1)
     {
@@ -42,9 +43,10 @@ int main(void)
         if (choice == MENU_QUIT)
             break;
 
-        map_x = 3;
-        map_y = 3;
-        logs  = initializeLogQueue();
+        game_won = false;
+        map_x    = 3;
+        map_y    = 3;
+        logs     = initializeLogQueue();
 
         layoutWindows();
 
@@ -59,6 +61,7 @@ int main(void)
         }
         else
         {
+            curr_floor      = 1;
             number_of_rooms = rand() % 8 + 8;
             setupFloor(map_x, map_y, number_of_rooms);
             Position start_pos = {15, 5};
@@ -71,20 +74,30 @@ int main(void)
         roomDoors();
 
         bool game_over = gameLoop();
-        if (!game_over && player && player->active && player->hp > 0)
+        if (!game_over && !game_won && player && player->active && player->hp > 0)
             save(player);
 
-        cleanupRun();
-
-        if (game_over)
+        if (game_won)
         {
-            if (!showGameOver())
+            bool back_to_menu = winGame();
+            cleanupRun();
+            if (!back_to_menu)
                 break;
-            eraseSave();
         }
         else
         {
-            break;
+            cleanupRun();
+
+            if (game_over)
+            {
+                if (!showGameOver())
+                    break;
+                eraseSave();
+            }
+            else
+            {
+                break;
+            }
         }
     }
     closeGame();

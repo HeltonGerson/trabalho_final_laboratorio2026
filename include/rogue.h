@@ -140,7 +140,7 @@ void       cleanupRun(void);
 void       closeGame(void);
 void       save(Entity* p);
 bool       continueGame(void);
-void       winGame(void);
+bool       winGame(void);
 
 // funcoes das rooms
 Tile** readRoom(int room_id);
@@ -214,6 +214,7 @@ extern int       map_y;
 extern int       map_x;
 extern int       number_of_rooms;
 extern int       curr_floor;
+extern bool      game_won;
 extern WINDOW*   win;
 extern WINDOW*   win_minimapa;
 extern WINDOW*   win_hud;
