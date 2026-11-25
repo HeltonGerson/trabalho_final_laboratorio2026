@@ -290,7 +290,7 @@ void dealDamage(int raw_attack, Entity* target)
         target->hp     = 0;
         target->active = false;
 
-        if (target->type == ENTITY_BOSS && curr_floor < LAST_FLOOR)
+        if (target->type == ENTITY_BOSS)
         {
             Position boss_pos = target->pos;
 
@@ -567,22 +567,17 @@ void handleInput(int input)
     movePlayer(newPos);
 }
 
-static bool isFinalBossRoomCleared(void)
+static bool roomHasAliveEnemies(void)
 {
-    if (curr_floor < LAST_FLOOR)
-        return false;
-    MapCell* cell     = &map[map_y][map_x];
-    bool     has_boss = false;
+    MapCell* cell = &map[map_y][map_x];
     for (int i = 0; i < cell->entity_count; ++i)
     {
         Entity* e = &cell->entities[i];
-        if (e->type == ENTITY_BOSS)
-            has_boss = true;
         if (e->active && (e->type == ENTITY_ENEMY_MELEE || e->type == ENTITY_ENEMY_RANGED ||
                           e->type == ENTITY_BOSS))
-            return false;
+            return true;
     }
-    return has_boss;
+    return false;
 }
 
 /*
@@ -600,19 +595,7 @@ void movePlayer(Position newPos)
     if (x >= ROOM_WIDTH || x < 0 || y >= ROOM_HEIGHT || y < 0)
         return;
 
-    bool   room_changed = false;
-    chtype dest_ch      = curr_room[newPos.y][newPos.x].ch;
-    bool   is_door = (dest_ch == ACS_UARROW || dest_ch == ACS_DARROW || dest_ch == ACS_LARROW ||
-                      dest_ch == ACS_RARROW);
-
-    if (is_door && isFinalBossRoomCleared())
-    {
-        char ans =
-            confirmationLog("You have defeated the final boss, press 'y' if you want to quit!");
-        if (ans == 'y' || ans == 'Y')
-            game_won = true;
-        return;
-    }
+    bool room_changed = false;
 
     /* Entrada e saida das salas */
     if (curr_room[newPos.y][newPos.x].ch == ACS_UARROW)
@@ -671,7 +654,23 @@ void movePlayer(Position newPos)
             }
             else if (target->type == ENTITY_NEXT_FLOOR_DOOR)
             {
-                if (confirmationLog("Do you want to go to the next floor? y to confirm") == 'y')
+                if (curr_floor >= LAST_FLOOR)
+                {
+                    if (roomHasAliveEnemies())
+                    {
+                        pushLogQueue("Defeat all enemies in the room first!", logs);
+                    }
+                    else
+                    {
+                        char ans = confirmationLog("You have defeated the final boss, press 'y' if you want to quit!");
+                        if (ans == 'y' || ans == 'Y')
+                        {
+                            game_won = true;
+                            return;
+                        }
+                    }
+                }
+                else if (confirmationLog("Do you want to go to the next floor? y to confirm") == 'y')
                 {
                     newFloor();
                 }

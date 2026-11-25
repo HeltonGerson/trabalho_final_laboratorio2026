@@ -519,7 +519,7 @@ int main(void)
     remove(SAVE_PATH);
     assert(map == NULL && player == NULL);
 
-    // Teste 14: Morte do Boss no ultimo andar nao gera escada
+    // Teste 14: Morte do Boss no ultimo andar gera escada e bloqueia vitoria com inimigos vivos
     logs       = initializeLogQueue();
     map        = createMap();
     curr_floor = LAST_FLOOR;
@@ -541,7 +541,12 @@ int main(void)
     dealDamage(100, &map[map_y][map_x].entities[0]);
     assert(map[map_y][map_x].entities[0].active == false);
     assert(game_won == false);
-    assert(getEntityAt(11, 5) == NULL);
+    Entity* spawned_door = getEntityAt(11, 5);
+    assert(spawned_door != NULL && spawned_door->type == ENTITY_NEXT_FLOOR_DOOR);
+
+    movePlayer((Position){11, 5});
+    assert(game_won == false);
+    assert(logs->size > 0);
 
     cleanupRun();
 
