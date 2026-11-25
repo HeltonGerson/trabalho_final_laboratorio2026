@@ -249,41 +249,65 @@ int main(void)
     assert(fireRangedAttack(player, 1, 0) == false);
     assert(map[3][2].entities[0].hp == 4);
 
-    // Teste 8: IA do Goblin Arqueiro (apenas linha/coluna cardeal) + cooldown + parede
+    // Teste 8: IA do Goblin Arqueiro (visao 360 Bresenham, mira 2 turnos, cooldown 5, parede e alcance)
     clearRoomInterior(curr_room);
     freeRoomEntities(&map[3][2]);
     map[3][2].entities     = malloc(sizeof(Entity) * 1);
     map[3][2].entity_count = 1;
     assert(map[3][2].entities != NULL);
 
-    initEntity(player, ENTITY_PLAYER, 10, 6);
+    initEntity(player, ENTITY_PLAYER, 11, 3);
+    player->hp = 10;
     initEntity(&map[3][2].entities[0], ENTITY_ENEMY_RANGED, 15, 6);
 
-    // Linha reta limpa dentro do alcance (dist = 5 <= 7)
+    // Turno 1 em angulo nao-cardeal dentro do alcance (dist = 5 <= 7): mira (aim_turns = 1), sem dano
     passTime();
-    assert(player->hp == 8);
-    assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
-    assert(map[3][2].entities[0].ranged_cooldown == 1);
-
-    // Proximo turno: em cooldown, nao dispara e reseta cooldown para 0
-    passTime();
-    assert(player->hp == 8);
-    assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
+    assert(player->hp == 10);
+    assert(map[3][2].entities[0].aim_turns == 1);
     assert(map[3][2].entities[0].ranged_cooldown == 0);
 
-    // Diagonal limpa: Arqueiro NAO deve disparar na diagonal (apenas 4 cardeais)
+    // Move dentro da visao -> Turno 2: continua mirando (aim_turns = 2), sem dano
     player->pos = (Position){12, 3};
     passTime();
-    assert(player->hp == 8);
+    assert(player->hp == 10);
+    assert(map[3][2].entities[0].aim_turns == 2);
     assert(map[3][2].entities[0].ranged_cooldown == 0);
 
-    // Parede '#' na mesma linha bloqueia tiro cardeal
-    player->pos               = (Position){10, 6};
-    curr_room[6][13].ch       = '#';
-    curr_room[6][13].walkable = false;
+    // Turno 3: dispara na posicao atual do player, causa 2 de dano, reseta aim_turns e ativa cooldown 5
     passTime();
     assert(player->hp == 8);
-    assert(map[3][2].entities[0].ranged_cooldown == 0);
+    assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
+    assert(map[3][2].entities[0].aim_turns == 0);
+    assert(map[3][2].entities[0].ranged_cooldown == 5);
+
+    // Proximos 5 turnos em cooldown: nao mira nem dispara
+    for (int cd = 4; cd >= 0; --cd)
+    {
+        passTime();
+        assert(player->hp == 8);
+        assert(map[3][2].entities[0].aim_turns == 0);
+        assert(map[3][2].entities[0].ranged_cooldown == cd);
+    }
+
+    // Apos cooldown zerar, volta a mirar
+    passTime();
+    assert(player->hp == 8);
+    assert(map[3][2].entities[0].aim_turns == 1);
+
+    // Parede '#' na linha de Bresenham entre (15,6) e (12,3) cancela a mira
+    curr_room[5][14].ch       = '#';
+    curr_room[5][14].walkable = false;
+    passTime();
+    assert(player->hp == 8);
+    assert(map[3][2].entities[0].aim_turns == 0);
+
+    // Sem parede, mas fora do alcance (dist = 8 > 7), nao mira
+    curr_room[5][14].ch       = '.';
+    curr_room[5][14].walkable = true;
+    player->pos               = (Position){7, 6};
+    passTime();
+    assert(player->hp == 8);
+    assert(map[3][2].entities[0].aim_turns == 0);
 
     // Teste 9: IA do Boss em 2 fases (Fase 1 melee/chase, Fase 2 ranged/evade)
     clearRoomInterior(curr_room);
@@ -381,16 +405,21 @@ int main(void)
     assert(map[3][2].entities[0].active == false);
     assert(player->hp == 10);
 
-    // 11b: Arqueiro fora da linha -> player entra na linha exata e NAO leva tiro nesse turno
-    initEntity(player, ENTITY_PLAYER, 15, 8);
+    // 11b: Arqueiro fora da linha -> player entra na visao, arqueiro so inicia mira (aim_turns = 1)
+    initEntity(player, ENTITY_PLAYER, 12, 9);
+    player->hp                            = 10;
     map[3][2].entities[1].ranged_cooldown = 0;
-    movePlayer((Position){15, 9});
-    assert(player->pos.x == 15 && player->pos.y == 9);
-    assert(player->hp == 10); // prioridade do player: arqueiro so mira
+    map[3][2].entities[1].aim_turns       = 0;
+    movePlayer((Position){13, 9});
+    assert(player->pos.x == 13 && player->pos.y == 9);
+    assert(player->hp == 10);
+    assert(map[3][2].entities[1].aim_turns == 1);
 
-    // Proximo turno: player atira primeiro no arqueiro
+    // Proximo turno: player atira primeiro no arqueiro; arqueiro avanca para aim_turns = 2 sem atirar
     handleInput(KEY_RIGHT);
     assert(map[3][2].entities[1].hp == 6);
+    assert(player->hp == 10);
+    assert(map[3][2].entities[1].aim_turns == 2);
 
     // Teste 12: Coleta de item com max_hp > 0 soma ao max_hp do jogador (sem sobrescrever)
     clearRoomInterior(curr_room);

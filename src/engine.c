@@ -178,6 +178,7 @@ bool continueGame(void)
                         auxEntity.active      = (auxB != 0);
                         auxEntity.ch          = (chtype)auxC;
                         auxEntity.type        = (EntityType)auxT;
+                        auxEntity.aim_turns   = 0;
                         map[i][j].entities[t] = auxEntity;
                     }
                 }
@@ -193,6 +194,7 @@ bool continueGame(void)
     }
 
     player->healingItem = 0;
+    player->aim_turns   = 0;
     player->active      = true;
     player->ch          = '@';
     player->type        = ENTITY_PLAYER;

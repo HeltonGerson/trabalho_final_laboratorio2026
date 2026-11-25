@@ -130,6 +130,13 @@ void drawEntity(Entity* e)
         return;
 
     attr_t attr = entityAttr(e->type);
+    if (e->type == ENTITY_ENEMY_RANGED && e->aim_turns > 0)
+    {
+        if (has_colors())
+            attr = COLOR_PAIR(e->aim_turns >= 2 ? COLOR_PAIR_HIT : COLOR_PAIR_SHOT_ENEMY) | A_BOLD;
+        else
+            attr = (e->aim_turns >= 2) ? (A_REVERSE | A_BOLD) : A_BOLD;
+    }
     wattron(win, attr);
     mvwaddch(win, e->pos.y, e->pos.x, e->ch);
     wattroff(win, attr);
@@ -199,6 +206,85 @@ void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_play
         y += dy;
         if (x < 0 || x >= ROOM_WIDTH || y < 0 || y >= ROOM_HEIGHT)
             break;
+
+        wattron(win, attr);
+        mvwaddch(win, y, x, glyph);
+        wattroff(win, attr);
+        wrefresh(win);
+        napms(30);
+
+        drawRoom();
+        drawRoomEntities();
+        drawEntity(player);
+    }
+
+    if (hit_target)
+        drawHitFlash(to);
+    else
+        wrefresh(win);
+    flushinp();
+}
+
+/*
+ * Anima o trajeto de um projétil de from até to seguindo o algoritmo de Bresenham,
+ * ajustando o glifo ('|', '-', '/', '\') conforme o passo de cada iteração.
+ * Chamada por: actRangedEnemy (src/entity.c).
+ */
+void drawBresenhamProjectilePath(Position from, Position to, bool is_player, bool hit_target)
+{
+    if (!win || !curr_room || (from.x == to.x && from.y == to.y))
+        return;
+
+    attr_t attr = A_BOLD;
+    if (has_colors())
+        attr |= COLOR_PAIR(is_player ? COLOR_PAIR_SHOT_PLAYER : COLOR_PAIR_SHOT_ENEMY);
+
+    drawRoom();
+    drawRoomEntities();
+    drawEntity(player);
+    wrefresh(win);
+    flushinp();
+
+    int x   = from.x;
+    int y   = from.y;
+    int sx  = (from.x < to.x) ? 1 : -1;
+    int sy  = (from.y < to.y) ? 1 : -1;
+    int adx = abs(to.x - from.x);
+    int ady = abs(to.y - from.y);
+    int err = adx - ady;
+
+    while (x != to.x || y != to.y)
+    {
+        int nx = x;
+        int ny = y;
+        int e2 = 2 * err;
+        if (e2 > -ady)
+        {
+            err -= ady;
+            nx += sx;
+        }
+        if (e2 < adx)
+        {
+            err += adx;
+            ny += sy;
+        }
+        if (nx < 0 || nx >= ROOM_WIDTH || ny < 0 || ny >= ROOM_HEIGHT)
+            break;
+
+        int    step_x = nx - x;
+        int    step_y = ny - y;
+        chtype glyph  = '*';
+        if (step_x == 0)
+            glyph = '|';
+        else if (step_y == 0)
+            glyph = '-';
+        else if (step_x * step_y > 0)
+            glyph = '\\';
+        else
+            glyph = '/';
+
+        x = nx;
+        y = ny;
 
         wattron(win, attr);
         mvwaddch(win, y, x, glyph);

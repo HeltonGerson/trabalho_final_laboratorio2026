@@ -60,6 +60,7 @@ typedef struct
     int        ranged_attack;
     int        ranged_range;
     int        ranged_cooldown;
+    int        aim_turns;
     int        defense;
     int        healingItem;
     bool       active;
@@ -177,6 +178,7 @@ void drawHud(void);
 void drawEntity(Entity* e);
 void drawHitFlash(Position pos);
 void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player, bool hit_target);
+void drawBresenhamProjectilePath(Position from, Position to, bool is_player, bool hit_target);
 void drawEverything(void);
 void drawLogs();
 

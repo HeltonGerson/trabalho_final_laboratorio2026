@@ -61,6 +61,7 @@ void initEntity(Entity* e, EntityType type, int x, int y)
     e->ranged_attack   = 0;
     e->ranged_range    = 0;
     e->ranged_cooldown = 0;
+    e->aim_turns       = 0;
     e->active          = true;
     e->healingItem     = 0;
     int healing        = rand() % 10 + 1;
@@ -851,9 +852,64 @@ void chasePlayer(Entity* chaser)
 }
 
 /*
+ * Verifica linha de visão 360° via Bresenham dentro do alcance euclidiano range,
+ * retornando false se houver parede ou entidade bloqueadora no caminho.
+ * Chamada por: actRangedEnemy (src/entity.c).
+ */
+static bool hasBresenhamLineOfSight(Position origin, Position target, int range)
+{
+    if (!curr_room || range <= 0)
+        return false;
+    if (origin.x < 0 || origin.x >= ROOM_WIDTH || origin.y < 0 || origin.y >= ROOM_HEIGHT)
+        return false;
+    if (target.x < 0 || target.x >= ROOM_WIDTH || target.y < 0 || target.y >= ROOM_HEIGHT)
+        return false;
+
+    int dx = target.x - origin.x;
+    int dy = target.y - origin.y;
+    int dist_sq = dx * dx + dy * dy;
+    if (dist_sq <= 0 || dist_sq > range * range)
+        return false;
+
+    int x   = origin.x;
+    int y   = origin.y;
+    int sx  = (origin.x < target.x) ? 1 : -1;
+    int sy  = (origin.y < target.y) ? 1 : -1;
+    int adx = abs(dx);
+    int ady = abs(dy);
+    int err = adx - ady;
+
+    while (x != target.x || y != target.y)
+    {
+        int e2 = 2 * err;
+        if (e2 > -ady)
+        {
+            err -= ady;
+            x += sx;
+        }
+        if (e2 < adx)
+        {
+            err += adx;
+            y += sy;
+        }
+        if (x == target.x && y == target.y)
+            break;
+        if (x < 0 || x >= ROOM_WIDTH || y < 0 || y >= ROOM_HEIGHT || !curr_room[y][x].walkable)
+            return false;
+
+        Entity* blocker = getEntityAt(x, y);
+        if (blocker && blocker->type != ENTITY_ITEM && blocker->type != ENTITY_CONSUMABLE &&
+            blocker->type != ENTITY_NEXT_FLOOR_DOOR)
+            return false;
+    }
+
+    return true;
+}
+
+/*
  * Controla a IA do Goblin Arqueiro ('A'): decrementa ranged_cooldown se estiver
- * em recarga ou dispara em linha cardeal via fireRangedAttack (apenas mirando no
- * turno em que o jogador acabou de entrar na linha de tiro).
+ * em recarga ou executa ciclo de mira em 2 turnos (visão 360° Bresenham) antes
+ * de disparar em direção ao player e entrar em cooldown de 5 turnos.
  * Chamada por: passTime (src/time.c).
  */
 void actRangedEnemy(Entity* e)
@@ -864,21 +920,35 @@ void actRangedEnemy(Entity* e)
     if (e->ranged_cooldown > 0)
     {
         e->ranged_cooldown--;
+        e->aim_turns = 0;
         return;
     }
 
-    int dx = 0, dy = 0;
-    if (canHitLineOfSight(e->pos, player->pos, e->ranged_range, false, &dx, &dy))
+    if (!hasBresenhamLineOfSight(e->pos, player->pos, e->ranged_range))
     {
-        if (player_moved_turn &&
-            !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, false, NULL, NULL))
-        {
-            pushLogQueue("Archer (A) aims at you!", logs);
-            return;
-        }
-        fireRangedAttack(e, dx, dy);
-        e->ranged_cooldown = 1;
+        e->aim_turns = 0;
+        return;
     }
+
+    if (e->aim_turns == 0)
+    {
+        e->aim_turns = 1;
+        pushLogQueue("Archer (A) aims at you!", logs);
+        return;
+    }
+
+    if (e->aim_turns == 1)
+    {
+        e->aim_turns = 2;
+        pushLogQueue("Archer (A) is about to shoot!", logs);
+        return;
+    }
+
+    drawBresenhamProjectilePath(e->pos, player->pos, false, false);
+    dealDamage(e->ranged_attack, player);
+    pushLogQueue("Archer (A) shot you!", logs);
+    e->aim_turns       = 0;
+    e->ranged_cooldown = 5;
 }
 
 /*
