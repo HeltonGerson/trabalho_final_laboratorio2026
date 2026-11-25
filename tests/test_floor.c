@@ -367,13 +367,14 @@ int main(void)
     map[3][2].entity_count = 2;
     assert(map[3][2].entities != NULL);
 
-    // 11a: Melee na diagonal -> player move para adjacente cardeal e NAO toma dano nesse turno
-    initEntity(player, ENTITY_PLAYER, 5, 5);
+    // 11a: Melee fora de alcance -> player entra na diagonal e NAO toma dano nesse turno
+    initEntity(player, ENTITY_PLAYER, 4, 5);
+    player->hp = 10;
     initEntity(&map[3][2].entities[0], ENTITY_ENEMY_MELEE, 6, 6);
     initEntity(&map[3][2].entities[1], ENTITY_ENEMY_RANGED, 20, 9);
-    movePlayer((Position){6, 5});
-    assert(player->pos.x == 6 && player->pos.y == 5);
-    assert(player->hp == 10); // prioridade do player: goblin nao golpeou ao entrar
+    movePlayer((Position){5, 5});
+    assert(player->pos.x == 5 && player->pos.y == 5);
+    assert(player->hp == 10); // prioridade do player: goblin nao golpeou ao entrar na diagonal
 
     // Proximo turno: player ataca melee primeiro e mata o goblin sem tomar dano
     movePlayer((Position){6, 6});
@@ -615,6 +616,67 @@ int main(void)
 
     cleanupRun();
 
-    printf("Todos os 15 testes do mapa procedural, entidades, combate, IA, save/load, vitoria e tranca de portas passaram com sucesso!\n");
+    // Teste 16: Movimentacao e ataque diagonal de Goblin Melee e Boss (Arqueiro inalterado)
+    logs  = initializeLogQueue();
+    map   = createMap();
+    map_x = 3;
+    map_y = 3;
+    assert(setRoom(3, 3, 0) == 0);
+    curr_room = map[3][3].tiles;
+    clearRoomInterior(curr_room);
+    freeRoomEntities(&map[3][3]);
+    map[3][3].entities     = malloc(sizeof(Entity) * 3);
+    map[3][3].entity_count = 3;
+    assert(map[3][3].entities != NULL);
+
+    player = createPlayer((Position){5, 5});
+    assert(player != NULL);
+    player->hp = 20;
+
+    // 16a: Goblin Melee persegue na diagonal ((8,8) -> (7,7)) e Arqueiro permanece parado
+    initEntity(&map[3][3].entities[0], ENTITY_ENEMY_MELEE, 8, 8);
+    initEntity(&map[3][3].entities[1], ENTITY_ENEMY_RANGED, 10, 8);
+    initEntity(&map[3][3].entities[2], ENTITY_BOSS, 20, 8);
+    map[3][3].entities[2].active = false;
+
+    int hp_before = player->hp;
+    passTime();
+    assert(map[3][3].entities[0].pos.x == 7 && map[3][3].entities[0].pos.y == 7);
+    assert(map[3][3].entities[1].pos.x == 10 && map[3][3].entities[1].pos.y == 8);
+    assert(player->hp == hp_before);
+
+    // 16b: Prioridade na diagonal para Goblin Melee e ataque diagonal no turno seguinte
+    player->pos                 = (Position){4, 5};
+    map[3][3].entities[0].pos   = (Position){6, 6};
+    hp_before                   = player->hp;
+    movePlayer((Position){5, 5});
+    assert(player->hp == hp_before);
+    passTime();
+    assert(player->hp == hp_before - map[3][3].entities[0].attack);
+
+    // 16c: Boss fora da linha de tiro persegue na diagonal, ataca na diagonal e respeita prioridade
+    map[3][3].entities[0].active = false;
+    map[3][3].entities[1].active = false;
+    map[3][3].entities[2].active = true;
+    player->pos                  = (Position){5, 5};
+    map[3][3].entities[2].pos    = (Position){8, 7};
+    curr_room[7][7].walkable     = false;
+    hp_before                    = player->hp;
+    passTime();
+    assert(map[3][3].entities[2].pos.x == 7 && map[3][3].entities[2].pos.y == 6);
+    assert(player->hp == hp_before);
+    curr_room[7][7].walkable = true;
+
+    player->pos               = (Position){4, 5};
+    map[3][3].entities[2].pos = (Position){6, 6};
+    hp_before                 = player->hp;
+    movePlayer((Position){5, 5});
+    assert(player->hp == hp_before);
+    passTime();
+    assert(player->hp == hp_before - map[3][3].entities[2].attack);
+
+    cleanupRun();
+
+    printf("Todos os 16 testes do mapa procedural, entidades, combate, IA, save/load, vitoria e tranca de portas passaram com sucesso!\n");
     return 0;
 }

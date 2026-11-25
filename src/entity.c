@@ -7,13 +7,16 @@ static bool     player_moved_turn = false;
 static Position prev_player_pos   = {0, 0};
 
 /*
- * Verifica se as posições a e b estão adjacentes nas 4 direções cardeais
- * (distância de Manhattan igual a 1).
- * Chamada por: chasePlayer e actBoss (src/entity.c).
+ * Verifica se as posições a e b estão adjacentes nas 8 direções
+ * (distância de Chebyshev igual a 1).
+ * Chamada por: chasePlayer e actBossI (src/entity.c).
  */
 static bool isCardinalAdjacent(Position a, Position b)
 {
-    return abs(a.x - b.x) + abs(a.y - b.y) == 1;
+    // shortcut: nome mantido para evitar alterar chamadas em actBossI (de outro autor); checa 8 direcoes
+    int dx = abs(a.x - b.x);
+    int dy = abs(a.y - b.y);
+    return dx <= 1 && dy <= 1 && (dx != 0 || dy != 0);
 }
 
 /*
@@ -750,8 +753,8 @@ void movePlayer(Position newPos)
  */
 void chasePlayer(Entity* chaser)
 {
-    int     dx[]  = {0, 0, -1, 1};
-    int     dy[]  = {-1, 1, 0, 0};
+    int     dx[]  = {0, 0, -1, 1, -1, 1, -1, 1};
+    int     dy[]  = {-1, 1, 0, 0, -1, -1, 1, 1};
     MapCell cell  = map[map_y][map_x];
     Tile**  tiles = cell.tiles;
     // para o backtraking , -1 => indefinido
@@ -778,7 +781,7 @@ void chasePlayer(Entity* chaser)
         popCoordQueue(q);
         int x = p.x;
         int y = p.y;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 8; i++)
         {
             int nx = x + dx[i];
             int ny = y + dy[i];
