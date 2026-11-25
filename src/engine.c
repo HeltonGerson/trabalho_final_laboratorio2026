@@ -4,18 +4,19 @@
 #include <stdio.h>
 
 /*
- * Configura o locale UTF-8, inicializa o modo ncurses (sem eco, cbreak, keypad,
- * cursor oculto) e registra os pares de cores usados em entidades, tiros e dano.
- * Chamada por: main (src/main.c).
+ * Prepara a tela do terminal para o jogo funcionar direito (aceita acentos,
+ * esconde o que é digitado e o cursor, libera as setas do teclado) e configura
+ * as cores de cada personagem, item, tiro e dano.
+ * Onde é chamada: main (src/main.c).
  */
 void cursesSetup(void)
 {
     setlocale(LC_ALL, "");
-    initscr();            /* Inicia o modo curses */
-    noecho();             /* Faz com que eh digitado nao apareca no term */
-    cbreak();             /* Comandos nao sao executados (ex: Ctrl-C) */
-    keypad(stdscr, TRUE); /* Permite pegar caracteres como as setas e teclas F(n) */
-    curs_set(0);          /* Cursor nao aparece */
+    initscr();            /* Inicia o modo de tela do jogo */
+    noecho();             /* Não mostra na tela o que o jogador digita */
+    cbreak();             /* Lê cada tecla na hora, sem precisar apertar Enter */
+    keypad(stdscr, TRUE); /* Libera teclas especiais, como as setas do teclado */
+    curs_set(0);          /* Esconde o cursor piscando */
     if (has_colors())
     {
         start_color();
@@ -32,8 +33,8 @@ void cursesSetup(void)
 }
 
 /*
- * Verifica se o arquivo de save (SAVE_PATH) existe e pode ser aberto para leitura.
- * Chamada por: showMainMenu e continueGame (src/engine.c).
+ * Confere se já existe um arquivo de jogo salvo que pode ser aberto e lido.
+ * Onde é chamada: showMainMenu, eraseSave e continueGame (src/engine.c), e tests/test_floor.c.
  */
 bool saveExists(void)
 {
@@ -45,17 +46,21 @@ bool saveExists(void)
 }
 
 /*
- * Salva o estado completo do andar (salas, entidades e seus atributos de combate
- * e estado de visitação) e do jogador (atributos e posição no mapa) em SAVE_PATH.
- * Chamada por: main (src/main.c) e tests/test_floor.c.
+ * Tenta apagar o arquivo de jogo salvo quando não houver um save aberto.
+ * Onde é chamada: main (src/main.c) e winGame (src/engine.c).
  */
-
 void eraseSave()
 {
     if (!saveExists())
         remove(SAVE_PATH);
 }
 
+/*
+ * Grava no arquivo de save todas as salas do andar, todos os inimigos e itens
+ * com seus status, e a situação atual do jogador (vida, ataque, defesa e
+ * posição no mapa).
+ * Onde é chamada: main (src/main.c) e tests/test_floor.c.
+ */
 void save(Entity* p)
 {
     if (!p || !map || !p->active || p->hp <= 0)
@@ -98,9 +103,10 @@ void save(Entity* p)
 }
 
 /*
- * Carrega o estado salvo de SAVE_PATH para map e player, reconstrói os tiles
- * de cada sala via readRoom(), limpa marcadores de entidades e atualiza o fog of war.
- * Chamada por: main (src/main.c) e tests/test_floor.c.
+ * Lê o arquivo de jogo salvo, recria o mapa, as salas, os inimigos, os itens e o
+ * jogador exatamente de onde pararam e atualiza o que já estava descoberto no
+ * minimapa.
+ * Onde é chamada: main (src/main.c) e tests/test_floor.c.
  */
 bool continueGame(void)
 {
@@ -221,9 +227,10 @@ bool continueGame(void)
 }
 
 /*
- * Exibe o menu principal centralizado (Start New Game, Continue se saveExists()
- * for verdadeiro, e Quit), trata a navegação por teclado e retorna a MenuOption.
- * Chamada por: main (src/main.c).
+ * Mostra o menu inicial bem no meio da tela (Começar novo jogo, Continuar — só
+ * aparece se houver jogo salvo — e Sair), deixa o jogador escolher pelo teclado
+ * e devolve a opção escolhida.
+ * Onde é chamada: main (src/main.c).
  */
 MenuOption showMainMenu(void)
 {
@@ -287,9 +294,10 @@ MenuOption showMainMenu(void)
 }
 
 /*
- * Limpa o buffer de entrada (flushinp), exibe a tela de Game Over com as opções
- * "Voltar ao Menu" e "Sair" e retorna true para reiniciar ou false para sair.
- * Chamada por: main (src/main.c).
+ * Descarta teclas apertadas antes da hora, mostra a tela de fim de jogo com as
+ * opções "Voltar ao Menu" e "Sair" e devolve se o jogador quer recomeçar ou
+ * fechar o jogo.
+ * Onde é chamada: main (src/main.c).
  */
 bool showGameOver(void)
 {
@@ -340,6 +348,11 @@ bool showGameOver(void)
     }
 }
 
+/*
+ * Apaga o arquivo de save, mostra a tela de vitória com os status finais do
+ * jogador (vida, ataque e defesa) e pergunta se ele quer voltar ao menu ou sair.
+ * Onde é chamada: main (src/main.c).
+ */
 bool winGame(void)
 {
     const char* labels[2] = {"Back to Menu", "Quit"};
@@ -443,10 +456,11 @@ bool winGame(void)
 }
 
 /*
- * Executa o loop principal da partida enquanto o jogador estiver ativo e vivo:
- * lê comandos, trata saída ('q'), redimensionamento (KEY_RESIZE) ou ações
- * (handleInput), redesenha a tela e retorna true se o player morreu ou false se saiu.
- * Chamada por: main (src/main.c).
+ * Mantém a partida rodando enquanto o jogador estiver vivo e ainda não tiver
+ * vencido: espera uma tecla, sai se apertar ESC, ajusta a tela se o terminal
+ * mudar de tamanho, repassa o comando para o jogador, redesenha tudo e avisa
+ * se o jogador morreu ou saiu.
+ * Onde é chamada: main (src/main.c).
  */
 bool gameLoop(void)
 {
@@ -478,9 +492,9 @@ bool gameLoop(void)
 }
 
 /*
- * Libera todos os recursos alocados para uma partida (janelas, player, fila logs,
- * matriz map e zera curr_room).
- * Chamada por: main (src/main.c) e closeGame (src/engine.c).
+ * Fecha as janelinhas e limpa da memória tudo o que foi usado na partida
+ * (jogador, fila de mensagens e mapa do andar).
+ * Onde é chamada: main (src/main.c), closeGame (src/engine.c) e tests/test_floor.c.
  */
 void cleanupRun(void)
 {
@@ -500,9 +514,9 @@ void cleanupRun(void)
 }
 
 /*
- * Termina o jogo: libera toda a memória da partida via cleanupRun e encerra o
- * modo ncurses com endwin().
- * Chamada por: main (src/main.c).
+ * Limpa tudo da memória chamando cleanupRun e devolve o terminal ao modo normal
+ * antes de fechar o jogo.
+ * Onde é chamada: main (src/main.c).
  */
 void closeGame(void)
 {

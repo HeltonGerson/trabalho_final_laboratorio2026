@@ -32,7 +32,7 @@ typedef enum
 } MenuOption;
 
 
-// structs base
+// Moldes usados para guardar as informações do jogo
 typedef struct
 {
     int x, y;
@@ -114,13 +114,13 @@ typedef struct
     int size;
 } logQueue;
 
-// funcoes das structs
-// pilha
+// Funções para guardar e organizar listas de posições e mensagens
+// Pilha de posições (como uma pilha de pratos: o último que entra sai primeiro)
 coordStack* initializeCoordStack();
 void        pushCoord(int x, int y, coordStack* stack);
 void        popCoord(coordStack* stack);
 void        eraseStack(coordStack* st);
-// fila
+// Filas comuns (o primeiro que entra é o primeiro que sai)
 coordQueue* initializeCoordQueue();
 void        pushCoordQueue(int x, int y, coordQueue* q);
 coordNode   popCoordQueue(coordQueue* q);
@@ -130,7 +130,7 @@ void        pushLogQueue(char* msg, logQueue* q);
 char*       popLogQueue(logQueue* q);
 void        eraseLogQueue(logQueue* q);
 
-// funcoes da engine
+// Funções principais que controlam o menu, a partida e o jogo salvo
 void       cursesSetup(void);
 bool       saveExists(void);
 void       eraseSave(void);
@@ -143,14 +143,14 @@ void       save(Entity* p);
 bool       continueGame(void);
 bool       winGame(void);
 
-// funcoes das rooms
+// Funções que montam e preparam cada sala
 Tile** readRoom(int room_id);
 void   freeRoomTiles(Tile** tiles);
 void   roomDoors(void);
 int    setRoom(int x, int y, int choosed_room);
 int    countTxtFiles(const char* dir_path);
 
-// funcoes de entidades e player
+// Funções do jogador, inimigos, itens e combates
 void    initEntity(Entity* e, EntityType type, int x, int y);
 int     spawnRoomEntities(MapCell* cell);
 void    freeRoomEntities(MapCell* cell);
@@ -170,7 +170,7 @@ void    chooseItem(Entity* e, char type);
 void    removeEntityChars(MapCell* posMap);
 bool    roomHasAliveEnemies(void);
 
-// funcoes do draw
+// Funções que desenham o jogo na tela
 void drawRoom(void);
 void drawRoomEntities(void);
 void drawMinimap(void);
@@ -182,27 +182,27 @@ void drawBresenhamProjectilePath(Position from, Position to, bool is_player, boo
 void drawEverything(void);
 void drawLogs();
 
-// funcoes do map
+// Funções que criam e limpam o mapa do andar
 MapCell** createMap(void);
 void      setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms);
 void      updateFogOfWar(void);
 void      freeMap(void);
 void      newFloor(void);
 
-// funcoes de tela
+// Funções que organizam as janelas na tela
 WINDOW* create_newwin(int height, int width, int starty, int startx);
 void    layoutWindows(void);
 void    destroyWindows(void);
 
-// tempo
+// Função que faz o turno passar e os inimigos agirem
 void passTime(void);
 
-// logs
+// Funções que mostram mensagens e perguntas na tela
 void logDefault(const char* msg);
 char confirmationLog(char* msg);
 
 
-/* extern: variaveis globais compartilhadas */
+/* Informações compartilhadas entre os arquivos do jogo */
 extern const int ROOM_HEIGHT;
 extern const int ROOM_WIDTH;
 extern const int MAP_SIZE;

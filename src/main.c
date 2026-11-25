@@ -1,7 +1,7 @@
 #include "rogue.h"
 #include <curses.h>
 
-// declaracoes globais
+// Informações principais usadas pelo jogo inteiro
 Entity*   player;
 Tile**    curr_room;
 WINDOW*   win;
@@ -10,7 +10,7 @@ WINDOW*   win_hud;
 MapCell** map;
 logQueue* logs;
 
-// Variáveis globais
+// Posição, andar atual e tamanhos fixos das salas e do mapa
 int         map_y              = 3;
 int         map_x              = 3;
 int         curr_floor         = 1;
@@ -25,10 +25,11 @@ const int   LAST_FLOOR         = 2;
 const float ENEMIES_MULTIPLIER = 0.15;
 
 /*
- * Ponto de entrada do jogo: inicializa o ncurses e a semente aleatória, executa
- * o loop de partidas (menu inicial, geração do andar, gameLoop, limpeza e Game Over)
- * e encerra a aplicação com closeGame.
- * Chamada por: sistema operacional ao executar o binário principal.
+ * É por aqui que o jogo começa: prepara a tela e os sorteios, mostra o menu
+ * inicial, monta ou carrega a partida, roda o jogo, salva o progresso se o
+ * jogador sair vivo, mostra a tela de vitória ou de fim de jogo e fecha tudo
+ * quando o jogador decide sair.
+ * Onde é chamada: pelo próprio computador quando o jogador abre o jogo.
  */
 int main(void)
 {
@@ -105,9 +106,8 @@ int main(void)
 }
 
 /*
- * Wrapper de newwin() que cria e retorna uma janela ncurses com dimensões
- * (height x width) na posição (starty, startx).
- * Chamada por: layoutWindows (src/main.c).
+ * Cria uma janelinha nova na tela com a altura, largura e posição escolhidas.
+ * Onde é chamada: layoutWindows (src/main.c).
  */
 WINDOW* create_newwin(int height, int width, int starty, int startx)
 {
@@ -115,9 +115,9 @@ WINDOW* create_newwin(int height, int width, int starty, int startx)
 }
 
 /*
- * Libera com delwin() e anula os ponteiros das janelas win_minimapa, win e win_hud
- * caso estejam alocadas.
- * Chamada por: layoutWindows (src/main.c) e cleanupRun (src/engine.c).
+ * Fecha e limpa da memória as três janelinhas do jogo (minimapa, sala e painel
+ * de status) se elas estiverem abertas.
+ * Onde é chamada: layoutWindows (src/main.c) e cleanupRun (src/engine.c).
  */
 void destroyWindows(void)
 {
@@ -139,9 +139,10 @@ void destroyWindows(void)
 }
 
 /*
- * Calcula o posicionamento centralizado das janelas (minimapa, sala e HUD) com base
- * em COLS e LINES e as recria (ou mantém destruídas se o terminal for pequeno demais).
- * Chamada por: main (src/main.c) e gameLoop (src/engine.c, em KEY_RESIZE).
+ * Mede o tamanho da tela do terminal para deixar o minimapa, a sala e o painel
+ * de status bem centralizados e recria essas três janelinhas (ou deixa fechadas
+ * se a janela do terminal estiver pequena demais).
+ * Onde é chamada: main (src/main.c) e gameLoop (src/engine.c, quando o terminal muda de tamanho).
  */
 void layoutWindows(void)
 {
@@ -150,7 +151,7 @@ void layoutWindows(void)
     int spacing = 3;
     int total_w = minimap_w + spacing + ROOM_WIDTH + spacing + hud_w;
 
-    // Recria as janelas para impedir que resizeterm() mantenha dimensoes cortadas
+    // Fecha e cria as janelinhas de novo para não ficarem cortadas se a tela mudar de tamanho
     destroyWindows();
 
     if (COLS < total_w || LINES < ROOM_HEIGHT + 3)

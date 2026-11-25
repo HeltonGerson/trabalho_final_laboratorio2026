@@ -2,9 +2,9 @@
 #include <curses.h>
 
 /*
- * Aloca dinamicamente a matriz MAP_SIZE x MAP_SIZE de MapCell, inicializando cada
- * célula com zeros via calloc.
- * Chamada por: main (src/main.c) e tests/test_floor.c.
+ * Cria a grade vazia do mapa do andar (7 por 7 espaços) na memória, começando
+ * tudo zerado.
+ * Onde é chamada: main (src/main.c), newFloor (src/map.c) e tests/test_floor.c.
  */
 MapCell** createMap(void)
 {
@@ -16,6 +16,11 @@ MapCell** createMap(void)
     return m;
 }
 
+/*
+ * Apaga o andar atual, cria um novo andar com salas sorteadas, avança o número
+ * do andar e coloca o jogador no meio da nova sala inicial.
+ * Onde é chamada: movePlayer (src/entity.c).
+ */
 void newFloor(void)
 {
     freeMap();
@@ -35,10 +40,10 @@ void newFloor(void)
     player->pos.y = 5;
 }
 /*
- * Gera proceduralmente o andar via busca em profundidade (DFS) usando coordStack:
- * cria a sala inicial em (start_pos_x, start_pos_y), expande até number_of_rooms
- * garantindo ao menos uma sala de itens e uma de boss, e atualiza a névoa de guerra.
- * Chamada por: main (src/main.c) e tests/test_floor.c.
+ * Monta o mapa do andar sorteando as salas uma ligada na outra a partir da sala
+ * inicial até completar a quantidade pedida, garantindo pelo menos uma sala de
+ * item e uma sala do chefão, e depois atualiza o que aparece no minimapa.
+ * Onde é chamada: main (src/main.c), newFloor (src/map.c) e tests/test_floor.c.
  */
 void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
 {
@@ -110,9 +115,10 @@ void setupFloor(int start_pos_x, int start_pos_y, int number_of_rooms)
 }
 
 /*
- * Marca a sala atual (map_x, map_y) como visitada e descoberta e revela as salas
- * adjacentes cardeais válidas como descobertas para o minimapa.
- * Chamada por: setupFloor (src/map.c), movePlayer (src/entity.c) e tests/test_floor.c.
+ * Marca a sala onde o jogador está como visitada e descoberta, e revela no
+ * minimapa as salas vizinhas ligadas a qualquer sala que o jogador já visitou.
+ * Onde é chamada: setupFloor (src/map.c), movePlayer (src/entity.c),
+ * continueGame (src/engine.c) e tests/test_floor.c.
  */
 void updateFogOfWar(void)
 {
@@ -130,7 +136,7 @@ void updateFogOfWar(void)
 
             map[y][x].discovered = true;
 
-            // Adjacentes conectadas a qualquer sala visitada reveladas como ?
+            // Marca as salas vizinhas ligadas a qualquer sala já visitada para aparecerem como [?] no minimapa
             if (y > 0 && map[y - 1][x].id != 0)
                 map[y - 1][x].discovered = true;
             if (y + 1 < MAP_HEIGHT && map[y + 1][x].id != 0)
@@ -144,9 +150,9 @@ void updateFogOfWar(void)
 }
 
 /*
- * Percorre toda a matriz map, libera os tiles e entidades de cada MapCell, libera
- * as linhas e o ponteiro principal e redefine map para NULL.
- * Chamada por: cleanupRun (src/engine.c) e tests/test_floor.c.
+ * Limpa da memória todas as salas, inimigos, itens e a própria grade do mapa
+ * do andar.
+ * Onde é chamada: cleanupRun (src/engine.c), newFloor (src/map.c) e tests/test_floor.c.
  */
 void freeMap(void)
 {
