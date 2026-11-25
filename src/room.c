@@ -2,9 +2,9 @@
 #include <curses.h>
 
 /*
- * Desenha os caracteres de porta (ACS_LARROW, ACS_RARROW, ACS_UARROW, ACS_DARROW)
- * no centro das quatro paredes da sala informada.
- * Chamada por: readRoom e roomDoors (src/room.c).
+ * Coloca os símbolos de porta (setinhas para esquerda, direita, cima e baixo)
+ * no meio das quatro paredes da sala.
+ * Onde é chamada: readRoom e roomDoors (src/room.c).
  */
 void fillDoors(Tile** room)
 {
@@ -19,9 +19,10 @@ void fillDoors(Tile** room)
 }
 
 /*
- * Abre o diretório dir_path e conta quantos arquivos não ocultos (templates de sala)
- * existem nele, retornando -1 em caso de falha ao abrir.
- * Chamada por: readRoom (src/room.c) e tests/test_floor.c.
+ * Abre uma pasta e conta quantos arquivos de modelo de sala existem lá dentro
+ * (ignorando arquivos ocultos que começam com ponto), ou avisa com -1 se não
+ * conseguir abrir a pasta.
+ * Onde é chamada: setRoom (src/room.c) e tests/test_floor.c.
  */
 int countTxtFiles(const char* dir_path)
 {
@@ -45,9 +46,10 @@ int countTxtFiles(const char* dir_path)
     return count;
 }
 /*
- * Valida coordenadas e room_type, sorteia o template, gera o ID único
- * (tipo * ROOM_ID_BASE + room_n), carrega os tiles via readRoom e gera entidades.
- * Chamada por: setupFloor (src/map.c) e tests/test_floor.c.
+ * Confere se a posição no mapa e o tipo de sala são válidos, sorteia um dos
+ * modelos daquela pasta, monta o código da sala, carrega o desenho dela e
+ * coloca os inimigos e itens dentro.
+ * Onde é chamada: setupFloor (src/map.c) e tests/test_floor.c.
  */
 int setRoom(int x, int y, int room_type)
 {
@@ -106,9 +108,10 @@ int setRoom(int x, int y, int room_type)
 }
 
 /*
- * Carrega uma sala específica em data/rooms/<tipo>/<room_n>.txt a partir de room_id
- * (tipo * ROOM_ID_BASE + room_n), aloca Tile**, preenche bordas, cantos, piso '.' e portas.
- * Chamada por: setRoom (src/room.c) e continueGame (src/engine.c).
+ * Descobre qual arquivo de texto abrir pelo código da sala, lê o desenho da
+ * sala do arquivo, marca onde dá para andar (.), coloca as paredes e os cantos
+ * da borda e adiciona as portas.
+ * Onde é chamada: setRoom (src/room.c) e continueGame (src/engine.c).
  */
 Tile** readRoom(int room_id)
 {
@@ -153,7 +156,7 @@ Tile** readRoom(int room_id)
                 input_ch = fgetc(fp);
 
             room[y][x].ch = (chtype)input_ch;
-            // o entorno
+            // Desenha as paredes ao redor da sala
             if (x == 0 || x == ROOM_WIDTH - 1)
                 room[y][x].ch = ACS_VLINE;
             if (y == 0 || y == ROOM_HEIGHT - 1)
@@ -164,7 +167,7 @@ Tile** readRoom(int room_id)
     }
     fclose(fp);
 
-    // Definindo os caracteres especiais do canto
+    // Coloca os desenhos certos nos quatro cantos da sala
     room[0][0].ch                            = ACS_ULCORNER;
     room[0][ROOM_WIDTH - 1].ch               = ACS_URCORNER;
     room[ROOM_HEIGHT - 1][0].ch              = ACS_LLCORNER;
@@ -174,8 +177,8 @@ Tile** readRoom(int room_id)
 }
 
 /*
- * Libera cada linha alocada da matriz tiles e o vetor de ponteiros principal.
- * Chamada por: setRoom (src/room.c) e freeMap (src/map.c).
+ * Limpa da memória todos os quadradinhos desenhados de uma sala.
+ * Onde é chamada: setRoom (src/room.c) e freeMap (src/map.c).
  */
 void freeRoomTiles(Tile** tiles)
 {
@@ -189,13 +192,18 @@ void freeRoomTiles(Tile** tiles)
 }
 
 /*
- * Atualiza as portas da sala atual (curr_room): restaura todas com fillDoors e
- * substitui por parede (ACS_VLINE/ACS_HLINE) as que apontam para fora do mapa ou
- * para células sem sala (id == 0).
- * Chamada por: main (src/main.c) e movePlayer (src/entity.c).
+ * Atualiza as portas da sala atual: fecha com parede normal onde não existe
+ * sala vizinha e tranca com '#' as portas que levam a outras salas enquanto
+ * ainda houver inimigos vivos ali dentro.
+ * Onde é chamada: main (src/main.c), newFloor (src/map.c), movePlayer e
+ * dealDamage (src/entity.c), e tests/test_floor.c.
  */
 void roomDoors(void)
 {
+    if (!curr_room)
+        return;
+
+    bool locked = roomHasAliveEnemies();
     fillDoors(curr_room);
     for (int y = 0; y < ROOM_HEIGHT; ++y)
     {
@@ -205,12 +213,20 @@ void roomDoors(void)
             {
                 curr_room[y][ROOM_WIDTH - 1].ch = ACS_VLINE;
             }
+            else if (locked)
+            {
+                curr_room[y][ROOM_WIDTH - 1].ch = '#';
+            }
         }
         if (curr_room[y][0].ch == ACS_LARROW)
         {
             if (map_x - 1 < 0 || map[map_y][map_x - 1].id == 0)
             {
                 curr_room[y][0].ch = ACS_VLINE;
+            }
+            else if (locked)
+            {
+                curr_room[y][0].ch = '#';
             }
         }
     }
@@ -222,12 +238,20 @@ void roomDoors(void)
             {
                 curr_room[ROOM_HEIGHT - 1][x].ch = ACS_HLINE;
             }
+            else if (locked)
+            {
+                curr_room[ROOM_HEIGHT - 1][x].ch = '#';
+            }
         }
         if (curr_room[0][x].ch == ACS_UARROW)
         {
             if (map_y - 1 < 0 || map[map_y - 1][map_x].id == 0)
             {
                 curr_room[0][x].ch = ACS_HLINE;
+            }
+            else if (locked)
+            {
+                curr_room[0][x].ch = '#';
             }
         }
     }

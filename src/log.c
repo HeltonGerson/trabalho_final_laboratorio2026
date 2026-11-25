@@ -2,9 +2,8 @@
 #include <curses.h>
 
 /*
- * Centraliza e imprime a mensagem msg na penúltima linha do terminal (LINES - 2),
- * limpando o conteúdo anterior da linha.
- * Chamada por: drawLogs (src/draw.c).
+ * Limpa a penúltima linha da tela e escreve uma mensagem bem centralizada ali.
+ * Onde é chamada: drawLogs (src/draw.c) e confirmationLog (src/log.c).
  */
 void logDefault(const char* msg)
 {
@@ -19,6 +18,11 @@ void logDefault(const char* msg)
     mvprintw(row, col, "%s", msg);
 }
 
+/*
+ * Mostra uma pergunta na parte de baixo da tela e espera o jogador apertar uma
+ * tecla para responder.
+ * Onde é chamada: movePlayer (src/entity.c).
+ */
 char confirmationLog(char* msg)
 {
     logDefault(msg);

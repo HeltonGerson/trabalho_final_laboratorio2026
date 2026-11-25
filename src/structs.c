@@ -1,8 +1,9 @@
 #include "rogue.h"
 
 /*
- * Aloca e inicializa uma pilha vazia de coordenadas (coordStack).
- * Chamada por: setupFloor (src/map.c).
+ * Cria uma pilha vazia de posições na memória (como uma pilha de pratos: o
+ * último que entra é o primeiro que sai).
+ * Onde é chamada: setupFloor (src/map.c).
  */
 coordStack* initializeCoordStack()
 {
@@ -13,8 +14,8 @@ coordStack* initializeCoordStack()
 }
 
 /*
- * Aloca um coordNode com as coordenadas (x, y) e o empilha no topo de stack.
- * Chamada por: setupFloor (src/map.c).
+ * Guarda uma posição (x, y) no topo da pilha.
+ * Onde é chamada: setupFloor (src/map.c).
  */
 void pushCoord(int x, int y, coordStack* stack)
 {
@@ -40,8 +41,8 @@ void pushCoord(int x, int y, coordStack* stack)
 }
 
 /*
- * Remove e libera o nó do topo da pilha stack, decrementando stack->size.
- * Chamada por: setupFloor (src/map.c) e eraseStack (src/structs.c).
+ * Tira a posição que está no topo da pilha e libera o espaço dela na memória.
+ * Onde é chamada: setupFloor (src/map.c) e eraseStack (src/structs.c).
  */
 void popCoord(coordStack* stack)
 {
@@ -52,8 +53,8 @@ void popCoord(coordStack* stack)
 }
 
 /*
- * Desempilha todos os nós restantes com popCoord e libera a struct coordStack.
- * Chamada por: setupFloor (src/map.c).
+ * Esvazia tudo o que sobrou na pilha e limpa a pilha inteira da memória.
+ * Onde é chamada: setupFloor (src/map.c).
  */
 void eraseStack(coordStack* stack)
 {
@@ -65,8 +66,9 @@ void eraseStack(coordStack* stack)
 }
 
 /*
- * Aloca e inicializa uma fila FIFO vazia de coordenadas (coordQueue).
- * Chamada por: chasePlayer (src/entity.c).
+ * Cria uma fila vazia de posições na memória (o primeiro que entra é o primeiro
+ * que sai).
+ * Onde é chamada: chasePlayer (src/entity.c).
  */
 coordQueue* initializeCoordQueue()
 {
@@ -78,8 +80,8 @@ coordQueue* initializeCoordQueue()
 }
 
 /*
- * Aloca um coordNode com (x, y) e o insere no final (back) da fila q.
- * Chamada por: chasePlayer (src/entity.c).
+ * Coloca uma nova posição (x, y) no final da fila.
+ * Onde é chamada: chasePlayer (src/entity.c).
  */
 void pushCoordQueue(int x, int y, coordQueue* q)
 {
@@ -107,8 +109,9 @@ void pushCoordQueue(int x, int y, coordQueue* q)
 }
 
 /*
- * Remove e libera o nó da frente (front) da fila q e retorna uma cópia do nó.
- * Chamada por: eraseCoordQueue (src/structs.c) e chasePlayer (src/entity.c).
+ * Tira o primeiro item da fila, limpa o espaço dele na memória e devolve uma
+ * cópia com a posição guardada.
+ * Onde é chamada: eraseCoordQueue (src/structs.c) e chasePlayer (src/entity.c).
  */
 coordNode popCoordQueue(coordQueue* q)
 {
@@ -121,8 +124,8 @@ coordNode popCoordQueue(coordQueue* q)
 }
 
 /*
- * Esvazia todos os nós da fila q via popCoordQueue e libera a struct coordQueue.
- * Chamada por: chasePlayer (src/entity.c).
+ * Esvazia todos os itens da fila de posições e limpa a fila inteira da memória.
+ * Onde é chamada: chasePlayer (src/entity.c).
  */
 void eraseCoordQueue(coordQueue* q)
 {
@@ -134,8 +137,9 @@ void eraseCoordQueue(coordQueue* q)
 }
 
 /*
- * Aloca e inicializa uma fila FIFO vazia para mensagens de log (logQueue).
- * Chamada por: main (src/main.c) e tests/test_floor.c.
+ * Cria uma fila vazia na memória para guardar as mensagens que vão aparecer
+ * para o jogador.
+ * Onde é chamada: main (src/main.c) e tests/test_floor.c.
  */
 logQueue* initializeLogQueue()
 {
@@ -150,9 +154,9 @@ logQueue* initializeLogQueue()
 }
 
 /*
- * Aloca um logNode apontando para msg e o enfileira no final da fila q.
- * Chamada por: fireRangedAttack, movePlayer, chasePlayer, actRangedEnemy e
- * actBoss (src/entity.c).
+ * Coloca uma nova mensagem no final da fila de mensagens.
+ * Onde é chamada: main (src/main.c) e dealDamage, fireRangedAttack, movePlayer,
+ * chasePlayer, actRangedEnemy e actBossI (src/entity.c).
  */
 void pushLogQueue(char* msg, logQueue* q)
 {
@@ -182,9 +186,9 @@ void pushLogQueue(char* msg, logQueue* q)
 }
 
 /*
- * Remove e libera o nó da frente da fila q e retorna o ponteiro msg armazenado
- * (ou NULL se a fila estiver vazia).
- * Chamada por: eraseLogQueue (src/structs.c) e drawLogs (src/draw.c).
+ * Tira a primeira mensagem da fila, limpa o espaço dela na memória e devolve o
+ * texto guardado (ou nada se a fila estiver vazia).
+ * Onde é chamada: eraseLogQueue (src/structs.c) e drawLogs (src/draw.c).
  */
 char* popLogQueue(logQueue* q)
 {
@@ -202,8 +206,8 @@ char* popLogQueue(logQueue* q)
 }
 
 /*
- * Esvazia todos os nós da fila q via popLogQueue e libera a struct logQueue.
- * Chamada por: cleanupRun (src/engine.c) e tests/test_floor.c.
+ * Esvazia todas as mensagens da fila e limpa a fila inteira da memória.
+ * Onde é chamada: cleanupRun (src/engine.c) e tests/test_floor.c.
  */
 void eraseLogQueue(logQueue* q)
 {

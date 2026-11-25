@@ -1,18 +1,15 @@
 #include "rogue.h"
 
 /*
- * TEMPO:
- * 1: Ver quais acoes passam o tempo, Acoes do player validas
- * 2: Fazer um vetor / fila com todas as entidades.
- * 3: Cada entidade vai ter sua acao
- * 3.1: Os inimigos vao perseguir o player
- * 3.2(depois): Os projeteis seguem o seu percurso
+ * Controla a passagem de tempo do jogo: a cada ação do jogador, todos os
+ * inimigos da sala ganham a vez de agir.
  */
 
 /*
- * Executa o turno de todas as entidades ativas na sala atual enquanto o jogador
- * estiver vivo, despachando a IA de cada tipo (chasePlayer, actRangedEnemy, actBoss).
- * Chamada por: handleInput e movePlayer (src/entity.c), e tests/test_floor.c.
+ * Faz passar um turno na sala atual: enquanto o jogador estiver vivo, dá a vez
+ * para cada inimigo ativo agir (o goblin de perto persegue, o arqueiro mira e
+ * atira e o chefão age).
+ * Onde é chamada: handleInput e movePlayer (src/entity.c), e tests/test_floor.c.
  */
 void passTime(void)
 {

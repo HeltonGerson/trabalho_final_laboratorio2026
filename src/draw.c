@@ -1,9 +1,9 @@
 #include "rogue.h"
 
 /*
- * Converte o id da sala no glifo exibido no minimapa ('S' inicial, 'B' boss,
- * 'I' item ou 'X' sala normal).
- * Chamada por: drawMinimap (src/draw.c).
+ * Escolhe qual letra vai representar a sala no minimapa ('S' para início, 'B'
+ * para a sala do chefão, 'I' para sala de item ou 'X' para sala comum).
+ * Onde é chamada: drawMinimap (src/draw.c).
  */
 static char roomGlyph(int id)
 {
@@ -19,8 +19,10 @@ static char roomGlyph(int id)
 }
 
 /*
- * Desenha todos os tiles da sala atual (curr_room) na janela win em escala 1:1.
- * Chamada por: drawHitFlash, drawProjectilePath e drawEverything (src/draw.c).
+ * Desenha todos os quadradinhos da sala atual (chão, paredes e portas) na
+ * janela da sala.
+ * Onde é chamada: drawHitFlash, drawProjectilePath, drawBresenhamProjectilePath
+ * e drawEverything (src/draw.c).
  */
 void drawRoom(void)
 {
@@ -37,10 +39,10 @@ void drawRoom(void)
 }
 
 /*
- * Renderiza a janela win_minimapa como uma janela deslizante 3x3 centrada na sala
- * atual, mostrando salas visitadas, descobertas ([?]), jogador ([@]), bordas
- * fora do grid (###) e conectores ('-' e '|').
- * Chamada por: drawEverything (src/draw.c).
+ * Desenha o minimapa mostrando uma grade 3x3 em volta da sala onde o jogador
+ * está, marcando o jogador ([@]), as salas já visitadas, as salas vizinhas
+ * descobertas ([?]), os limites fora do mapa (###) e os caminhos ('-' e '|').
+ * Onde é chamada: drawEverything (src/draw.c).
  */
 void drawMinimap(void)
 {
@@ -92,9 +94,9 @@ void drawMinimap(void)
 }
 
 /*
- * Retorna o atributo de cor e destaque do ncurses correspondente ao EntityType
- * (ou apenas A_BOLD/A_NORMAL se o terminal não suportar cores).
- * Chamada por: drawEntity (src/draw.c).
+ * Escolhe a cor e o destaque na tela para cada tipo de personagem ou item (ou
+ * usa apenas negrito/normal se o terminal não tiver suporte a cores).
+ * Onde é chamada: drawEntity (src/draw.c).
  */
 static attr_t entityAttr(EntityType type)
 {
@@ -120,9 +122,10 @@ static attr_t entityAttr(EntityType type)
 }
 
 /*
- * Desenha uma entidade ativa e na janela win aplicando a cor de entityAttr.
- * Chamada por: drawHitFlash, drawProjectilePath, drawRoomEntities e
- * drawEverything (src/draw.c).
+ * Desenha um personagem ou item ativo na janela da sala usando a cor certa
+ * (mudando a cor do arqueiro quando ele está mirando para avisar o jogador).
+ * Onde é chamada: drawHitFlash, drawProjectilePath, drawBresenhamProjectilePath,
+ * drawRoomEntities e drawEverything (src/draw.c).
  */
 void drawEntity(Entity* e)
 {
@@ -130,15 +133,23 @@ void drawEntity(Entity* e)
         return;
 
     attr_t attr = entityAttr(e->type);
+    if ((e->type == ENTITY_ENEMY_RANGED || e->type == ENTITY_BOSS) && e->aim_turns > 0)
+    {
+        if (has_colors())
+            attr = COLOR_PAIR(e->aim_turns >= 2 ? COLOR_PAIR_HIT : COLOR_PAIR_SHOT_ENEMY) | A_BOLD;
+        else
+            attr = (e->aim_turns >= 2) ? (A_REVERSE | A_BOLD) : A_BOLD;
+    }
     wattron(win, attr);
     mvwaddch(win, e->pos.y, e->pos.x, e->ch);
     wattroff(win, attr);
 }
 
 /*
- * Redesenha a sala e exibe um flash vermelho 'X' na posição pos por 100 ms
- * como feedback visual ao aplicar dano.
- * Chamada por: drawProjectilePath (src/draw.c) e dealDamage (src/entity.c).
+ * Redesenha a sala e faz piscar um 'X' vermelho por um instante no lugar onde
+ * alguém levou dano.
+ * Onde é chamada: drawProjectilePath e drawBresenhamProjectilePath (src/draw.c),
+ * e dealDamage (src/entity.c).
  */
 void drawHitFlash(Position pos)
 {
@@ -161,10 +172,10 @@ void drawHitFlash(Position pos)
 }
 
 /*
- * Anima o trajeto de um projétil de from até to na direção (dx, dy) usando o
- * glifo direcional ('|', '-', '/', '\') e cor de player ou inimigo; ao final,
- * aciona drawHitFlash se hit_target for verdadeiro.
- * Chamada por: fireRangedAttack (src/entity.c).
+ * Mostra a animação de uma flecha ou tiro indo em linha reta de um ponto ao
+ * outro, usando um tracinho virado para a direção do tiro ('|', '-', '/', '\')
+ * na cor do jogador ou do inimigo; se acertar, faz piscar o 'X' de dano.
+ * Onde é chamada: fireRangedAttack (src/entity.c).
  */
 void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_player, bool hit_target)
 {
@@ -219,8 +230,90 @@ void drawProjectilePath(Position from, Position to, int dx, int dy, bool is_play
 }
 
 /*
- * Percorre todas as entidades da sala atual e desenha cada uma via drawEntity.
- * Chamada por: drawHitFlash, drawProjectilePath e drawEverything (src/draw.c).
+ * Mostra a animação de um tiro indo em linha reta de um ponto ao outro em
+ * qualquer ângulo, ajustando o desenho do tracinho ('|', '-', '/', '\') a cada
+ * passo até o destino, e faz piscar o 'X' de dano se acertar.
+ * Onde é chamada: actRangedEnemy (src/entity.c).
+ */
+void drawBresenhamProjectilePath(Position from, Position to, bool is_player, bool hit_target)
+{
+    if (!win || !curr_room || (from.x == to.x && from.y == to.y))
+        return;
+
+    attr_t attr = A_BOLD;
+    if (has_colors())
+        attr |= COLOR_PAIR(is_player ? COLOR_PAIR_SHOT_PLAYER : COLOR_PAIR_SHOT_ENEMY);
+
+    drawRoom();
+    drawRoomEntities();
+    drawEntity(player);
+    wrefresh(win);
+    flushinp();
+
+    int x   = from.x;
+    int y   = from.y;
+    int sx  = (from.x < to.x) ? 1 : -1;
+    int sy  = (from.y < to.y) ? 1 : -1;
+    int adx = abs(to.x - from.x);
+    int ady = abs(to.y - from.y);
+    int err = adx - ady;
+
+    while (x != to.x || y != to.y)
+    {
+        int nx = x;
+        int ny = y;
+        int e2 = 2 * err;
+        if (e2 > -ady)
+        {
+            err -= ady;
+            nx += sx;
+        }
+        if (e2 < adx)
+        {
+            err += adx;
+            ny += sy;
+        }
+        if (nx < 0 || nx >= ROOM_WIDTH || ny < 0 || ny >= ROOM_HEIGHT)
+            break;
+
+        int    step_x = nx - x;
+        int    step_y = ny - y;
+        chtype glyph  = '*';
+        if (step_x == 0)
+            glyph = '|';
+        else if (step_y == 0)
+            glyph = '-';
+        else if (step_x * step_y > 0)
+            glyph = '\\';
+        else
+            glyph = '/';
+
+        x = nx;
+        y = ny;
+
+        wattron(win, attr);
+        mvwaddch(win, y, x, glyph);
+        wattroff(win, attr);
+        wrefresh(win);
+        napms(30);
+
+        drawRoom();
+        drawRoomEntities();
+        drawEntity(player);
+    }
+
+    if (hit_target)
+        drawHitFlash(to);
+    else
+        wrefresh(win);
+    flushinp();
+}
+
+/*
+ * Passa por todos os inimigos, itens e portas especiais da sala atual e desenha
+ * cada um na tela.
+ * Onde é chamada: drawHitFlash, drawProjectilePath, drawBresenhamProjectilePath
+ * e drawEverything (src/draw.c).
  */
 void drawRoomEntities(void)
 {
@@ -235,9 +328,9 @@ void drawRoomEntities(void)
 }
 
 /*
- * Atualiza a janela win_hud exibindo a barra de vida proporcional (8 blocos) e os
- * valores numéricos de HP, ataque e defesa do jogador.
- * Chamada por: drawEverything (src/draw.c).
+ * Atualiza o painel lateral de status com a barrinha de vida (8 bloquinhos) e os
+ * números de vida, ataque e defesa do jogador.
+ * Onde é chamada: drawEverything (src/draw.c).
  */
 void drawHud(void)
 {
@@ -268,13 +361,15 @@ void drawHud(void)
     mvwprintw(win_hud, 2, 3, "♥ VIDA: [%s]", bar);
     mvwprintw(win_hud, 3, hp_x, "%s", hp_text);
     mvwprintw(win_hud, 6, 3, "⚔ ATAQUE: %d", player->attack);
+    mvwprintw(win_hud, 7, 3, "→ ARCO: %d", player->ranged_attack);
     mvwprintw(win_hud, 8, 3, "⛨ DEFESA: %d", player->defense);
 }
 
 /*
- * Consome e imprime sequencialmente as mensagens da fila logs via logDefault,
- * pausando com getch() caso ainda existam mais mensagens pendentes.
- * Chamada por: drawEverything (src/draw.c).
+ * Mostra na tela, uma por uma, as mensagens que estão esperando na fila; se
+ * ainda houver mais mensagens depois da atual, espera o jogador apertar uma
+ * tecla para continuar.
+ * Onde é chamada: drawEverything (src/draw.c).
  */
 void drawLogs()
 {
@@ -286,7 +381,7 @@ void drawLogs()
         char* msg = popLogQueue(logs);
         if (msg)
             logDefault(msg);
-        // se nao for o ultimo
+        // Se ainda tiver mais mensagens depois desta, espera uma tecla antes de mostrar a próxima
         refresh();
         if (logs->size > 0)
         {
@@ -298,9 +393,10 @@ void drawLogs()
 }
 
 /*
- * Verifica o tamanho mínimo do terminal (77x14) e redesenha em lote a sala,
- * entidades, jogador, minimapa, HUD e logs usando wnoutrefresh/doupdate.
- * Chamada por: gameLoop (src/engine.c).
+ * Confere se a janela do terminal tem espaço suficiente (pelo menos 77 por 14)
+ * e redesenha tudo de uma vez na tela: sala, personagens, jogador, minimapa,
+ * painel de status e mensagens.
+ * Onde é chamada: gameLoop (src/engine.c).
  */
 void drawEverything(void)
 {
