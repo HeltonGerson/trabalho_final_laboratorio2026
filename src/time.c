@@ -39,7 +39,7 @@ void passTime(void)
             actRangedEnemy(e);
             break;
         case ENTITY_BOSS:
-            actBoss(e);
+            actBossI(e);
             break;
         default:
             break;

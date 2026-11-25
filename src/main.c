@@ -11,16 +11,17 @@ MapCell** map;
 logQueue* logs;
 
 // Variáveis globais
-int       map_y       = 3;
-int       map_x       = 3;
-int       curr_floor  = 1;
-int       number_of_rooms = 0;
-const int ROOM_WIDTH  = 31;
-const int ROOM_HEIGHT = 11;
-const int MAP_SIZE    = 7;
-const int MAP_WIDTH   = 7;
-const int MAP_HEIGHT  = 7;
-const int LAST_FLOOR   = 2;
+int       map_y                = 3;
+int       map_x                = 3;
+int       curr_floor           = 1;
+int       number_of_rooms      = 0;
+const int ROOM_WIDTH           = 31;
+const int ROOM_HEIGHT          = 11;
+const int MAP_SIZE             = 7;
+const int MAP_WIDTH            = 7;
+const int MAP_HEIGHT           = 7;
+const int LAST_FLOOR           = 2;
+const float ENEMIES_MULTIPLIER = 0.15;
 
 /*
  * Ponto de entrada do jogo: inicializa o ncurses e a semente aleatória, executa
@@ -62,6 +63,7 @@ int main(void)
             setupFloor(map_x, map_y, number_of_rooms);
             Position start_pos = {15, 5};
             player             = createPlayer(start_pos);
+            pushLogQueue("You must escape the dungeon", logs);
         }
 
         curr_room = map[map_y][map_x].tiles;
