@@ -133,7 +133,7 @@ void drawEntity(Entity* e)
         return;
 
     attr_t attr = entityAttr(e->type);
-    if (e->type == ENTITY_ENEMY_RANGED && e->aim_turns > 0)
+    if ((e->type == ENTITY_ENEMY_RANGED || e->type == ENTITY_BOSS) && e->aim_turns > 0)
     {
         if (has_colors())
             attr = COLOR_PAIR(e->aim_turns >= 2 ? COLOR_PAIR_HIT : COLOR_PAIR_SHOT_ENEMY) | A_BOLD;

@@ -109,8 +109,8 @@ void initEntity(Entity* e, EntityType type, int x, int y)
         e->max_hp        = 35;
         e->hp            = e->max_hp;
         e->attack        = 7;
-        e->ranged_attack = 5;
-        e->ranged_range  = 8;
+        e->ranged_attack = 6;
+        e->ranged_range  = 6;
         e->defense       = 1;
         break;
     case ENTITY_ITEM:
@@ -1169,12 +1169,13 @@ void evadePlayer(Entity* e)
 }
 
 /*
- * Controla o chefão ('B'): diminui o tempo de espera do tiro se estiver
- * descansando; se estiver colado no jogador, dá um golpe de perto (respeitando
- * a chance do jogador bater primeiro quando acaba de se aproximar); senão, se
- * estiver alinhado em uma das 8 direções com o caminho livre e puder atirar,
- * avisa primeiro se o jogador acabou de entrar na mira ou dispara e espera 1
- * turno antes do próximo tiro; caso contrário, persegue o jogador pela sala.
+ * Controla o chefão ('B'): se estiver em descanso do tiro, diminui o contador;
+ * se estiver colado no jogador, dá um golpe de perto (respeitando a chance do
+ * jogador bater primeiro quando acaba de se aproximar); senão, se não estiver
+ * em descanso e enxergar o jogador em 360° dentro do alcance, mira parado por
+ * 2 turnos avisando antes e dispara no terceiro entrando em descanso de 3
+ * turnos; se perder a visão enquanto mirava, espera 1 turno parado; caso
+ * contrário, persegue o jogador pela sala.
  * Onde é chamada: passTime (src/time.c).
  */
 void actBossI(Entity* e)
@@ -1182,13 +1183,18 @@ void actBossI(Entity* e)
     if (!e || !e->active || !player || !player->active)
         return;
 
-    if (e->ranged_cooldown > 0)
+    bool on_ranged_cooldown = (e->ranged_cooldown > 0);
+    if (on_ranged_cooldown)
+    {
         e->ranged_cooldown--;
+        e->aim_turns = 0;
+    }
 
     bool adjacent = isCardinalAdjacent(e->pos, player->pos);
 
     if (adjacent)
     {
+        e->aim_turns = 0;
         if (player_moved_turn && !isCardinalAdjacent(e->pos, prev_player_pos))
             return;
 
@@ -1197,20 +1203,33 @@ void actBossI(Entity* e)
         return;
     }
 
-    int dx = 0, dy = 0;
-    if (e->ranged_cooldown == 0 &&
-        canHitLineOfSight(e->pos, player->pos, e->ranged_range, true, &dx, &dy))
+    if (!on_ranged_cooldown && hasBresenhamLineOfSight(e->pos, player->pos, e->ranged_range, e))
     {
-        if (player_moved_turn &&
-            !canHitLineOfSight(e->pos, prev_player_pos, e->ranged_range, true, NULL, NULL))
+        if (e->aim_turns == 0)
         {
+            e->aim_turns = 1;
             pushLogQueue("Boss (B) aims at you!", logs);
             return;
         }
 
-        fireRangedAttack(e, dx, dy);
-        e->ranged_cooldown = 2; // Marca 2 para que, diminuindo 1 no começo do próximo turno, ele
-                                // fique 1 turno sem atirar
+        if (e->aim_turns == 1)
+        {
+            e->aim_turns = 2;
+            pushLogQueue("Boss (B) is about to shoot!", logs);
+            return;
+        }
+
+        drawBresenhamProjectilePath(e->pos, player->pos, false, false);
+        dealDamage(e->ranged_attack, player);
+        pushLogQueue("Boss (B) shot you!", logs);
+        e->aim_turns       = 0;
+        e->ranged_cooldown = 3;
+        return;
+    }
+
+    if (e->aim_turns > 0)
+    {
+        e->aim_turns = 0;
         return;
     }
 

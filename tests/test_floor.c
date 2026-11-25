@@ -145,8 +145,8 @@ int main(void)
         if (e->type == ENTITY_BOSS)
         {
             found_boss = true;
-            assert(e->hp == 35 && e->max_hp == 35 && e->attack == 7 && e->ranged_attack == 5 &&
-                   e->ranged_range == 8 && e->ranged_cooldown == 0 && e->defense == 1);
+            assert(e->hp == 35 && e->max_hp == 35 && e->attack == 7 && e->ranged_attack == 6 &&
+                   e->ranged_range == 6 && e->ranged_cooldown == 0 && e->defense == 1);
         }
     }
     assert(found_boss == true);
@@ -214,8 +214,8 @@ int main(void)
     initEntity(player, ENTITY_PLAYER, 5, 5);
     Entity tank;
     initEntity(&tank, ENTITY_BOSS, 10, 5);
-    assert(tank.hp == 35 && tank.max_hp == 35 && tank.attack == 7 && tank.ranged_attack == 5 &&
-           tank.ranged_range == 8 && tank.ranged_cooldown == 0 && tank.defense == 1);
+    assert(tank.hp == 35 && tank.max_hp == 35 && tank.attack == 7 && tank.ranged_attack == 6 &&
+           tank.ranged_range == 6 && tank.ranged_cooldown == 0 && tank.defense == 1);
     tank.defense = 10;
     attackEntity(player, &tank);
     assert(tank.hp == 34 && tank.active == true);
@@ -354,7 +354,7 @@ int main(void)
     assert(map[3][2].entities[0].pos.x == 15 && map[3][2].entities[0].pos.y == 6);
     assert(map[3][2].entities[0].aim_turns == 0);
 
-    // Teste 9: Comportamento do Chefão (disparo alinhado em 8 direções, descanso e ataque de perto)
+    // Teste 9: Comportamento do Chefão (visão 360°, mira por 2 turnos parado, descanso 3 turnos perseguindo, pausa 1 turno ao perder visão e ataque de perto)
     clearRoomInterior(curr_room);
     freeRoomEntities(&map[3][2]);
     map[3][2].entities     = malloc(sizeof(Entity) * 1);
@@ -362,23 +362,59 @@ int main(void)
     assert(map[3][2].entities != NULL);
 
     initEntity(player, ENTITY_PLAYER, 10, 5);
-    initEntity(&map[3][2].entities[0], ENTITY_BOSS, 14, 5);
+    initEntity(&map[3][2].entities[0], ENTITY_BOSS, 14, 8); // dist^2 = 4^2 + 3^2 = 25 <= 36 (alcance 6)
 
-    // Alinhado com descanso 0: atira de longe (tira 5 de vida) e ativa descanso 2
+    // Turno 1 em ângulo inclinado: começa a mirar parado (aim_turns == 1, sem dano)
     passTime();
-    assert(player->hp == 15);
-    assert(map[3][2].entities[0].ranged_cooldown == 2);
+    assert(player->hp == 20);
+    assert(map[3][2].entities[0].pos.x == 14 && map[3][2].entities[0].pos.y == 8);
+    assert(map[3][2].entities[0].aim_turns == 1);
+    assert(map[3][2].entities[0].ranged_cooldown == 0);
 
-    // Em descanso: aproxima do jogador sem atirar
+    // Turno 2: continua mirando parado (aim_turns == 2, sem dano)
     passTime();
-    assert(player->hp == 15);
-    assert(map[3][2].entities[0].ranged_cooldown == 1);
-    assert(abs(map[3][2].entities[0].pos.x - player->pos.x) < 4);
+    assert(player->hp == 20);
+    assert(map[3][2].entities[0].pos.x == 14 && map[3][2].entities[0].pos.y == 8);
+    assert(map[3][2].entities[0].aim_turns == 2);
+    assert(map[3][2].entities[0].ranged_cooldown == 0);
+
+    // Turno 3: atira (tira 6 de vida), zera mira e entra em descanso de 3 turnos
+    passTime();
+    assert(player->hp == 14);
+    assert(map[3][2].entities[0].pos.x == 14 && map[3][2].entities[0].pos.y == 8);
+    assert(map[3][2].entities[0].aim_turns == 0);
+    assert(map[3][2].entities[0].ranged_cooldown == 3);
+
+    // Durante os 3 turnos de descanso: não mira nem atira e persegue o jogador
+    player->pos               = (Position){5, 5};
+    map[3][2].entities[0].pos = (Position){15, 5};
+    for (int cd = 2; cd >= 0; --cd)
+    {
+        int prev_bx = map[3][2].entities[0].pos.x;
+        passTime();
+        assert(player->hp == 14);
+        assert(map[3][2].entities[0].aim_turns == 0);
+        assert(map[3][2].entities[0].ranged_cooldown == cd);
+        assert(map[3][2].entities[0].pos.x < prev_bx);
+    }
+
+    // Perder visão durante a mira: espera 1 turno parado, depois volta a perseguir
+    player->pos               = (Position){10, 5};
+    map[3][2].entities[0].pos = (Position){14, 5};
+    passTime();
+    assert(map[3][2].entities[0].aim_turns == 1);
+    player->pos = (Position){3, 5}; // sai do alcance (dist 11 > 6)
+    passTime();
+    assert(map[3][2].entities[0].aim_turns == 0);
+    assert(map[3][2].entities[0].pos.x == 14 && map[3][2].entities[0].pos.y == 5);
+    passTime();
+    assert(map[3][2].entities[0].pos.x == 13);
 
     // Colado no jogador: dá golpe de perto (tira 7 de vida)
+    player->pos               = (Position){10, 5};
     map[3][2].entities[0].pos = (Position){11, 5};
     passTime();
-    assert(player->hp == 8);
+    assert(player->hp == 7);
 
     // Teste 10: Fim de jogo e bloqueio de qualquer ação depois que o jogador morre
     clearRoomInterior(curr_room);
@@ -491,7 +527,7 @@ int main(void)
     initEntity(&f2_boss, ENTITY_BOSS, 3, 1);
     assert(f2_melee.max_hp == 8 && f2_melee.attack == 5 && f2_melee.defense == 1);
     assert(f2_ranged.max_hp == 8 && f2_ranged.ranged_attack == 3 && f2_ranged.defense == 0);
-    assert(f2_boss.max_hp == 47 && f2_boss.attack == 9 && f2_boss.ranged_attack == 7 &&
+    assert(f2_boss.max_hp == 47 && f2_boss.attack == 9 && f2_boss.ranged_attack == 8 &&
            f2_boss.defense == 2);
     curr_floor = 1;
 
@@ -734,13 +770,13 @@ int main(void)
     map[3][3].entities[1].active = false;
     map[3][3].entities[2].active = true;
     player->pos                  = (Position){5, 5};
-    map[3][3].entities[2].pos    = (Position){8, 7};
-    curr_room[7][7].walkable     = false;
+    map[3][3].entities[2].pos    = (Position){11, 8};
+    curr_room[8][10].walkable    = false;
     hp_before                    = player->hp;
     passTime();
-    assert(map[3][3].entities[2].pos.x == 7 && map[3][3].entities[2].pos.y == 6);
+    assert(map[3][3].entities[2].pos.x == 10 && map[3][3].entities[2].pos.y == 7);
     assert(player->hp == hp_before);
-    curr_room[7][7].walkable = true;
+    curr_room[8][10].walkable = true;
 
     player->pos               = (Position){4, 5};
     map[3][3].entities[2].pos = (Position){6, 6};
