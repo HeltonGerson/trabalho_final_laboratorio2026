@@ -1,7 +1,7 @@
 # Dungeon C — Exploração de Masmorras
 
 Projeto final da disciplina de **Laboratório de Programação** (Ciência da Computação — 2026.2).  
-**Equipe:** Helton, Lucas Gabriel, Francisco Rerisson e Camilly.
+**Equipe:** Helton, Lucas Gabriel e Francisco Rerisson.
 
 ---
 
@@ -14,10 +14,11 @@ Projeto final da disciplina de **Laboratório de Programação** (Ciência da Co
 ## Guia Rápido: Como o Jogo Funciona
 
 ### 1. Fluxo da Partida
-1. **Menu Inicial (`showMainMenu`):** permite iniciar um novo jogo (`Start New Game`), continuar (`Continue`, quando existir save) ou sair (`Quit`).
+1. **Menu Inicial (`showMainMenu`):** permite iniciar um novo jogo (`Start New Game`), continuar (`Continue`, quando existir save em `data/save/save.txt`) ou sair (`Quit`).
 2. **Geração do Andar (`setupFloor`):** cria uma grade `7x7` e gera de **8 a 15 salas** conectadas usando busca em profundidade (DFS) com pilha (`coordStack`), garantindo a sala inicial, ao menos uma sala de itens e uma sala de Boss.
-3. **Loop de Turnos (`gameLoop`):** cada movimento ou disparo do jogador executa um turno das entidades vivas na sala (`passTime`), redesenha as janelas e exibe os logs de combate.
-4. **Game Over (`showGameOver`):** ao zerar o HP do jogador, a partida é encerrada e é possível voltar ao menu ou sair.
+3. **Loop de Turnos (`gameLoop`):** cada movimento ou disparo do jogador executa um turno das entidades vivas na sala (`passTime`), redesenha as janelas e exibe os logs de combate. Enquanto houver inimigos vivos na sala (`roomHasAliveEnemies`), as portas permanecem trancadas. Ao sair vivo pressionando `ESC`, o estado da partida é salvo automaticamente (`save` / `continueGame` em `data/save/save.txt`).
+4. **Progressão de Andares (`newFloor`):** o jogo possui **2 andares** com escalonamento de atributos dos inimigos a partir do 2º andar. Ao derrotar o Boss, surge a porta para o próximo andar (`ENTITY_NEXT_FLOOR_DOOR`).
+5. **Vitória e Game Over (`winGame` / `showGameOver`):** ao derrotar o Boss do último andar e confirmar a saída pela porta final, a tela de vitória exibe os atributos finais do jogador; ao zerar o HP, a tela de Game Over permite voltar ao menu ou sair.
 
 ### 2. Interface no Terminal (mínimo `77x14`)
 - **Minimapa (esquerda):** janela deslizante `3x3` com névoa de guerra (`[@]` atual, `[S]` início, `[B]` boss, `[I]` itens, `[X]` normal visitada, `[?]` adjacente descoberta, `###` borda do mapa).
@@ -26,16 +27,15 @@ Projeto final da disciplina de **Laboratório de Programação** (Ciência da Co
 - **Logs (rodapé):** mensagens de combate e eventos exibidas na penúltima linha do terminal.
 
 ### 3. Entidades, Combate e IA
-- **`@` Jogador:** inicia com `10 HP`, `4 ATK` (corpo a corpo), `2 RANGED` (arco com alcance `10`, sem cooldown) e `0 DEF`.
-  - **Corpo a corpo:** mover-se sobre um inimigo desfere um ataque; se ele morrer, o espaço fica livre no próximo passo.
-  - **À distância:** as setas direcionais disparam uma flecha em linha reta (para em paredes `#` ou inimigos).
+- **`@` Jogador:** inicia com `20 HP`, `4 ATK` (corpo a corpo), `2 RANGED` (arco com alcance `8`, sem cooldown) e `0 DEF`.
+  - **Movimento e corpo a corpo:** move-se em 8 direções (`WASD` nas cardeais e `Q`/`E`/`Z`/`C` nas diagonais); mover-se sobre um inimigo desfere um ataque corpo a corpo.
+  - **À distância:** as setas direcionais disparam uma flecha nas 4 direções cardeais em linha reta (para em paredes `#` ou inimigos).
   - **Prioridade de ataque:** ao entrar na linha de ataque de um inimigo nesse turno, o jogador tem prioridade e não sofre o golpe imediato.
-- **`E` Goblin Melee (`4 HP`, `3 ATK`, `0 DEF`):** persegue o jogador pelo menor caminho usando busca em largura (BFS) e ataca quando adjacente.
-- **`A` Goblin Arqueiro (`8 HP`, `2 RANGED`, `0 DEF`):** permanece parado e atira nas 4 direções cardeais (alcance `7`, cooldown de `1` turno).
-- **`B` Boss (`20 HP`, `5 ATK`, `3 RANGED`, `1 DEF`):** opera em 2 fases:
-  - *HP > 50%:* persegue o jogador (BFS) e ataca corpo a corpo.
-  - *HP <= 50%:* atira em 8 direções (cardeais e diagonais, cooldown `1`) e tenta se afastar durante a recarga (`evadePlayer`).
-- **`I` Itens:** coletados ao caminhar sobre eles, concedendo cura, aumento de HP máximo, ataque ou defesa.
+- **`E` Goblin Melee (`6 HP`, `4 ATK`, `0 DEF`):** persegue o jogador pelo menor caminho usando busca em largura (BFS) em 8 direções, ataca quando adjacente (cardeais e diagonais) e tem chance de dropar um consumível de cura (`C`) ao morrer.
+- **`A` Goblin Arqueiro (`6 HP`, `3 ATK`, `2 RANGED`, `0 DEF`):** permanece parado, possui visão 360° via algoritmo de Bresenham (alcance `5`), mira por 2 turnos avisando no log, dispara no 3º turno e recarrega por `3` turnos; também tem chance de dropar um consumível de cura (`C`) ao morrer.
+- **`B` Boss (`35 HP`, `7 ATK`, `5 RANGED`, `1 DEF`, alcance `8`):** ataca corpo a corpo quando adjacente, dispara em 8 direções quando há linha de visão (com cooldown de `1` turno e aviso prévio se o jogador acabou de entrar na mira) e persegue via BFS caso contrário. Ao morrer, libera a passagem para o próximo andar ou para a vitória.
+- **Escalonamento entre andares:** a partir do 2º andar, inimigos e Boss recebem bônus progressivo de HP, ataque e defesa.
+- **`I` Itens e `C` Consumíveis:** caminhar sobre `I` concede bônus permanentes (HP máximo, ataque corpo a corpo, ataque do arco ou defesa); caminhar sobre `C` recupera HP.
 
 ---
 
@@ -43,10 +43,11 @@ Projeto final da disciplina de **Laboratório de Programação** (Ciência da Co
 
 | Ação | Teclas |
 | :--- | :--- |
-| **Mover / Atacar corpo a corpo** | `W`, `A`, `S`, `D` ou `k`, `h`, `j`, `l` |
+| **Mover / Atacar corpo a corpo (8 direções)** | `W`, `A`, `S`, `D` (cardeais) e `Q`, `E`, `Z`, `C` (diagonais) |
 | **Disparar arco (4 direções)** | Setas direcionais (`↑`, `↓`, `←`, `→`) |
 | **Navegar nos menus** | `W`/`S`, `k`/`j` ou `↑`/`↓` + `Enter` |
-| **Sair da partida / menu** | `q` |
+| **Confirmar avanço de andar / vitória** | `y` |
+| **Sair da partida (salvando) / menu** | `ESC` (`q` nas telas de Game Over e Vitória) |
 
 ---
 
@@ -59,7 +60,7 @@ Projeto final da disciplina de **Laboratório de Programação** (Ciência da Co
 ├── data/rooms/          # Templates ASCII (start/, boss/, items/, normal/)
 ├── src/
 │   ├── main.c           # Ponto de entrada e gerenciamento das janelas ncurses
-│   ├── engine.c         # Setup do ncurses, menus, gameLoop e limpeza de memória
+│   ├── engine.c         # Setup do ncurses, menus, gameLoop, save/load (data/save/save.txt), vitória e limpeza de memória
 │   ├── draw.c           # Renderização da sala, minimapa, HUD, projéteis e logs
 │   ├── map.c            # Geração procedural do andar (DFS) e névoa de guerra
 │   ├── room.c           # Leitura de templates ASCII e controle de portas
@@ -68,7 +69,7 @@ Projeto final da disciplina de **Laboratório de Programação** (Ciência da Co
 │   ├── log.c            # Exibição de mensagens no rodapé
 │   └── structs.c        # Pilha (coordStack) e filas (coordQueue, logQueue)
 └── tests/
-    └── test_floor.c     # Suíte com 11 testes automatizados (mapa, combate, IA e morte)
+    └── test_floor.c     # Suíte com 16 testes automatizados (mapa procedural, entidades, combate, IA, save/load, vitória e tranca de portas)
 ```
 
 ---
@@ -81,6 +82,6 @@ Projeto final da disciplina de **Laboratório de Programação** (Ciência da Co
 make compile   # Compila o binário ./game sem warnings
 make run       # Executa ./game
 make           # Compila, executa e limpa os binários
-make test      # Compila e executa os 11 testes automatizados
+make test      # Compila e executa os 16 testes automatizados
 make clean     # Remove binários gerados (game e test_runner)
 ```
