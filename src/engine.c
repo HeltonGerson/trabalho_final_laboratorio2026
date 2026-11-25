@@ -364,8 +364,8 @@ bool winGame(void)
         if (win_vic)
         {
             const char* title  = "=== VICTORY! DUNGEON C ===";
-            const char* sub1   = "The Goblin Specialist was defeated!";
-            const char* sub2   = "You conquered the dungeon.";
+            const char* sub1   = "You conquered the dungeon,";
+            const char* sub2   = "You escaped the darkness.";
             const char* hint   = "[W/S] Move   |  [Enter] Confirm";
             int         menu_x = (46 - (int)strlen(labels[0]) - 4) / 2;
 
