@@ -357,12 +357,12 @@ void drawHud(void)
 
     werase(win_hud);
     box(win_hud, 0, 0);
-    mvwprintw(win_hud, 0, 3, " STATUS DO JOGADOR ");
-    mvwprintw(win_hud, 2, 3, "♥ VIDA: [%s]", bar);
+    mvwprintw(win_hud, 0, 5, " PLAYER STATUS ");
+    mvwprintw(win_hud, 2, 3, "♥ HP: [%s]", bar);
     mvwprintw(win_hud, 3, hp_x, "%s", hp_text);
-    mvwprintw(win_hud, 6, 3, "⚔ ATAQUE: %d", player->attack);
-    mvwprintw(win_hud, 7, 3, "→ ARCO: %d", player->ranged_attack);
-    mvwprintw(win_hud, 8, 3, "⛨ DEFESA: %d", player->defense);
+    mvwprintw(win_hud, 6, 3, "⚔ ATTACK: %d", player->attack);
+    mvwprintw(win_hud, 7, 3, "→ RANGED: %d", player->ranged_attack);
+    mvwprintw(win_hud, 8, 3, "⛨ DEFENSE: %d", player->defense);
 }
 
 /*
@@ -407,7 +407,7 @@ void drawEverything(void)
     {
         if (LINES > 0 && COLS > 0)
         {
-            const char* msg = "Terminal pequeno! Min: 77x14";
+            const char* msg = "Small Terminal! Min: 77x14";
             int         y   = LINES / 2;
             int         x   = (COLS - (int)strlen(msg)) / 2;
             if (x < 0)

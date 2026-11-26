@@ -301,7 +301,7 @@ MenuOption showMainMenu(void)
  */
 bool showGameOver(void)
 {
-    const char* labels[2] = {"Voltar ao Menu", "Sair"};
+    const char* labels[2] = {"Go back to the Menu", "Quit"};
     int         count     = 2;
     int         selected  = 0;
 
