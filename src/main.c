@@ -1,5 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
 
 // Informações principais usadas pelo jogo inteiro
 Entity*   player;

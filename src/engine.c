@@ -1,7 +1,5 @@
 #include "rogue.h"
-#include <curses.h>
 #include <locale.h>
-#include <stdio.h>
 
 /*
  * Prepara a tela do terminal para o jogo funcionar direito (aceita acentos,

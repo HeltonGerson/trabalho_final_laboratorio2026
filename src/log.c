@@ -1,5 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
 
 /*
  * Limpa a penúltima linha da tela e escreve uma mensagem bem centralizada ali.

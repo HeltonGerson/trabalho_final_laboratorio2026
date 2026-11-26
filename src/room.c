@@ -1,5 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
 
 /*
  * Coloca os símbolos de porta (setinhas para esquerda, direita, cima e baixo)

@@ -1,7 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 static bool     player_moved_turn = false;
 static Position prev_player_pos   = {0, 0};

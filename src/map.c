@@ -1,5 +1,4 @@
 #include "rogue.h"
-#include <curses.h>
 
 /*
  * Cria a grade vazia do mapa do andar (7 por 7 espaços) na memória, começando
